@@ -127,6 +127,7 @@ import { createDetectedAgentsSlice } from './detected-agents'
 import { createWorktreeNavHistorySlice } from './worktree-nav-history'
 import { createDictationSlice } from './dictation'
 import { createWorkspaceCleanupSlice } from './workspace-cleanup'
+import { createIntegratedTerminalSlice } from './integrated-terminal'
 
 const WT = 'repo1::/tmp/feature'
 
@@ -158,7 +159,8 @@ function createTestStore() {
     ...createDetectedAgentsSlice(...a),
     ...createWorktreeNavHistorySlice(...a),
     ...createDictationSlice(...a),
-    ...createWorkspaceCleanupSlice(...a)
+    ...createWorkspaceCleanupSlice(...a),
+    ...createIntegratedTerminalSlice(...a)
   }))
 }
 

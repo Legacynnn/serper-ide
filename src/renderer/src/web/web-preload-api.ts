@@ -804,6 +804,7 @@ function createWebUiApi(): NonNullable<Partial<PreloadApi>['ui']> {
     onToggleRightSidebar: () => noopUnsubscribe,
     onToggleWorktreePalette: () => noopUnsubscribe,
     onToggleFloatingTerminal: () => noopUnsubscribe,
+    onToggleIntegratedTerminal: () => noopUnsubscribe,
     onOpenQuickOpen: () => noopUnsubscribe,
     onOpenNewWorkspace: () => noopUnsubscribe,
     onJumpToWorktreeIndex: () => noopUnsubscribe,

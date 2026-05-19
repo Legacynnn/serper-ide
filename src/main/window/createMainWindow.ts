@@ -647,8 +647,13 @@ export function createMainWindow(
       // Why: embedded browser guests can keep keyboard focus inside Chromium's
       // guest webContents, which bypasses the renderer's window-level keydown
       // listener. Forward the worktree-switch shortcut through the main window
-      // so Cmd+J (macOS) or Ctrl+Shift+J (Win/Linux) works consistently from browser tabs too.
+      // so Cmd+K (macOS) or Ctrl+Shift+K (Win/Linux) works consistently from browser tabs too.
       mainWindow.webContents.send('ui:toggleWorktreePalette')
+      return
+    }
+
+    if (action.type === 'toggleIntegratedTerminal') {
+      mainWindow.webContents.send('ui:toggleIntegratedTerminal')
       return
     }
 

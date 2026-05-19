@@ -8,7 +8,11 @@ import type {
   Worktree,
   WorkspaceSessionState
 } from '../../../../shared/types'
-import { FLOATING_TERMINAL_WORKTREE_ID } from '../../../../shared/constants'
+import {
+  FLOATING_TERMINAL_WORKTREE_ID,
+  INTEGRATED_TERMINAL_WORKTREE_PREFIX,
+  isIntegratedTerminalWorktreeKey
+} from '../../../../shared/constants'
 import { isValidHostTerminalTabId, isValidTerminalTabId } from '../../../../shared/terminal-tab-id'
 import { getRepoIdFromWorktreeId, splitWorktreeId } from '../../../../shared/worktree-id'
 import type { AgentStartedTelemetry } from '../../lib/worktree-activation'
@@ -1579,6 +1583,19 @@ export const createTerminalSlice: StateCreator<AppState, [], [], TerminalSlice> 
       validWorktreeIds.add(FLOATING_TERMINAL_WORKTREE_ID)
       for (const worktreeId of Object.keys(session.tabsByWorktree)) {
         if (!validWorktreeIds.has(worktreeId)) {
+          // Why: integrated bottom terminal keys are synthetic
+          // (__integrated_terminal__:<worktreeId>). Allow any whose underlying
+          // worktree id is still valid (locally hydrated or SSH-pending) so
+          // its tabs survive restart and SSH reconnect just like the floating
+          // terminal's do.
+          if (isIntegratedTerminalWorktreeKey(worktreeId)) {
+            const underlying = worktreeId.slice(INTEGRATED_TERMINAL_WORKTREE_PREFIX.length)
+            const underlyingRepoId = getRepoIdFromWorktreeId(underlying)
+            if (validWorktreeIds.has(underlying) || sshRepoIds.has(underlyingRepoId)) {
+              validWorktreeIds.add(worktreeId)
+            }
+            continue
+          }
           const repoId = getRepoIdFromWorktreeId(worktreeId)
           if (sshRepoIds.has(repoId)) {
             validWorktreeIds.add(worktreeId)

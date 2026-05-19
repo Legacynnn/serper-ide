@@ -1481,6 +1481,10 @@ export type GlobalSettings = {
   /** Where the Floating Terminal toggle is shown. Defaults to the floating
    *  button for discoverability. */
   floatingTerminalTriggerLocation: FloatingTerminalTriggerLocation
+  /** Persisted height (px) of the integrated bottom terminal panel toggled by
+   *  Cmd+J (Mac) / Ctrl+Shift+J (Win/Linux). Restored across sessions so the
+   *  user's preferred panel size survives a restart. */
+  integratedTerminalPanelHeight: number
   diffDefaultView: 'inline' | 'side-by-side'
   combinedDiffFileTreeVisibleByDefault: boolean
   notifications: NotificationSettings

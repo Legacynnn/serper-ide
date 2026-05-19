@@ -98,6 +98,26 @@ export const ORPHAN_WORKTREE_ID = '__orphan__'
 // pruning must classify it without consulting the repo catalog.
 export const FLOATING_TERMINAL_WORKTREE_ID = 'global-floating-terminal'
 
+// Why: the integrated bottom terminal panel namespaces its tabs per workspace
+// so each worktree gets its own shells, and tabs are pruned naturally when
+// the underlying worktree is deleted. Keys look like:
+//   __integrated_terminal__:<worktreeId>
+export const INTEGRATED_TERMINAL_WORKTREE_PREFIX = '__integrated_terminal__:'
+
+export function integratedTerminalWorktreeKey(worktreeId: string): string {
+  return `${INTEGRATED_TERMINAL_WORKTREE_PREFIX}${worktreeId}`
+}
+
+export function isIntegratedTerminalWorktreeKey(id: string): boolean {
+  return id.startsWith(INTEGRATED_TERMINAL_WORKTREE_PREFIX)
+}
+
+// Default height (px) for the integrated bottom terminal panel before user
+// resize. Kept moderate so the panel doesn't dominate the editor on first
+// open but still shows enough lines to be useful.
+export const INTEGRATED_TERMINAL_PANEL_HEIGHT_DEFAULT = 280
+export const INTEGRATED_TERMINAL_PANEL_HEIGHT_MIN = 120
+
 export const REPO_COLORS = [
   '#737373', // neutral
   '#ef4444', // red
@@ -213,6 +233,7 @@ export function getDefaultSettings(homedir: string): GlobalSettings {
     floatingTerminalDefaultedForAllUsers: true,
     floatingTerminalCwd: '~',
     floatingTerminalTriggerLocation: 'floating-button',
+    integratedTerminalPanelHeight: INTEGRATED_TERMINAL_PANEL_HEIGHT_DEFAULT,
     notifications: getDefaultNotificationSettings(),
     diffDefaultView: 'inline',
     combinedDiffFileTreeVisibleByDefault: false,

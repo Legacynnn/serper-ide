@@ -11,6 +11,7 @@ export type WindowShortcutInput = {
 export type WindowShortcutAction =
   | { type: 'zoom'; direction: 'in' | 'out' | 'reset' }
   | { type: 'toggleWorktreePalette' }
+  | { type: 'toggleIntegratedTerminal' }
   | { type: 'toggleFloatingTerminal' }
   | { type: 'toggleLeftSidebar' }
   | { type: 'toggleRightSidebar' }
@@ -159,6 +160,17 @@ export function resolveWindowShortcutAction(
 
   if (
     matchesLetterShortcut(input, 'j', 'KeyJ') &&
+    ((platform === 'darwin' && !input.shift) || (platform !== 'darwin' && input.shift))
+  ) {
+    return { type: 'toggleIntegratedTerminal' }
+  }
+
+  // Why: worktree palette moved from Cmd+J to Cmd+K to free Cmd+J for the
+  // integrated bottom terminal panel. Same cross-platform gate: bare Cmd on
+  // macOS, Ctrl+Shift on Windows/Linux. Note: this preempts the local Cmd+K
+  // in RichMarkdownLinkBubble.tsx — Esc still cancels link editing.
+  if (
+    matchesLetterShortcut(input, 'k', 'KeyK') &&
     ((platform === 'darwin' && !input.shift) || (platform !== 'darwin' && input.shift))
   ) {
     return { type: 'toggleWorktreePalette' }

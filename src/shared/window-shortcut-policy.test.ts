@@ -47,6 +47,13 @@ describe('resolveWindowShortcutAction', () => {
         { code: 'KeyJ', key: 'j', meta: true, control: false, alt: false, shift: false },
         'darwin'
       )
+    ).toEqual({ type: 'toggleIntegratedTerminal' })
+
+    expect(
+      resolveWindowShortcutAction(
+        { code: 'KeyK', key: 'k', meta: true, control: false, alt: false, shift: false },
+        'darwin'
+      )
     ).toEqual({ type: 'toggleWorktreePalette' })
 
     expect(
@@ -64,7 +71,7 @@ describe('resolveWindowShortcutAction', () => {
     ).toEqual({ type: 'jumpToWorktreeIndex', index: 2 })
   })
 
-  it('requires shift for the non-mac worktree palette shortcut', () => {
+  it('requires shift for the non-mac integrated terminal and worktree palette shortcuts', () => {
     expect(
       resolveWindowShortcutAction(
         { code: 'KeyJ', key: 'j', meta: false, control: true, alt: false, shift: false },
@@ -75,6 +82,20 @@ describe('resolveWindowShortcutAction', () => {
     expect(
       resolveWindowShortcutAction(
         { code: 'KeyJ', key: 'j', meta: false, control: true, alt: false, shift: true },
+        'win32'
+      )
+    ).toEqual({ type: 'toggleIntegratedTerminal' })
+
+    expect(
+      resolveWindowShortcutAction(
+        { code: 'KeyK', key: 'k', meta: false, control: true, alt: false, shift: false },
+        'win32'
+      )
+    ).toBeNull()
+
+    expect(
+      resolveWindowShortcutAction(
+        { code: 'KeyK', key: 'k', meta: false, control: true, alt: false, shift: true },
         'win32'
       )
     ).toEqual({ type: 'toggleWorktreePalette' })
@@ -387,8 +408,8 @@ describe('resolveWindowShortcutAction', () => {
     // non-letter marker (dead keys, IME edge cases).
 
     // Dvorak layout: the letters the user presses sit on different codes
-    // ('b'→KeyN, 'l'→KeyP, 'p'→KeyR, 'n'→KeyL, 'j'→KeyC). All must resolve
-    // to the layout-matched shortcut.
+    // ('b'→KeyN, 'l'→KeyP, 'p'→KeyR, 'n'→KeyL, 'j'→KeyC, 'k'→KeyV). All must
+    // resolve to the layout-matched shortcut.
     const dvorak: [WindowShortcutInput, WindowShortcutAction][] = [
       [
         { code: 'KeyN', key: 'b', meta: true, alt: false, shift: false },
@@ -405,6 +426,10 @@ describe('resolveWindowShortcutAction', () => {
       ],
       [
         { code: 'KeyC', key: 'j', meta: true, alt: false, shift: false },
+        { type: 'toggleIntegratedTerminal' }
+      ],
+      [
+        { code: 'KeyV', key: 'k', meta: true, alt: false, shift: false },
         { type: 'toggleWorktreePalette' }
       ]
     ]

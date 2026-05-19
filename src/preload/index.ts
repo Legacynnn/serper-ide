@@ -2131,6 +2131,11 @@ const api = {
       ipcRenderer.on('ui:toggleFloatingTerminal', listener)
       return () => ipcRenderer.removeListener('ui:toggleFloatingTerminal', listener)
     },
+    onToggleIntegratedTerminal: (callback: () => void): (() => void) => {
+      const listener = (_event: Electron.IpcRendererEvent) => callback()
+      ipcRenderer.on('ui:toggleIntegratedTerminal', listener)
+      return () => ipcRenderer.removeListener('ui:toggleIntegratedTerminal', listener)
+    },
     onOpenQuickOpen: (callback: () => void): (() => void) => {
       const listener = (_event: Electron.IpcRendererEvent) => callback()
       ipcRenderer.on('ui:openQuickOpen', listener)

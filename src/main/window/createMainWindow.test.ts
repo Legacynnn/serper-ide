@@ -535,7 +535,7 @@ describe('createMainWindow', () => {
     expect(webContents.send).not.toHaveBeenCalled()
   })
 
-  it('forwards ctrl/cmd+j to the worktree palette toggle event', () => {
+  it('forwards ctrl/cmd+j to the integrated terminal toggle event', () => {
     const windowHandlers: Record<string, (...args: any[]) => void> = {}
     const webContents = {
       on: vi.fn((event, handler) => {
@@ -596,8 +596,8 @@ describe('createMainWindow', () => {
     }
 
     expect(webContents.send).toHaveBeenCalledTimes(2)
-    expect(webContents.send).toHaveBeenNthCalledWith(1, 'ui:toggleWorktreePalette')
-    expect(webContents.send).toHaveBeenNthCalledWith(2, 'ui:toggleWorktreePalette')
+    expect(webContents.send).toHaveBeenNthCalledWith(1, 'ui:toggleIntegratedTerminal')
+    expect(webContents.send).toHaveBeenNthCalledWith(2, 'ui:toggleIntegratedTerminal')
   })
 
   it('toggles devtools on F12 in development', () => {

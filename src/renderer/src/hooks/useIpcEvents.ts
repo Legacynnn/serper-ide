@@ -627,6 +627,12 @@ export function useIpcEvents(): void {
     )
 
     unsubs.push(
+      window.api.ui.onToggleIntegratedTerminal(() => {
+        useAppStore.getState().toggleIntegratedTerminal()
+      })
+    )
+
+    unsubs.push(
       window.api.ui.onOpenQuickOpen(() => {
         const store = useAppStore.getState()
         if (store.activeView === 'terminal' && store.activeWorktreeId !== null) {

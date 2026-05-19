@@ -55,6 +55,7 @@ import {
   FloatingTerminalPanel,
   FloatingTerminalToggleButton
 } from './components/floating-terminal/FloatingTerminalPanel'
+import { IntegratedTerminalPanel } from './components/integrated-terminal/IntegratedTerminalPanel'
 import { TOGGLE_FLOATING_TERMINAL_EVENT } from '@/lib/floating-terminal'
 import { DictationController } from './components/dictation/DictationController'
 import { CrashReportDialog } from './components/crash-report/CrashReportDialog'
@@ -1511,6 +1512,12 @@ function App(): React.JSX.Element {
                     {activeView === 'space' ? <WorkspaceSpacePage /> : null}
                     {activeView === 'terminal' && !activeWorktreeId ? <Landing /> : null}
                   </Suspense>
+                  {/* Why: bottom-docked integrated terminal sits at the foot of
+                      the center column with a fixed height + shrink-0, so it
+                      pushes whichever view is active (terminal/settings/tasks/...)
+                      up rather than overlaying it. Toggled by Cmd+J (mac) /
+                      Ctrl+Shift+J (Win/Linux). */}
+                  <IntegratedTerminalPanel />
                 </div>
                 {showFloatingTerminalButton ? (
                   <FloatingTerminalToggleButton
