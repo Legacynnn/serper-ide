@@ -1034,6 +1034,61 @@ function App(): React.JSX.Element {
         return
       }
 
+      // Workspace-tab keyboard navigation (split panels + tab cycling).
+      // Why: only fire inside the terminal workspace view — the full-page nav
+      // surfaces (settings, activity, etc.) don't render split tabs.
+      if (activeView === 'terminal' && activeWorktreeId !== null) {
+        const baseMod = isMac ? e.metaKey && !e.ctrlKey : e.ctrlKey && !e.metaKey
+        const modAlt = baseMod && e.altKey && !e.shiftKey
+
+        // Spatial panel focus: Alt+Shift+Arrow on all platforms.
+        // Why: avoids Ctrl+Arrow (macOS Spaces / Mission Control), Cmd+Arrow
+        // (terminal line-nav), and Cmd+Alt+Arrow (worktree history). Skipped in
+        // editable surfaces (TipTap, inputs) via the isEditableTarget guard
+        // above, so text-selection still works in editors.
+        if (e.altKey && e.shiftKey && !e.metaKey && !e.ctrlKey) {
+          const direction =
+            e.code === 'ArrowLeft'
+              ? 'left'
+              : e.code === 'ArrowRight'
+                ? 'right'
+                : e.code === 'ArrowUp'
+                  ? 'up'
+                  : e.code === 'ArrowDown'
+                    ? 'down'
+                    : null
+          if (direction) {
+            const store = useAppStore.getState()
+            const moved = store.focusAdjacentGroup(activeWorktreeId, direction)
+            if (moved) {
+              e.preventDefault()
+              e.stopPropagation()
+            }
+            return
+          }
+        }
+
+        // Cmd/Ctrl+Alt+1..9 — jump to tab N in the active panel.
+        // Cmd/Ctrl+Alt+0 — jump to the last tab in the active panel.
+        // Why: match on e.code (Digit0–Digit9) so non-US keyboard layouts that
+        // produce different characters from the digit row still trigger.
+        if (modAlt && e.code?.startsWith('Digit')) {
+          const digit = Number.parseInt(e.code.slice(5), 10)
+          if (Number.isFinite(digit)) {
+            const store = useAppStore.getState()
+            const moved =
+              digit === 0
+                ? store.focusTabByIndex(activeWorktreeId, -1)
+                : store.focusTabByIndex(activeWorktreeId, digit - 1)
+            if (moved) {
+              e.preventDefault()
+              e.stopPropagation()
+            }
+            return
+          }
+        }
+      }
+
       // Cmd/Ctrl+Alt+Arrow — worktree history back/forward. Handled before the
       // `mod && !alt` branch below since this is the one renderer-side shortcut
       // that intentionally requires Alt.

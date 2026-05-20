@@ -181,6 +181,16 @@ const SHORTCUT_GROUP_DEFINITIONS: ShortcutGroupDefinition[] = [
         action: 'Previous terminal tab',
         searchKeywords: ['shortcut', 'tab', 'terminal', 'previous', 'switch'],
         keys: () => ['Ctrl', 'PageUp']
+      },
+      {
+        action: 'Jump to tab 1–9 in panel',
+        searchKeywords: ['shortcut', 'tab', 'jump', 'index', 'number', 'digit', 'panel'],
+        keys: ({ mod }) => [mod, mod === '⌘' ? '⌥' : 'Alt', '1…9']
+      },
+      {
+        action: 'Jump to last tab in panel',
+        searchKeywords: ['shortcut', 'tab', 'jump', 'last', 'panel'],
+        keys: ({ mod }) => [mod, mod === '⌘' ? '⌥' : 'Alt', '0']
       }
     ]
   },
@@ -225,6 +235,23 @@ const SHORTCUT_GROUP_DEFINITIONS: ShortcutGroupDefinition[] = [
         action: 'Expand / collapse pane',
         searchKeywords: ['shortcut', 'pane', 'expand', 'collapse'],
         keys: ({ mod, shift, enter }) => [mod, shift, enter]
+      },
+      {
+        action: 'Focus adjacent panel',
+        searchKeywords: [
+          'shortcut',
+          'pane',
+          'panel',
+          'focus',
+          'split',
+          'left',
+          'right',
+          'up',
+          'down',
+          'arrow',
+          'spatial'
+        ],
+        keys: ({ mod, shift }) => [mod === '⌘' ? '⌥' : 'Alt', shift, '←/→/↑/↓']
       }
     ]
   },

@@ -25,6 +25,10 @@ import {
   sanitizeRecentTabIds,
   updateGroup
 } from './tab-group-state'
+import {
+  findSpatialNeighbor,
+  type SpatialDirection
+} from '../../components/tab-group/split-tree-navigation'
 import { buildHydratedTabState } from './tabs-hydration'
 import { buildOrphanTerminalCleanupPatch, getOrphanTerminalIds } from './terminal-orphan-helpers'
 import { createBrowserUuid } from '@/lib/browser-uuid'
@@ -70,6 +74,8 @@ export type TabsSlice = {
   closeTabsToRight: (tabId: string) => string[]
   ensureWorktreeRootGroup: (worktreeId: string) => string
   focusGroup: (worktreeId: string, groupId: string) => void
+  focusAdjacentGroup: (worktreeId: string, direction: 'left' | 'right' | 'up' | 'down') => boolean
+  focusTabByIndex: (worktreeId: string, index: number) => boolean
   closeEmptyGroup: (worktreeId: string, groupId: string) => boolean
   createEmptySplitGroup: (
     worktreeId: string,
@@ -884,6 +890,40 @@ export const createTabsSlice: StateCreator<AppState, [], [], TabsSlice> = (set, 
         )
       }
     }),
+
+  focusAdjacentGroup: (worktreeId, direction) => {
+    const state = get()
+    const layout = state.layoutByWorktree[worktreeId]
+    const activeGroupId = state.activeGroupIdByWorktree[worktreeId]
+    if (!layout || !activeGroupId) {
+      return false
+    }
+    const targetGroupId = findSpatialNeighbor(layout, activeGroupId, direction as SpatialDirection)
+    if (!targetGroupId || targetGroupId === activeGroupId) {
+      return false
+    }
+    get().focusGroup(worktreeId, targetGroupId)
+    return true
+  },
+
+  focusTabByIndex: (worktreeId, index) => {
+    const state = get()
+    const activeGroupId = state.activeGroupIdByWorktree[worktreeId]
+    if (!activeGroupId) {
+      return false
+    }
+    const group = (state.groupsByWorktree[worktreeId] ?? []).find((g) => g.id === activeGroupId)
+    if (!group || group.tabOrder.length === 0) {
+      return false
+    }
+    const resolved = index < 0 ? group.tabOrder.length + index : index
+    const targetTabId = group.tabOrder[resolved]
+    if (!targetTabId) {
+      return false
+    }
+    get().activateTab(targetTabId)
+    return true
+  },
 
   closeEmptyGroup: (worktreeId, groupId) => {
     const state = get()
