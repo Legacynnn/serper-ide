@@ -11,7 +11,6 @@ import {
   FileCog,
   FileDiff,
   FileImage,
-  FileJson,
   FileKey,
   FileLock,
   FileMusic,
@@ -25,101 +24,74 @@ import {
 } from 'lucide-react'
 import {
   SiAstro,
+  SiBabel,
+  SiBun,
   SiC,
+  SiComposer,
   SiCplusplus,
+  SiCss,
   SiDart,
+  SiDocker,
   SiDotnet,
+  SiEditorconfig,
+  SiEslint,
+  SiGit,
   SiGo,
+  SiHtml5,
   SiJavascript,
+  SiJson,
   SiKotlin,
   SiLua,
+  SiMarkdown,
+  SiNpm,
   SiOpenjdk,
   SiPhp,
+  SiPnpm,
+  SiPostcss,
+  SiPrettier,
   SiPython,
   SiReact,
   SiRuby,
+  SiRubygems,
   SiRust,
+  SiSass,
   SiSvelte,
   SiSwift,
+  SiTailwindcss,
+  SiToml,
   SiTypescript,
-  SiVuedotjs
+  SiVite,
+  SiVitest,
+  SiVuedotjs,
+  SiYaml,
+  SiYarn
 } from 'react-icons/si'
 import type { IconType } from 'react-icons'
 
 const FILE_ICON_BY_NAME: Record<string, LucideIcon> = {
-  '.babelrc': FileSliders,
-  '.dockerignore': FileSliders,
-  '.editorconfig': FileSliders,
-  '.eslintrc': FileSliders,
-  '.eslintrc.cjs': FileSliders,
-  '.eslintrc.js': FileSliders,
-  '.eslintrc.json': FileJson,
-  '.eslintrc.yaml': FileSliders,
-  '.eslintrc.yml': FileSliders,
-  '.gitattributes': FileSliders,
-  '.gitignore': FileSliders,
   '.npmrc': FileSliders,
-  '.prettierrc': FileSliders,
-  '.prettierrc.json': FileJson,
-  '.prettierrc.yaml': FileSliders,
-  '.prettierrc.yml': FileSliders,
   'agents.md': FileText,
   authors: FileText,
-  'bun.lock': FileBox,
-  'bun.lockb': FileBox,
-  'cargo.lock': FileBox,
-  'cargo.toml': FileBox,
   changelog: FileText,
   'changelog.md': FileText,
   'cmakelists.txt': FileCog,
   codeowners: FileKey,
   'components.json': FileSliders,
-  'composer.json': FileBox,
-  'composer.lock': FileBox,
   contributing: FileText,
   'contributing.md': FileText,
   copying: FileKey,
-  dockerfile: FileCog,
-  gemfile: FileBox,
-  'go.mod': FileBox,
-  'go.sum': FileBox,
   license: FileKey,
   makefile: FileTerminal,
   'meson.build': FileCog,
   notice: FileKey,
-  'package-lock.json': FileBox,
-  'package.json': FileBox,
-  pipfile: FileBox,
-  'pnpm-lock.yaml': FileBox,
-  'pnpm-workspace.yaml': FileBox,
-  'poetry.lock': FileBox,
   'pom.xml': FileBox,
-  'postcss.config.cjs': FileSliders,
-  'postcss.config.js': FileSliders,
-  'postcss.config.mjs': FileSliders,
-  'postcss.config.ts': FileSliders,
-  'pyproject.toml': FileBox,
   readme: FileText,
   'readme.md': FileText,
-  'requirements-dev.txt': FileBox,
-  'requirements.txt': FileBox,
   security: FileLock,
   'security.md': FileLock,
   'settings.gradle': FileCog,
   'settings.gradle.kts': FileCog,
-  'tailwind.config.cjs': FileSliders,
-  'tailwind.config.js': FileSliders,
-  'tailwind.config.mjs': FileSliders,
-  'tailwind.config.ts': FileSliders,
-  todo: FileText,
-  'tsconfig.json': FileSliders,
-  'vite.config.js': FileSliders,
-  'vite.config.mjs': FileSliders,
-  'vite.config.ts': FileSliders,
-  'vitest.config.js': FileSliders,
-  'vitest.config.mjs': FileSliders,
-  'vitest.config.ts': FileSliders,
-  'yarn.lock': FileBox
+  todo: FileText
 }
 
 const FILE_ICON_BY_EXTENSION: Record<string, LucideIcon> = {
@@ -148,7 +120,6 @@ const FILE_ICON_BY_EXTENSION: Record<string, LucideIcon> = {
   cpp: FileCode,
   crt: FileKey,
   cs: FileCode,
-  css: FileType,
   csv: FileSpreadsheet,
   cts: FileCode,
   cxx: FileCode,
@@ -184,8 +155,6 @@ const FILE_ICON_BY_EXTENSION: Record<string, LucideIcon> = {
   hpp: FileCode,
   hrl: FileCode,
   hs: FileCode,
-  htm: FileCode,
-  html: FileCode,
   ico: FileImage,
   ini: FileSliders,
   ipynb: FileChartColumn,
@@ -194,9 +163,6 @@ const FILE_ICON_BY_EXTENSION: Record<string, LucideIcon> = {
   jpeg: FileImage,
   jpg: FileImage,
   js: FileCode,
-  json: FileJson,
-  json5: FileJson,
-  jsonc: FileJson,
   jsx: FileCode,
   key: FileKey,
   kt: FileCode,
@@ -207,8 +173,6 @@ const FILE_ICON_BY_EXTENSION: Record<string, LucideIcon> = {
   lua: FileCode,
   m4a: FileMusic,
   m4v: FileVideo,
-  md: FileText,
-  mdx: FileText,
   mjs: FileCode,
   mkv: FileVideo,
   mmd: FileChartColumn,
@@ -249,9 +213,7 @@ const FILE_ICON_BY_EXTENSION: Record<string, LucideIcon> = {
   rst: FileText,
   rs: FileCode,
   rtf: FileText,
-  sass: FileType,
   scala: FileCode,
-  scss: FileType,
   sh: FileTerminal,
   sol: FileCode,
   sqlite: Database,
@@ -272,7 +234,6 @@ const FILE_ICON_BY_EXTENSION: Record<string, LucideIcon> = {
   tgz: FileArchive,
   tif: FileImage,
   tiff: FileImage,
-  toml: FileSliders,
   ts: FileCode,
   tsx: FileCode,
   tsv: FileSpreadsheet,
@@ -286,13 +247,10 @@ const FILE_ICON_BY_EXTENSION: Record<string, LucideIcon> = {
   webp: FileImage,
   woff: FileType,
   woff2: FileType,
-  xhtml: FileCode,
+  xml: FileCode,
   xls: FileSpreadsheet,
   xlsx: FileSpreadsheet,
-  xml: FileCode,
   xz: FileArchive,
-  yaml: FileSliders,
-  yml: FileSliders,
   zig: FileCode,
   zip: FileArchive,
   zsh: FileTerminal
@@ -307,6 +265,62 @@ export type FileIconComponent = LucideIcon | IconType
 export type FileIconSpec = {
   Icon: FileIconComponent
   isTest: boolean
+  isBrand: boolean
+}
+
+// Brand-mark icons keyed by exact lowercase filename.
+// Why: many dev/config files have no meaningful extension — matching on the
+// full name is more precise than extension-based heuristics for these cases.
+const LANGUAGE_ICON_BY_NAME: Record<string, FileIconComponent> = {
+  '.babelrc': SiBabel,
+  '.dockerignore': SiDocker,
+  '.editorconfig': SiEditorconfig,
+  '.eslintrc': SiEslint,
+  '.eslintrc.cjs': SiEslint,
+  '.eslintrc.js': SiEslint,
+  '.eslintrc.json': SiEslint,
+  '.eslintrc.yaml': SiEslint,
+  '.eslintrc.yml': SiEslint,
+  '.gitattributes': SiGit,
+  '.gitignore': SiGit,
+  '.prettierrc': SiPrettier,
+  '.prettierrc.json': SiPrettier,
+  '.prettierrc.yaml': SiPrettier,
+  '.prettierrc.yml': SiPrettier,
+  'bun.lock': SiBun,
+  'bun.lockb': SiBun,
+  'cargo.lock': SiRust,
+  'cargo.toml': SiRust,
+  'composer.json': SiComposer,
+  'composer.lock': SiComposer,
+  gemfile: SiRubygems,
+  'go.mod': SiGo,
+  'go.sum': SiGo,
+  'package-lock.json': SiNpm,
+  'package.json': SiNpm,
+  pipfile: SiPython,
+  'pnpm-lock.yaml': SiPnpm,
+  'pnpm-workspace.yaml': SiPnpm,
+  'poetry.lock': SiPython,
+  'postcss.config.cjs': SiPostcss,
+  'postcss.config.js': SiPostcss,
+  'postcss.config.mjs': SiPostcss,
+  'postcss.config.ts': SiPostcss,
+  'pyproject.toml': SiPython,
+  'requirements-dev.txt': SiPython,
+  'requirements.txt': SiPython,
+  'tailwind.config.cjs': SiTailwindcss,
+  'tailwind.config.js': SiTailwindcss,
+  'tailwind.config.mjs': SiTailwindcss,
+  'tailwind.config.ts': SiTailwindcss,
+  'tsconfig.json': SiTypescript,
+  'vite.config.js': SiVite,
+  'vite.config.mjs': SiVite,
+  'vite.config.ts': SiVite,
+  'vitest.config.js': SiVitest,
+  'vitest.config.mjs': SiVitest,
+  'vitest.config.ts': SiVitest,
+  'yarn.lock': SiYarn
 }
 
 const LANGUAGE_ICON_BY_EXTENSION: Record<string, FileIconComponent> = {
@@ -316,30 +330,44 @@ const LANGUAGE_ICON_BY_EXTENSION: Record<string, FileIconComponent> = {
   cjs: SiJavascript,
   cpp: SiCplusplus,
   cs: SiDotnet,
+  css: SiCss,
   cts: SiTypescript,
   cxx: SiCplusplus,
   dart: SiDart,
   go: SiGo,
   h: SiC,
   hpp: SiCplusplus,
+  htm: SiHtml5,
+  html: SiHtml5,
   hxx: SiCplusplus,
   java: SiOpenjdk,
   js: SiJavascript,
+  json: SiJson,
+  json5: SiJson,
+  jsonc: SiJson,
   jsx: SiReact,
   kt: SiKotlin,
   kts: SiKotlin,
   lua: SiLua,
+  md: SiMarkdown,
+  mdx: SiMarkdown,
   mjs: SiJavascript,
   mts: SiTypescript,
   php: SiPhp,
   py: SiPython,
   rb: SiRuby,
   rs: SiRust,
+  sass: SiSass,
+  scss: SiSass,
   svelte: SiSvelte,
   swift: SiSwift,
+  toml: SiToml,
   ts: SiTypescript,
   tsx: SiTypescript,
-  vue: SiVuedotjs
+  vue: SiVuedotjs,
+  xhtml: SiHtml5,
+  yaml: SiYaml,
+  yml: SiYaml
 }
 
 const COMPOUND_EXTENSIONS = ['tar.bz2', 'tar.gz', 'tar.xz']
@@ -385,38 +413,58 @@ function getExtension(filename: string): string {
   return filename.slice(lastDot + 1).toLowerCase()
 }
 
-function resolveIconComponent(filePath: string): FileIconComponent {
+function resolveIconComponent(filePath: string): { Icon: FileIconComponent; isBrand: boolean } {
   const filename = getFilename(filePath)
   const lowerName = filename.toLowerCase()
 
-  const exactMatch = FILE_ICON_BY_NAME[lowerName]
-  if (exactMatch) {
-    return exactMatch
+  // Brand name table wins over everything for exact filename matches.
+  const brandName = LANGUAGE_ICON_BY_NAME[lowerName]
+  if (brandName) {
+    return { Icon: brandName, isBrand: true }
   }
 
   if (lowerName === '.env' || lowerName.startsWith('.env.')) {
-    return FileLock
+    return { Icon: FileLock, isBrand: false }
   }
 
   if (lowerName === 'dockerfile' || lowerName.startsWith('dockerfile.')) {
-    return FileCog
+    return { Icon: SiDocker, isBrand: true }
   }
 
   if (lowerName === 'makefile' || lowerName.startsWith('makefile.')) {
-    return FileTerminal
+    return { Icon: FileTerminal, isBrand: false }
   }
 
   const extension = getExtension(filename)
-  // Language brand marks beat the generic FileCode when both apply.
+
+  // Brand extension table beats the Lucide name and extension tables.
+  // Why: a brand mark (e.g. SiMarkdown for .md) is more informative than a
+  // generic Lucide icon even when the Lucide name table has a specific entry.
+  const brandExt = LANGUAGE_ICON_BY_EXTENSION[extension]
+  if (brandExt) {
+    return { Icon: brandExt, isBrand: true }
+  }
+
+  const exactName = FILE_ICON_BY_NAME[lowerName]
+  if (exactName) {
+    return { Icon: exactName, isBrand: false }
+  }
+
+  const lucideExt = FILE_ICON_BY_EXTENSION[extension]
+  if (lucideExt) {
+    return { Icon: lucideExt, isBrand: false }
+  }
   // Why: filename/extension matching keeps icons deterministic for SSH worktrees
   // where OS-native file associations are not available.
-  return LANGUAGE_ICON_BY_EXTENSION[extension] ?? FILE_ICON_BY_EXTENSION[extension] ?? File
+  return { Icon: File, isBrand: false }
 }
 
 export function getFileIconSpec(filePath: string): FileIconSpec {
+  const { Icon, isBrand } = resolveIconComponent(filePath)
   return {
-    Icon: resolveIconComponent(filePath),
-    isTest: isTestFile(filePath)
+    Icon,
+    isTest: isTestFile(filePath),
+    isBrand
   }
 }
 
@@ -425,5 +473,5 @@ export function getFileIconSpec(filePath: string): FileIconSpec {
  * flag. New code should prefer getFileIconSpec.
  */
 export function getFileTypeIcon(filePath: string): FileIconComponent {
-  return resolveIconComponent(filePath)
+  return resolveIconComponent(filePath).Icon
 }

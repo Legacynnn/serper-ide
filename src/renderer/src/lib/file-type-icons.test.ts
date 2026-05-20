@@ -1,6 +1,27 @@
 import { describe, expect, it } from 'vitest'
-import { File, FileCode, FileImage, FileJson, FileText } from 'lucide-react'
-import { SiTypescript, SiJavascript, SiReact, SiRust, SiGo, SiPython } from 'react-icons/si'
+import { File, FileCode, FileImage } from 'lucide-react'
+import {
+  SiCss,
+  SiDocker,
+  SiEslint,
+  SiGit,
+  SiHtml5,
+  SiJson,
+  SiMarkdown,
+  SiNpm,
+  SiPnpm,
+  SiPrettier,
+  SiSass,
+  SiTailwindcss,
+  SiTypescript,
+  SiVite,
+  SiYaml,
+  SiJavascript,
+  SiReact,
+  SiRust,
+  SiGo,
+  SiPython
+} from 'react-icons/si'
 import { getFileIconSpec, isTestFile } from './file-type-icons'
 
 describe('getFileIconSpec — language extensions', () => {
@@ -42,17 +63,17 @@ describe('getFileIconSpec — language extensions', () => {
   })
 })
 
-describe('getFileIconSpec — non-language extensions stay on existing icons', () => {
+describe('getFileIconSpec — non-brand extensions', () => {
   it('uses FileImage for .png', () => {
     expect(getFileIconSpec('foo.png').Icon).toBe(FileImage)
   })
 
-  it('uses FileJson for .json', () => {
-    expect(getFileIconSpec('foo.json').Icon).toBe(FileJson)
+  it('uses SiJson for .json', () => {
+    expect(getFileIconSpec('foo.json').Icon).toBe(SiJson)
   })
 
-  it('uses FileText for .md', () => {
-    expect(getFileIconSpec('readme.md').Icon).toBe(FileText)
+  it('uses SiMarkdown for .md', () => {
+    expect(getFileIconSpec('readme.md').Icon).toBe(SiMarkdown)
   })
 
   it('uses FileCode for unmapped code extensions (e.g. .hs)', () => {
@@ -145,5 +166,120 @@ describe('getFileIconSpec — test files', () => {
     const spec = getFileIconSpec('handler_test.py')
     expect(spec.Icon).toBe(SiPython)
     expect(spec.isTest).toBe(true)
+  })
+})
+
+describe('getFileIconSpec — dev/config files by name', () => {
+  it('uses SiGit for .gitignore / .gitattributes', () => {
+    expect(getFileIconSpec('.gitignore').Icon).toBe(SiGit)
+    expect(getFileIconSpec('.gitattributes').Icon).toBe(SiGit)
+  })
+
+  it('uses SiNpm for package.json / package-lock.json', () => {
+    expect(getFileIconSpec('package.json').Icon).toBe(SiNpm)
+    expect(getFileIconSpec('package-lock.json').Icon).toBe(SiNpm)
+  })
+
+  it('uses SiPnpm for pnpm-lock.yaml', () => {
+    expect(getFileIconSpec('pnpm-lock.yaml').Icon).toBe(SiPnpm)
+  })
+
+  it('uses SiTypescript for tsconfig.json', () => {
+    expect(getFileIconSpec('tsconfig.json').Icon).toBe(SiTypescript)
+  })
+
+  it('uses SiEslint for .eslintrc.json', () => {
+    expect(getFileIconSpec('.eslintrc.json').Icon).toBe(SiEslint)
+  })
+
+  it('uses SiPrettier for .prettierrc', () => {
+    expect(getFileIconSpec('.prettierrc').Icon).toBe(SiPrettier)
+  })
+
+  it('uses SiTailwindcss for tailwind.config.ts', () => {
+    expect(getFileIconSpec('tailwind.config.ts').Icon).toBe(SiTailwindcss)
+  })
+
+  it('uses SiVite for vite.config.ts', () => {
+    expect(getFileIconSpec('vite.config.ts').Icon).toBe(SiVite)
+  })
+
+  it('uses SiDocker for Dockerfile and .dockerignore', () => {
+    expect(getFileIconSpec('Dockerfile').Icon).toBe(SiDocker)
+    expect(getFileIconSpec('.dockerignore').Icon).toBe(SiDocker)
+  })
+
+  it('uses SiDocker for dockerfile variants (case insensitive, dockerfile.dev)', () => {
+    expect(getFileIconSpec('dockerfile.dev').Icon).toBe(SiDocker)
+  })
+})
+
+describe('getFileIconSpec — dev/config files by extension', () => {
+  it('uses SiMarkdown for .md / .mdx', () => {
+    expect(getFileIconSpec('readme.md').Icon).toBe(SiMarkdown)
+    expect(getFileIconSpec('guide.mdx').Icon).toBe(SiMarkdown)
+  })
+
+  it('uses SiJson for .json / .json5 / .jsonc', () => {
+    expect(getFileIconSpec('data.json').Icon).toBe(SiJson)
+    expect(getFileIconSpec('foo.json5').Icon).toBe(SiJson)
+    expect(getFileIconSpec('foo.jsonc').Icon).toBe(SiJson)
+  })
+
+  it('uses SiYaml for .yaml / .yml', () => {
+    expect(getFileIconSpec('foo.yaml').Icon).toBe(SiYaml)
+    expect(getFileIconSpec('foo.yml').Icon).toBe(SiYaml)
+  })
+
+  it('uses SiHtml5 for .html / .htm', () => {
+    expect(getFileIconSpec('index.html').Icon).toBe(SiHtml5)
+    expect(getFileIconSpec('legacy.htm').Icon).toBe(SiHtml5)
+  })
+
+  it('uses SiCss for .css', () => {
+    expect(getFileIconSpec('foo.css').Icon).toBe(SiCss)
+  })
+
+  it('uses SiSass for .scss / .sass', () => {
+    expect(getFileIconSpec('foo.scss').Icon).toBe(SiSass)
+    expect(getFileIconSpec('foo.sass').Icon).toBe(SiSass)
+  })
+})
+
+describe('getFileIconSpec — isBrand flag', () => {
+  it('flags isBrand=true for language extension matches', () => {
+    expect(getFileIconSpec('foo.ts').isBrand).toBe(true)
+    expect(getFileIconSpec('foo.rs').isBrand).toBe(true)
+    expect(getFileIconSpec('foo.go').isBrand).toBe(true)
+  })
+
+  it('flags isBrand=true for brand-mark name matches', () => {
+    expect(getFileIconSpec('.gitignore').isBrand).toBe(true)
+    expect(getFileIconSpec('package.json').isBrand).toBe(true)
+    expect(getFileIconSpec('tsconfig.json').isBrand).toBe(true)
+  })
+
+  it('flags isBrand=true for brand-mark extension matches', () => {
+    expect(getFileIconSpec('readme.md').isBrand).toBe(true)
+    expect(getFileIconSpec('foo.json').isBrand).toBe(true)
+    expect(getFileIconSpec('foo.html').isBrand).toBe(true)
+  })
+
+  it('flags isBrand=true for Dockerfile (promoted special-case)', () => {
+    expect(getFileIconSpec('Dockerfile').isBrand).toBe(true)
+    expect(getFileIconSpec('.dockerignore').isBrand).toBe(true)
+  })
+
+  it('flags isBrand=false for Lucide-only matches', () => {
+    expect(getFileIconSpec('foo.png').isBrand).toBe(false)
+    expect(getFileIconSpec('foo.zip').isBrand).toBe(false)
+    expect(getFileIconSpec('LICENSE').isBrand).toBe(false)
+    expect(getFileIconSpec('makefile').isBrand).toBe(false)
+    expect(getFileIconSpec('.env').isBrand).toBe(false)
+  })
+
+  it('flags isBrand=false for unknown extensions falling back to File', () => {
+    expect(getFileIconSpec('foo.xyz123').isBrand).toBe(false)
+    expect(getFileIconSpec('UNRELATED').isBrand).toBe(false)
   })
 })

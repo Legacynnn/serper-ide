@@ -8,18 +8,23 @@ type FileTypeIconProps = {
 }
 
 /**
- * Renders a file-type icon at the explorer's 12px size. When the spec is
- * flagged as a test file, overlays a small currentColor dot in the bottom-
- * right so the language remains identifiable while signalling "test".
+ * Renders a file-type icon inside a 12px slot. Brand-mark icons (simple-icons)
+ * are scaled to 10px so they visually match Lucide glyphs, which carry more
+ * internal padding. Test files get a 4px corner dot to mark them.
  */
 export function FileTypeIcon({ spec, className }: FileTypeIconProps): React.JSX.Element {
-  const { Icon, isTest } = spec
+  const { Icon, isTest, isBrand } = spec
+  const iconClass = cn(isBrand ? 'size-2.5' : 'size-3', 'text-muted-foreground', className)
   if (!isTest) {
-    return <Icon className={cn('size-3 shrink-0 text-muted-foreground', className)} />
+    return (
+      <span className="inline-flex size-3 shrink-0 items-center justify-center">
+        <Icon className={iconClass} />
+      </span>
+    )
   }
   return (
     <span className="relative inline-flex size-3 shrink-0 items-center justify-center">
-      <Icon className={cn('size-3 text-muted-foreground', className)} />
+      <Icon className={iconClass} />
       <span
         aria-hidden
         className="absolute -bottom-0.5 -right-0.5 size-1.5 rounded-full bg-current ring-1 ring-background"
