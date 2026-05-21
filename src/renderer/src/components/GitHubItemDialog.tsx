@@ -28,12 +28,19 @@ import {
   GitMerge,
   GitPullRequest,
   LayoutList,
+  Link2,
   LoaderCircle,
+  Maximize2,
   MessageSquare,
   MessageSquarePlus,
+  Minimize2,
+  Pencil,
+  Plus,
   RefreshCw,
   Send,
+  Tag,
   UndoDot,
+  UserCircle2,
   Users,
   X
 } from 'lucide-react'
@@ -960,6 +967,33 @@ function patchCachedPRReviewRequests(
   })
 }
 
+// Why: title/body edits succeed against GitHub but the local details cache
+// would still serve the pre-edit string until invalidation. Patch the cache
+// directly so the reopened drawer paints the new value without a network
+// round-trip while a background refetch still confirms the canonical state.
+function patchCachedDetailsTitleBody(
+  cacheKey: string,
+  patch: { title?: string; body?: string }
+): void {
+  const prev = workItemDetailsCache.get(cacheKey)
+  if (!prev?.details) {
+    return
+  }
+  touchWorkItemDetailsCache(cacheKey, {
+    ...prev,
+    details: {
+      ...prev.details,
+      item:
+        patch.title !== undefined
+          ? { ...prev.details.item, title: patch.title }
+          : prev.details.item,
+      body: patch.body !== undefined ? patch.body : prev.details.body
+    },
+    fetchedAt: Date.now(),
+    error: undefined
+  })
+}
+
 // Why: install once at module load — every dialog instance shares the cache,
 // so a single subscription is enough. The preload bridge re-emits the
 // main-process broadcast for every window, so each renderer invalidates its
@@ -1684,6 +1718,54 @@ function CommentCodeContext({
   )
 }
 
+// Why: the GitHub-style timeline draws a single vertical rail behind a
+// column of avatars so the eye reads the conversation as one chronological
+// thread, not a stack of disconnected cards. The rail is rendered per-node
+// (top + bottom halves) so removing or filtering a node doesn't leave a
+// dangling stub — the rail only exists between adjacent nodes.
+function TimelineNode({
+  avatarUrl,
+  alt,
+  isFirst,
+  isLast,
+  children
+}: {
+  avatarUrl: string | undefined | null
+  alt: string
+  isFirst: boolean
+  isLast: boolean
+  children: React.ReactNode
+}): React.JSX.Element {
+  return (
+    <div className="relative flex min-w-0 gap-3">
+      <div className="relative shrink-0">
+        {!isFirst && (
+          <div
+            aria-hidden
+            className="absolute left-1/2 -top-4 h-4 w-px -translate-x-1/2 bg-border/50"
+          />
+        )}
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt={alt}
+            className="relative z-10 size-8 rounded-full ring-2 ring-background"
+          />
+        ) : (
+          <div className="relative z-10 size-8 rounded-full bg-muted ring-2 ring-background" />
+        )}
+        {!isLast && (
+          <div
+            aria-hidden
+            className="absolute left-1/2 top-8 -bottom-4 w-px -translate-x-1/2 bg-border/50"
+          />
+        )}
+      </div>
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  )
+}
+
 function ConversationTab({
   item,
   repoPath,
@@ -1702,7 +1784,14 @@ function ConversationTab({
   onMutated,
   onChecksUpdated,
   onCommentAdded,
-  onReviewersRequested
+  onReviewersRequested,
+  canEditBody,
+  onSaveBody,
+  /** Why: signals expanded-mode rendering for PRs so the right panel adds
+   *  the branch card (the one piece of PR metadata previously only shown in
+   *  the floating sidebar). Issues still get the full floating sidebar in
+   *  expanded mode, so this flag has no effect for issues. */
+  metadataInSidebar = false
 }: {
   item: GitHubWorkItem
   repoPath: string | null
@@ -1723,10 +1812,23 @@ function ConversationTab({
   onChecksUpdated: (checks: PRCheckDetail[]) => void
   onCommentAdded: (comment: PRComment) => void
   onReviewersRequested: (reviewRequests: GitHubAssignableUser[]) => void
+  canEditBody: boolean
+  onSaveBody: (nextBody: string) => Promise<boolean>
+  metadataInSidebar?: boolean
 }): React.JSX.Element {
   const authorLabel = item.author ?? 'unknown'
   const [replyingTo, setReplyingTo] = useState<number | null>(null)
   const [commentFilter, setCommentFilter] = useState<PRCommentAudienceFilter>('all')
+  const [editingBody, setEditingBody] = useState(false)
+  const [bodyDraft, setBodyDraft] = useState('')
+  const [savingBody, setSavingBody] = useState(false)
+  const bodyTextareaRef = useRef<HTMLTextAreaElement | null>(null)
+  // Why: reset edit state when item changes — a stale draft on a different
+  // issue would clobber the wrong issue's body on save.
+  useEffect(() => {
+    setEditingBody(false)
+    setSavingBody(false)
+  }, [item.id])
   const repoAssignees = useRepoAssignees(repoPath, item.repoId)
   const commentCounts = useMemo(() => getPRCommentAudienceCounts(comments), [comments])
   const visibleComments = useMemo(
@@ -1744,6 +1846,17 @@ function ConversationTab({
       }),
     [comments, detailsParticipants, item, repoAssignees.data]
   )
+
+  // Why: GitHub workItem doesn't carry the author's avatar, but the GraphQL
+  // participants list (populated by getWorkItemDetails) does. Look it up here
+  // so the timeline rail's opener-node shows a proper avatar instead of a
+  // gray fallback.
+  const issueAuthorAvatar = useMemo(() => {
+    if (!item.author) {
+      return ''
+    }
+    return detailsParticipants.find((p) => p.login === item.author)?.avatarUrl ?? ''
+  }, [item.author, detailsParticipants])
 
   useEffect(() => {
     if (replyingTo !== null && !visibleComments.some((comment) => comment.id === replyingTo)) {
@@ -1819,6 +1932,23 @@ function ConversationTab({
           repoPath={repoPath}
           onReviewersRequested={onReviewersRequested}
         />
+        {/* Why: the expanded layout no longer ships a separate floating
+            metadata sidebar for PRs — the branch is the only PR-specific
+            metadata that wasn't already in this panel, so surface it inline
+            so the wide reading layout still exposes it. */}
+        {metadataInSidebar && item.branchName && (
+          <aside className="rounded-lg border border-border/50 bg-card/50 shadow-xs">
+            <div className="flex h-10 items-center gap-2 border-b border-border/50 px-3">
+              <GitMerge className="size-3.5 text-muted-foreground" />
+              <span className="text-[13px] font-medium text-foreground">Branch</span>
+            </div>
+            <div className="px-3 py-2.5">
+              <span className="inline-block max-w-full truncate rounded-md border border-border/50 bg-muted/40 px-2 py-1 font-mono text-[11px] text-muted-foreground">
+                {item.branchName}
+              </span>
+            </div>
+          </aside>
+        )}
         <aside className="rounded-lg border border-border/50 bg-card/50 shadow-xs">
           <div className="flex h-10 items-center gap-2 border-b border-border/50 px-3">
             <CircleDashed className="size-3.5 text-muted-foreground" />
@@ -1850,15 +1980,20 @@ function ConversationTab({
       )}
     >
       <div className="flex items-center gap-2 border-b border-border/40 px-3 py-2">
-        {comment.authorAvatarUrl ? (
-          <img
-            src={comment.authorAvatarUrl}
-            alt={comment.author}
-            className="size-5 shrink-0 rounded-full"
-          />
-        ) : (
-          <div className="size-5 shrink-0 rounded-full bg-muted" />
-        )}
+        {/* Why: the timeline rail provides a 32px author avatar for the root
+            comment, so the inner card avatar would duplicate it. Replies sit
+            inside the same node and need their own avatar in the header to
+            stay attributable. */}
+        {isReply &&
+          (comment.authorAvatarUrl ? (
+            <img
+              src={comment.authorAvatarUrl}
+              alt={comment.author}
+              className="size-5 shrink-0 rounded-full"
+            />
+          ) : (
+            <div className="size-5 shrink-0 rounded-full bg-muted" />
+          ))}
         <span
           className={cn(
             'text-[13px] font-semibold',
@@ -1987,6 +2122,96 @@ function ConversationTab({
     )
   }
 
+  const bodyCard = (
+    <div className="group/body rounded-lg border border-border/50 bg-card/50 shadow-xs">
+      <div className="flex items-center gap-2 border-b border-border/50 px-3 py-2 text-[12px] text-muted-foreground">
+        <span className="font-medium text-foreground">{authorLabel}</span>
+        <span>opened this {item.type === 'pr' ? 'pull request' : 'issue'}</span>
+        <span>· updated {formatRelativeTime(item.updatedAt)}</span>
+        {canEditBody && !editingBody && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon-xs"
+                variant="ghost"
+                className="ml-auto size-6 opacity-0 transition-opacity group-hover/body:opacity-100 focus-visible:opacity-100"
+                onClick={() => {
+                  setBodyDraft(body)
+                  setEditingBody(true)
+                }}
+                aria-label="Edit description"
+              >
+                <Pencil className="size-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" sideOffset={4}>
+              Edit description
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+      {editingBody ? (
+        <div className="flex flex-col gap-2 px-3 py-3">
+          <MentionTextarea
+            value={bodyDraft}
+            onValueChange={setBodyDraft}
+            placeholder="Write a description (Markdown supported)"
+            rows={8}
+            mentionOptions={mentionOptions}
+            textareaRef={bodyTextareaRef}
+            className="min-h-[140px] w-full resize-y rounded-md border border-border/60 bg-background px-3 py-2 text-[13px] leading-relaxed text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-ring"
+          />
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setEditingBody(false)}
+              disabled={savingBody}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={async () => {
+                setSavingBody(true)
+                const ok = await onSaveBody(bodyDraft)
+                setSavingBody(false)
+                if (ok) {
+                  setEditingBody(false)
+                }
+              }}
+              disabled={savingBody || bodyDraft === body}
+            >
+              {savingBody ? (
+                <>
+                  <LoaderCircle className="size-3.5 animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                'Save'
+              )}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="px-4 py-4 text-[14px] leading-relaxed text-foreground">
+          {body.trim() ? (
+            <CommentMarkdown
+              content={body}
+              variant="document"
+              className="text-[14px] leading-relaxed"
+            />
+          ) : (
+            <span className="italic text-muted-foreground">No description provided.</span>
+          )}
+        </div>
+      )}
+    </div>
+  )
+
+  const hasVisibleComments = visibleCommentGroups.length > 0
+  const bodyIsLastInRail = !hasVisibleComments && !repoPath
+
   return (
     <div
       className={cn(
@@ -1994,37 +2219,21 @@ function ConversationTab({
         item.type === 'pr' && 'xl:grid-cols-[minmax(0,1fr)_280px]'
       )}
     >
-      <div className="flex min-w-0 flex-col gap-4">
-        <div className="rounded-lg border border-border/50 bg-card/50 shadow-xs">
-          <div className="flex items-center gap-2 border-b border-border/50 px-3 py-2 text-[12px] text-muted-foreground">
-            <span className="font-medium text-foreground">{authorLabel}</span>
-            <span>updated {formatRelativeTime(item.updatedAt)}</span>
-          </div>
-          <div className="px-4 py-4 text-[14px] leading-relaxed text-foreground">
-            {body.trim() ? (
-              <CommentMarkdown
-                content={body}
-                variant="document"
-                className="text-[14px] leading-relaxed"
-              />
-            ) : (
-              <span className="italic text-muted-foreground">No description provided.</span>
-            )}
-          </div>
-        </div>
+      <div className="flex min-w-0 flex-col gap-6">
+        <TimelineNode
+          avatarUrl={issueAuthorAvatar}
+          alt={authorLabel}
+          isFirst
+          isLast={bodyIsLastInRail}
+        >
+          {bodyCard}
+        </TimelineNode>
 
-        <div className="flex items-center gap-2 pt-1">
-          <MessageSquare className="size-4 text-muted-foreground" />
-          <span className="text-[13px] font-medium text-foreground">Comments</span>
-          {comments.length > 0 && (
-            <span className="rounded-full border border-border/50 bg-muted/30 px-1.5 py-0.5 text-[11px] tabular-nums text-muted-foreground">
-              {comments.length}
-            </span>
-          )}
-        </div>
-
+        {/* Why: the audience filter is meta-UI, not a timeline event — render
+            it offset to align with the card column so it sits inside the rail
+            visually without breaking the avatar column. */}
         {item.type === 'pr' && comments.length > 0 && (
-          <div className="grid grid-cols-3 rounded-lg border border-border/50 bg-background p-0.5">
+          <div className="ml-11 grid grid-cols-3 rounded-lg border border-border/50 bg-background p-0.5">
             {PR_COMMENT_AUDIENCE_FILTERS.map((filter) => {
               const isActive = commentFilter === filter.value
               return (
@@ -2047,31 +2256,42 @@ function ConversationTab({
         )}
 
         {loading && comments.length === 0 ? (
-          <div className="flex items-center justify-center rounded-lg border border-dashed border-border/50 py-8">
+          <div className="ml-11 flex items-center justify-center rounded-lg border border-dashed border-border/50 py-8">
             <LoaderCircle className="size-4 animate-spin text-muted-foreground" />
           </div>
-        ) : comments.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border/50 px-3 py-6 text-left text-[13px] text-muted-foreground">
-            No comments yet.
-          </div>
-        ) : visibleComments.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border/50 px-3 py-6 text-center text-[13px] text-muted-foreground">
+        ) : comments.length === 0 ? null : visibleComments.length === 0 ? (
+          <div className="ml-11 rounded-lg border border-dashed border-border/50 px-3 py-6 text-center text-[13px] text-muted-foreground">
             {getPRCommentAudienceEmptyLabel(commentFilter)}
           </div>
         ) : (
-          <div className="flex flex-col gap-3">{visibleCommentGroups.map(renderCommentGroup)}</div>
+          visibleCommentGroups.map((group, idx) => {
+            const root = getPRCommentGroupRoot(group)
+            const isLastGroup = idx === visibleCommentGroups.length - 1
+            return (
+              <TimelineNode
+                key={getPRCommentGroupId(group)}
+                avatarUrl={root.authorAvatarUrl}
+                alt={root.author}
+                isFirst={false}
+                isLast={isLastGroup && !repoPath}
+              >
+                {renderCommentGroup(group)}
+              </TimelineNode>
+            )
+          })
         )}
 
         {repoPath && (
-          <GHCommentComposer
-            className="mt-1"
-            repoPath={repoPath}
-            repoId={item.repoId}
-            issueNumber={item.number}
-            itemType={item.type}
-            mentionOptions={mentionOptions}
-            onCommentAdded={onCommentAdded}
-          />
+          <div className="ml-11">
+            <GHCommentComposer
+              repoPath={repoPath}
+              repoId={item.repoId}
+              issueNumber={item.number}
+              itemType={item.type}
+              mentionOptions={mentionOptions}
+              onCommentAdded={onCommentAdded}
+            />
+          </div>
         )}
       </div>
 
@@ -2750,6 +2970,52 @@ async function runIssueUpdate(args: {
   }
 }
 
+// Why: PR title edits go through `updatePullRequestBySlug` in Project mode
+// (where edits target the row's repo, not the active workspace) and through
+// the dedicated `updatePRTitle` IPC otherwise. The same router pattern as
+// `runIssueUpdate` so callers don't have to think about which path applies.
+async function runPullRequestTitleUpdate(args: {
+  repoPath: string | null
+  repoId?: string | null
+  projectOrigin: GitHubItemDialogProjectOrigin | undefined
+  number: number
+  title: string
+}): Promise<void> {
+  if (args.projectOrigin) {
+    const target = getActiveRuntimeTarget(useAppStore.getState().settings)
+    const updateArgs = {
+      owner: args.projectOrigin.owner,
+      repo: args.projectOrigin.repo,
+      number: args.number,
+      updates: { title: args.title }
+    }
+    const res =
+      target.kind === 'environment'
+        ? await callRuntimeRpc<Awaited<ReturnType<typeof window.api.gh.updatePullRequestBySlug>>>(
+            target,
+            'github.project.updatePullRequestBySlug',
+            updateArgs,
+            { timeoutMs: 30_000 }
+          )
+        : await window.api.gh.updatePullRequestBySlug(updateArgs)
+    if (!res.ok) {
+      throw new Error(res.error.message)
+    }
+    return
+  }
+  if (!args.repoPath) {
+    throw new Error('No repo context available for this pull request.')
+  }
+  const ok = await window.api.gh.updatePRTitle({
+    repoPath: args.repoPath,
+    prNumber: args.number,
+    title: args.title
+  })
+  if (!ok) {
+    throw new Error('Failed to update pull request title.')
+  }
+}
+
 async function runPullRequestStateUpdate(args: {
   repoPath: string | null
   repoId?: string | null
@@ -2793,19 +3059,7 @@ async function runPullRequestStateUpdate(args: {
   }
 }
 
-function GHEditSection({
-  item,
-  repoPath,
-  repoId,
-  projectOrigin,
-  localState,
-  localLabels,
-  onStateChange,
-  onLabelsChange,
-  onMutated,
-  assignees,
-  onUse
-}: {
+type UseGHItemEditStateArgs = {
   item: GitHubWorkItem
   repoPath: string | null
   repoId: string | null
@@ -2814,13 +3068,38 @@ function GHEditSection({
   localLabels: string[]
   onStateChange: (state: GitHubWorkItem['state']) => void
   onLabelsChange: (labels: string[]) => void
-  /** Why: called after a successful issue mutation so the parent dialog can
-   *  invalidate its work-item-details cache entry. Without this, reopening the
-   *  drawer in the FRESH_MS window would paint pre-mutation data. */
   onMutated: () => void
   assignees: string[]
-  onUse: (item: GitHubWorkItem) => void
-}): React.JSX.Element | null {
+}
+
+// Why: GHEditSection (inline horizontal) and GHMetadataSidebar (expanded
+// floating panel) need the exact same state/labels/assignees handlers — only
+// the rendered layout differs. Sharing via a hook keeps mutation routing
+// (projectOrigin vs repoPath), optimistic patches, and revert paths in one
+// place so the two surfaces can never drift.
+function useGHItemEditState({
+  item,
+  repoPath,
+  projectOrigin,
+  localState,
+  localLabels,
+  onStateChange,
+  onLabelsChange,
+  onMutated,
+  assignees
+}: UseGHItemEditStateArgs): {
+  localAssignees: string[]
+  repoLabels: ReturnType<typeof useRepoLabels>
+  repoAssignees: ReturnType<typeof useRepoAssignees>
+  isPending: (key: string) => boolean
+  labelPopoverOpen: boolean
+  setLabelPopoverOpen: (open: boolean) => void
+  assigneePopoverOpen: boolean
+  setAssigneePopoverOpen: (open: boolean) => void
+  handleStateChange: (newState: 'open' | 'closed') => void
+  handleLabelToggle: (label: string) => void
+  handleAssigneeToggle: (login: string) => void
+} {
   const [labelPopoverOpen, setLabelPopoverOpen] = useState(false)
   const [assigneePopoverOpen, setAssigneePopoverOpen] = useState(false)
   const [localAssignees, setLocalAssignees] = useState<string[]>(assignees)
@@ -2828,11 +3107,6 @@ function GHEditSection({
   const patchWorkItem = useAppStore((s) => s.patchWorkItem)
   const patchProjectRowContent = useAppStore((s) => s.patchProjectRowContent)
   const { isPending, run } = useImmediateMutation()
-  // Why: when the dialog opens from a Project view, mutations route through
-  // *BySlug IPCs and we must keep `projectViewCache` in sync alongside
-  // `workItemsCache` — `patchWorkItem` only walks the latter, so without this
-  // helper the Project table would render stale data until manual refresh.
-  // See docs/design/github-project-view-tasks.md §Dialog editing from Project rows.
   const patchProjectRowIfNeeded = useCallback(
     (patch: Parameters<typeof patchProjectRowContent>[2]) => {
       if (!projectOrigin) {
@@ -2843,27 +3117,21 @@ function GHEditSection({
     [projectOrigin, patchProjectRowContent]
   )
 
-  // Why: when projectOrigin is set we MUST read labels/assignees from the
-  // row's repo, not from the workspace path — otherwise the popovers list
-  // values from a different repo than the writes target.
   const slugOwner = projectOrigin?.owner ?? null
   const slugRepo = projectOrigin?.repo ?? null
   const repoLabelsByPath = useRepoLabels(
     projectOrigin ? null : repoPath,
-    projectOrigin ? null : repoId
+    projectOrigin ? null : item.repoId
   )
   const repoLabelsBySlug = useRepoLabelsBySlug(slugOwner, slugRepo)
   const repoLabels = projectOrigin ? repoLabelsBySlug : repoLabelsByPath
   const repoAssigneesByPath = useRepoAssignees(
     projectOrigin ? null : repoPath,
-    projectOrigin ? null : repoId
+    projectOrigin ? null : item.repoId
   )
   const repoAssigneesBySlug = useRepoAssigneesBySlug(slugOwner, slugRepo, assignees)
   const repoAssignees = projectOrigin ? repoAssigneesBySlug : repoAssigneesByPath
 
-  // Why: sync local assignees when item changes or when the detail fetch
-  // resolves with real data — but skip if the user already made an
-  // optimistic edit so we don't clobber in-flight changes.
   useEffect(() => {
     if (hasEditedAssigneesRef.current) {
       return
@@ -2871,7 +3139,6 @@ function GHEditSection({
     setLocalAssignees(assignees)
   }, [item.id, assignees])
 
-  // Reset the dirty flag when we switch to a different item.
   useEffect(() => {
     hasEditedAssigneesRef.current = false
   }, [item.id])
@@ -2929,58 +3196,31 @@ function GHEditSection({
       const isAdding = !localLabels.includes(label)
       const prevLabels = localLabels
       const newLabels = isAdding ? [...prevLabels, label] : prevLabels.filter((l) => l !== label)
-
-      if (isAdding) {
-        run('labels', {
-          mutate: () =>
-            runIssueUpdate({
-              repoId: item.repoId,
-              repoPath,
-              projectOrigin,
-              number: item.number,
-              updates: { addLabels: [label] }
-            }),
-          onOptimistic: () => {
-            onLabelsChange(newLabels)
-            patchWorkItem(item.id, { labels: newLabels }, item.repoId)
-            patchProjectRowIfNeeded({ labels: newLabels })
-          },
-          onSuccess: () => {
-            onMutated()
-          },
-          onRevert: () => {
-            onLabelsChange(prevLabels)
-            patchWorkItem(item.id, { labels: prevLabels }, item.repoId)
-            patchProjectRowIfNeeded({ labels: prevLabels })
-          },
-          onError: (err) => toast.error(err)
-        })
-      } else {
-        run('labels', {
-          mutate: () =>
-            runIssueUpdate({
-              repoId: item.repoId,
-              repoPath,
-              projectOrigin,
-              number: item.number,
-              updates: { removeLabels: [label] }
-            }),
-          onOptimistic: () => {
-            onLabelsChange(newLabels)
-            patchWorkItem(item.id, { labels: newLabels }, item.repoId)
-            patchProjectRowIfNeeded({ labels: newLabels })
-          },
-          onRevert: () => {
-            onLabelsChange(prevLabels)
-            patchWorkItem(item.id, { labels: prevLabels }, item.repoId)
-            patchProjectRowIfNeeded({ labels: prevLabels })
-          },
-          onSuccess: () => {
-            onMutated()
-          },
-          onError: (err) => toast.error(err)
-        })
-      }
+      const updates = isAdding ? { addLabels: [label] } : { removeLabels: [label] }
+      run('labels', {
+        mutate: () =>
+          runIssueUpdate({
+            repoId: item.repoId,
+            repoPath,
+            projectOrigin,
+            number: item.number,
+            updates
+          }),
+        onOptimistic: () => {
+          onLabelsChange(newLabels)
+          patchWorkItem(item.id, { labels: newLabels }, item.repoId)
+          patchProjectRowIfNeeded({ labels: newLabels })
+        },
+        onRevert: () => {
+          onLabelsChange(prevLabels)
+          patchWorkItem(item.id, { labels: prevLabels }, item.repoId)
+          patchProjectRowIfNeeded({ labels: prevLabels })
+        },
+        onSuccess: () => {
+          onMutated()
+        },
+        onError: (err) => toast.error(err)
+      })
     },
     [
       item.id,
@@ -3006,53 +3246,29 @@ function GHEditSection({
         : [...prevAssignees, login]
 
       hasEditedAssigneesRef.current = true
-      if (isAssigned) {
-        run('assignees', {
-          mutate: () =>
-            runIssueUpdate({
-              repoId: item.repoId,
-              repoPath,
-              projectOrigin,
-              number: item.number,
-              updates: { removeAssignees: [login] }
-            }),
-          onOptimistic: () => {
-            setLocalAssignees(newAssignees)
-            patchProjectRowIfNeeded({ assignees: newAssignees })
-          },
-          onRevert: () => {
-            setLocalAssignees(prevAssignees)
-            patchProjectRowIfNeeded({ assignees: prevAssignees })
-          },
-          onSuccess: () => {
-            onMutated()
-          },
-          onError: (err) => toast.error(err)
-        })
-      } else {
-        run('assignees', {
-          mutate: () =>
-            runIssueUpdate({
-              repoId: item.repoId,
-              repoPath,
-              projectOrigin,
-              number: item.number,
-              updates: { addAssignees: [login] }
-            }),
-          onOptimistic: () => {
-            setLocalAssignees(newAssignees)
-            patchProjectRowIfNeeded({ assignees: newAssignees })
-          },
-          onSuccess: () => {
-            onMutated()
-          },
-          onRevert: () => {
-            setLocalAssignees(prevAssignees)
-            patchProjectRowIfNeeded({ assignees: prevAssignees })
-          },
-          onError: (err) => toast.error(err)
-        })
-      }
+      const updates = isAssigned ? { removeAssignees: [login] } : { addAssignees: [login] }
+      run('assignees', {
+        mutate: () =>
+          runIssueUpdate({
+            repoId: item.repoId,
+            repoPath,
+            projectOrigin,
+            number: item.number,
+            updates
+          }),
+        onOptimistic: () => {
+          setLocalAssignees(newAssignees)
+          patchProjectRowIfNeeded({ assignees: newAssignees })
+        },
+        onRevert: () => {
+          setLocalAssignees(prevAssignees)
+          patchProjectRowIfNeeded({ assignees: prevAssignees })
+        },
+        onSuccess: () => {
+          onMutated()
+        },
+        onError: (err) => toast.error(err)
+      })
     },
     [
       item.number,
@@ -3065,6 +3281,79 @@ function GHEditSection({
       onMutated
     ]
   )
+
+  return {
+    localAssignees,
+    repoLabels,
+    repoAssignees,
+    isPending,
+    labelPopoverOpen,
+    setLabelPopoverOpen,
+    assigneePopoverOpen,
+    setAssigneePopoverOpen,
+    handleStateChange,
+    handleLabelToggle,
+    handleAssigneeToggle
+  }
+}
+
+function GHEditSection({
+  item,
+  repoPath,
+  repoId,
+  projectOrigin,
+  localState,
+  localLabels,
+  onStateChange,
+  onLabelsChange,
+  onMutated,
+  assignees,
+  onUse,
+  onCommentAdded
+}: {
+  item: GitHubWorkItem
+  repoPath: string | null
+  repoId: string | null
+  projectOrigin: GitHubItemDialogProjectOrigin | undefined
+  localState: GitHubWorkItem['state']
+  localLabels: string[]
+  onStateChange: (state: GitHubWorkItem['state']) => void
+  onLabelsChange: (labels: string[]) => void
+  /** Why: called after a successful issue mutation so the parent dialog can
+   *  invalidate its work-item-details cache entry. Without this, reopening the
+   *  drawer in the FRESH_MS window would paint pre-mutation data. */
+  onMutated: () => void
+  assignees: string[]
+  onUse: (item: GitHubWorkItem) => void
+  /** Why: the Link-PR action posts a comment — surface it back to the dialog
+   *  so the timeline shows the link immediately instead of waiting for the
+   *  60s gh-CLI response cache to expire. */
+  onCommentAdded: (comment: PRComment) => void
+}): React.JSX.Element | null {
+  const {
+    localAssignees,
+    repoLabels,
+    repoAssignees,
+    isPending,
+    labelPopoverOpen,
+    setLabelPopoverOpen,
+    assigneePopoverOpen,
+    setAssigneePopoverOpen,
+    handleStateChange,
+    handleLabelToggle,
+    handleAssigneeToggle
+  } = useGHItemEditState({
+    item,
+    repoPath,
+    repoId,
+    projectOrigin,
+    localState,
+    localLabels,
+    onStateChange,
+    onLabelsChange,
+    onMutated,
+    assignees
+  })
 
   if (item.type === 'pr') {
     return null
@@ -3243,6 +3532,14 @@ function GHEditSection({
         </PopoverContent>
       </Popover>
 
+      <LinkPullRequestButton
+        issue={item}
+        repoPath={repoPath}
+        repoId={repoId}
+        onCommentAdded={onCommentAdded}
+        onMutated={onMutated}
+      />
+
       <Button
         size="sm"
         onClick={() => onUse(item)}
@@ -3253,6 +3550,581 @@ function GHEditSection({
         <ArrowRight className="size-4" />
       </Button>
     </div>
+  )
+}
+
+// Why: lets the user attach an open PR reference to an issue from inside the
+// drawer. Implementation is a comment-based link (`Linked PR: #N`) rather
+// than a GraphQL link mutation because: (a) we already have `addIssueComment`
+// IPC, no new main-process surface needed, (b) GitHub auto-cross-references
+// `#N` in any issue body/comment so the PR's timeline shows the back-link,
+// (c) using `Closes #N` would auto-close the issue on merge — for now we
+// stick to a neutral link verb so the user controls closure separately.
+function LinkPullRequestButton({
+  issue,
+  repoPath,
+  repoId,
+  onCommentAdded,
+  onMutated
+}: {
+  issue: GitHubWorkItem
+  repoPath: string | null
+  repoId: string | null
+  onCommentAdded: (comment: PRComment) => void
+  onMutated: () => void
+}): React.JSX.Element | null {
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [prs, setPrs] = useState<Pick<GitHubWorkItem, 'number' | 'title' | 'url' | 'state'>[]>([])
+  const [filter, setFilter] = useState('')
+  const [posting, setPosting] = useState<number | null>(null)
+
+  // Why: lazy fetch on first open keeps the cost off the drawer's hot path —
+  // most users never open this popover. The query mirrors the Tasks page's
+  // PR "Open" preset so the cache shape is consistent.
+  useEffect(() => {
+    if (!open || !repoPath) {
+      return
+    }
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+    window.api.gh
+      .listWorkItems({ repoPath, repoId: repoId ?? undefined, query: 'is:pr is:open', limit: 100 })
+      .then((result) => {
+        if (cancelled) {
+          return
+        }
+        const items = (result.items ?? []).filter((i) => i.type === 'pr' && i.state !== 'merged')
+        setPrs(items)
+      })
+      .catch((err) => {
+        if (cancelled) {
+          return
+        }
+        setError(err instanceof Error ? err.message : 'Failed to load pull requests')
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [open, repoPath, repoId])
+
+  if (!repoPath) {
+    return null
+  }
+
+  const filtered = prs.filter((pr) => {
+    if (!filter.trim()) {
+      return true
+    }
+    const q = filter.toLowerCase()
+    return pr.title.toLowerCase().includes(q) || String(pr.number).includes(q)
+  })
+
+  const handlePick = async (
+    pr: Pick<GitHubWorkItem, 'number' | 'title' | 'url' | 'state'>
+  ): Promise<void> => {
+    setPosting(pr.number)
+    try {
+      const body = `Linked PR: #${pr.number} (${pr.title})`
+      const result = await addIssueCommentForRepo({
+        repoPath,
+        repoId: repoId ?? undefined,
+        number: issue.number,
+        body,
+        type: 'issue'
+      })
+      if (!result.ok) {
+        toast.error(result.error ?? 'Failed to link pull request')
+        return
+      }
+      onCommentAdded(result.comment)
+      onMutated()
+      toast.success(`Linked PR #${pr.number}`)
+      setOpen(false)
+      setFilter('')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to link pull request')
+    } finally {
+      setPosting(null)
+    }
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="group/linkpr inline-flex items-center gap-1 rounded-full border border-border/30 bg-muted/20 px-2 py-0.5 text-[11px] text-muted-foreground transition hover:brightness-125 hover:ring-1 hover:ring-white/10"
+        >
+          <Link2 className="size-3" />
+          <span>Link PR</span>
+          <ChevronDown className="size-2.5 opacity-50" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="popover-scroll-content scrollbar-sleek w-72 p-1" align="start">
+        <div className="border-b border-border/40 p-1">
+          <Input
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder="Filter open PRs…"
+            className="h-7 text-[12px]"
+          />
+        </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-4">
+            <LoaderCircle className="size-4 animate-spin text-muted-foreground" />
+          </div>
+        ) : error ? (
+          <div className="px-2 py-3 text-center text-[12px] text-destructive">{error}</div>
+        ) : filtered.length === 0 ? (
+          <div className="px-2 py-4 text-center text-[12px] text-muted-foreground">
+            No open pull requests match.
+          </div>
+        ) : (
+          <div className="max-h-64 overflow-y-auto">
+            {filtered.map((pr) => (
+              <button
+                key={pr.number}
+                type="button"
+                disabled={posting === pr.number}
+                onClick={() => void handlePick(pr)}
+                className="flex w-full items-start gap-2 rounded-sm px-2 py-1.5 text-left text-[12px] hover:bg-accent disabled:opacity-50"
+              >
+                <GitPullRequest className="mt-0.5 size-3.5 shrink-0 text-emerald-500" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-foreground">{pr.title}</span>
+                  <span className="block text-[11px] text-muted-foreground">#{pr.number}</span>
+                </span>
+                {posting === pr.number && (
+                  <LoaderCircle className="size-3.5 animate-spin text-muted-foreground" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+// Why: small visual wrapper used by the floating metadata sidebar so each
+// metadata category (Status, Labels, Assignees…) gets a consistent header
+// row with an optional inline "+" affordance.
+function SidebarSection({
+  title,
+  icon,
+  trailing,
+  children
+}: {
+  title: string
+  icon?: React.ReactNode
+  trailing?: React.ReactNode
+  children: React.ReactNode
+}): React.JSX.Element {
+  return (
+    <section className="flex flex-col gap-2">
+      <div className="flex items-center gap-1.5">
+        {icon}
+        <h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          {title}
+        </h3>
+        {trailing && <div className="ml-auto flex items-center gap-1">{trailing}</div>}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+// Why: the expanded-mode floating panel that pulls all GH metadata
+// (status, labels, assignees, reviewers, linked PR, branch) into a single
+// right-docked card so a wide reading layout keeps the actionable bits
+// reachable. Mirrors GHEditSection's mutation paths via useGHItemEditState
+// so edits behave identically across the inline and expanded UIs.
+function GHMetadataSidebar({
+  item,
+  repoPath,
+  repoId,
+  projectOrigin,
+  localState,
+  localLabels,
+  onStateChange,
+  onLabelsChange,
+  onMutated,
+  assignees,
+  onUse,
+  onCommentAdded,
+  reviewersLoading,
+  onReviewersRequested
+}: {
+  item: GitHubWorkItem
+  repoPath: string | null
+  repoId: string | null
+  projectOrigin: GitHubItemDialogProjectOrigin | undefined
+  localState: GitHubWorkItem['state']
+  localLabels: string[]
+  onStateChange: (state: GitHubWorkItem['state']) => void
+  onLabelsChange: (labels: string[]) => void
+  onMutated: () => void
+  assignees: string[]
+  onUse: (item: GitHubWorkItem) => void
+  onCommentAdded: (comment: PRComment) => void
+  reviewersLoading: boolean
+  onReviewersRequested: (reviewRequests: GitHubAssignableUser[]) => void
+}): React.JSX.Element {
+  const {
+    localAssignees,
+    repoLabels,
+    repoAssignees,
+    isPending,
+    labelPopoverOpen,
+    setLabelPopoverOpen,
+    assigneePopoverOpen,
+    setAssigneePopoverOpen,
+    handleStateChange,
+    handleLabelToggle,
+    handleAssigneeToggle
+  } = useGHItemEditState({
+    item,
+    repoPath,
+    repoId,
+    projectOrigin,
+    localState,
+    localLabels,
+    onStateChange,
+    onLabelsChange,
+    onMutated,
+    assignees
+  })
+
+  const checkIcon = (
+    <svg className="size-2.5" viewBox="0 0 12 12" fill="none">
+      <path
+        d="M2 6l3 3 5-5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+
+  // Why: only issues can have state toggled inline; PR state involves
+  // close/reopen/merge actions handled by the conversation tab footer.
+  const canEditState = item.type === 'issue'
+  const isIssue = item.type === 'issue'
+  const assigneeRows = repoAssignees.data
+  const assigneeByLogin = useMemo(() => {
+    const map = new Map<string, (typeof assigneeRows)[number]>()
+    for (const u of assigneeRows) {
+      map.set(u.login, u)
+    }
+    return map
+  }, [assigneeRows])
+
+  return (
+    <aside className="flex h-full w-[320px] shrink-0 flex-col border-l border-border/60 bg-card/40 backdrop-blur-sm">
+      <div className="flex h-12 shrink-0 items-center border-b border-border/60 px-4">
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Details
+        </span>
+      </div>
+
+      <div className="scrollbar-sleek flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 py-4">
+        {canEditState && (
+          <SidebarSection
+            title="Status"
+            icon={
+              localState === 'open' ? (
+                <CircleDot className="size-3.5 text-emerald-500" />
+              ) : (
+                <CircleDashed className="size-3.5 text-rose-500" />
+              )
+            }
+          >
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className={cn(
+                    'inline-flex w-full items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 text-[12px] font-medium transition hover:brightness-125',
+                    getStateTone({ ...item, state: localState })
+                  )}
+                >
+                  <span>{getStateLabel({ ...item, state: localState })}</span>
+                  <ChevronDown className="size-3 opacity-60" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-44 p-1" align="start">
+                <button
+                  type="button"
+                  onClick={() => handleStateChange('open')}
+                  className={cn(
+                    'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-[12px] hover:bg-accent',
+                    localState === 'open' && 'bg-accent/50'
+                  )}
+                >
+                  <CircleDot className="size-3 text-emerald-500" />
+                  Open
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleStateChange('closed')}
+                  className={cn(
+                    'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-[12px] hover:bg-accent',
+                    localState === 'closed' && 'bg-accent/50'
+                  )}
+                >
+                  <CircleDashed className="size-3 text-rose-500" />
+                  Closed
+                </button>
+              </PopoverContent>
+            </Popover>
+          </SidebarSection>
+        )}
+
+        <SidebarSection
+          title="Labels"
+          icon={<Tag className="size-3.5 text-muted-foreground" />}
+          trailing={
+            isIssue && (
+              <Popover open={labelPopoverOpen} onOpenChange={setLabelPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    disabled={isPending('labels') || repoLabels.loading}
+                    aria-label="Edit labels"
+                    className="inline-flex size-5 items-center justify-center rounded-sm text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-50"
+                  >
+                    {isPending('labels') ? (
+                      <LoaderCircle className="size-3 animate-spin" />
+                    ) : (
+                      <Plus className="size-3.5" />
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="popover-scroll-content scrollbar-sleek w-56 p-1"
+                  align="end"
+                >
+                  {repoLabels.error ? (
+                    <div className="px-2 py-3 text-center text-[12px] text-destructive">
+                      {repoLabels.error}
+                    </div>
+                  ) : (
+                    <div>
+                      {repoLabels.data.map((label) => (
+                        <button
+                          key={label}
+                          type="button"
+                          onClick={() => handleLabelToggle(label)}
+                          className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-[12px] hover:bg-accent"
+                        >
+                          <span
+                            className={cn(
+                              'flex size-3.5 items-center justify-center rounded-sm border',
+                              localLabels.includes(label)
+                                ? 'border-primary bg-primary text-primary-foreground'
+                                : 'border-input'
+                            )}
+                          >
+                            {localLabels.includes(label) && checkIcon}
+                          </span>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
+            )
+          }
+        >
+          {localLabels.length === 0 ? (
+            <span className="text-[12px] text-muted-foreground/70">No labels</span>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {localLabels.map((name) => (
+                <span
+                  key={name}
+                  className="inline-flex items-center gap-1 rounded-full border border-border/40 bg-muted/40 px-2 py-0.5 text-[11px] text-foreground"
+                >
+                  {name}
+                  {isIssue && (
+                    <button
+                      type="button"
+                      onClick={() => handleLabelToggle(name)}
+                      disabled={isPending('labels')}
+                      className="-mr-0.5 inline-flex size-3.5 items-center justify-center rounded-sm text-muted-foreground transition hover:bg-muted-foreground/10 hover:text-foreground disabled:opacity-50"
+                      aria-label={`Remove ${name}`}
+                    >
+                      <X className="size-2.5" />
+                    </button>
+                  )}
+                </span>
+              ))}
+            </div>
+          )}
+        </SidebarSection>
+
+        <SidebarSection
+          title="Assignees"
+          icon={<UserCircle2 className="size-3.5 text-muted-foreground" />}
+          trailing={
+            isIssue && (
+              <Popover open={assigneePopoverOpen} onOpenChange={setAssigneePopoverOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    disabled={isPending('assignees') || repoAssignees.loading}
+                    aria-label="Edit assignees"
+                    className="inline-flex size-5 items-center justify-center rounded-sm text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-50"
+                  >
+                    {isPending('assignees') ? (
+                      <LoaderCircle className="size-3 animate-spin" />
+                    ) : (
+                      <Plus className="size-3.5" />
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="popover-scroll-content scrollbar-sleek w-56 p-1"
+                  align="end"
+                >
+                  {repoAssignees.error ? (
+                    <div className="px-2 py-3 text-center text-[12px] text-destructive">
+                      {repoAssignees.error}
+                    </div>
+                  ) : (
+                    <div>
+                      {repoAssignees.data.map((user) => (
+                        <button
+                          key={user.login}
+                          type="button"
+                          onClick={() => handleAssigneeToggle(user.login)}
+                          className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-[12px] hover:bg-accent"
+                        >
+                          <span
+                            className={cn(
+                              'flex size-3.5 items-center justify-center rounded-sm border',
+                              localAssignees.includes(user.login)
+                                ? 'border-primary bg-primary text-primary-foreground'
+                                : 'border-input'
+                            )}
+                          >
+                            {localAssignees.includes(user.login) && checkIcon}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate">{user.login}</span>
+                            {user.name && (
+                              <span className="block truncate text-[11px] text-muted-foreground">
+                                {user.name}
+                              </span>
+                            )}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
+            )
+          }
+        >
+          {localAssignees.length === 0 ? (
+            <span className="text-[12px] text-muted-foreground/70">Unassigned</span>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              {localAssignees.map((login) => {
+                const user = assigneeByLogin.get(login)
+                return (
+                  <div key={login} className="flex items-center gap-2">
+                    {user?.avatarUrl ? (
+                      <img
+                        src={user.avatarUrl}
+                        alt=""
+                        className="size-5 shrink-0 rounded-full border border-border/40 bg-muted"
+                      />
+                    ) : (
+                      <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-full border border-border/40 bg-muted text-[10px] text-muted-foreground">
+                        {login.slice(0, 1).toUpperCase()}
+                      </span>
+                    )}
+                    <span className="min-w-0 flex-1 truncate text-[12px] text-foreground">
+                      {login}
+                    </span>
+                    {isIssue && (
+                      <button
+                        type="button"
+                        onClick={() => handleAssigneeToggle(login)}
+                        disabled={isPending('assignees')}
+                        className="inline-flex size-5 items-center justify-center rounded-sm text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-50"
+                        aria-label={`Remove ${login}`}
+                      >
+                        <X className="size-3" />
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </SidebarSection>
+
+        {item.type === 'pr' && (
+          <PRReviewersPanel
+            item={item}
+            loading={reviewersLoading}
+            repoPath={repoPath}
+            onReviewersRequested={onReviewersRequested}
+          />
+        )}
+
+        {isIssue && repoPath && (
+          <SidebarSection
+            title="Linked PR"
+            icon={<Link2 className="size-3.5 text-muted-foreground" />}
+          >
+            <LinkPullRequestButton
+              issue={item}
+              repoPath={repoPath}
+              repoId={repoId}
+              onCommentAdded={onCommentAdded}
+              onMutated={onMutated}
+            />
+          </SidebarSection>
+        )}
+
+        {item.branchName && (
+          <SidebarSection
+            title="Branch"
+            icon={<GitMerge className="size-3.5 text-muted-foreground" />}
+          >
+            <span className="inline-block max-w-full truncate rounded-md border border-border/50 bg-muted/40 px-2 py-1 font-mono text-[11px] text-muted-foreground">
+              {item.branchName}
+            </span>
+          </SidebarSection>
+        )}
+      </div>
+
+      <div className="shrink-0 border-t border-border/60 bg-card/60 px-3 py-3">
+        <Button
+          size="sm"
+          className="w-full justify-center gap-2"
+          onClick={() => onUse(item)}
+          aria-label="Start workspace"
+        >
+          {isIssue ? 'Start workspace from issue' : 'Start workspace from PR'}
+          <ArrowRight className="size-4" />
+        </Button>
+      </div>
+    </aside>
   )
 }
 
@@ -3435,6 +4307,25 @@ export default function GitHubItemDialog({
   const [localLabels, setLocalLabels] = useState<string[]>(workItem?.labels ?? [])
   const [diffViewMode, setDiffViewMode] = useState<DiffViewMode>('flat')
   const [linkCopied, setLinkCopied] = useState(false)
+  // Why: expanded mode swaps the side-sheet's narrow max-width caps for a
+  // full-viewport overlay so a complex GH item can be reviewed without the
+  // usual 900px ceiling. Resets when the dialog opens a different item.
+  const [expanded, setExpanded] = useState(false)
+  // Why: when expanded, the sheet should expand from the workspace sidebar's
+  // right edge instead of covering it — same pattern as WorkspaceKanbanDrawer.
+  // Read both `sidebarOpen` and the live width CSS var so a sidebar resize
+  // mid-expand keeps the sheet's left edge aligned.
+  const sidebarOpen = useAppStore((s) => s.sidebarOpen)
+  const sidebarWidth = useAppStore((s) => s.sidebarWidth)
+  const expandedLeftCss = sidebarOpen
+    ? `var(--workspace-sidebar-live-width, ${sidebarWidth}px)`
+    : '0px'
+  // Why: inline title edit. Draft only commits on Save so an aborted edit
+  // never partially writes to GitHub.
+  const [editingTitle, setEditingTitle] = useState(false)
+  const [titleDraft, setTitleDraft] = useState('')
+  const [savingTitle, setSavingTitle] = useState(false)
+  const patchWorkItemInStore = useAppStore((s) => s.patchWorkItem)
   const workItemId = workItem?.id
   const workItemState = workItem?.state
   const workItemLabels = workItem?.labels
@@ -3702,6 +4593,9 @@ export default function GitHubItemDialog({
 
   useEffect(() => {
     setLinkCopied(false)
+    setExpanded(false)
+    setEditingTitle(false)
+    setSavingTitle(false)
   }, [workItemId])
 
   useEffect(() => {
@@ -3726,6 +4620,94 @@ export default function GitHubItemDialog({
       toast.error('Failed to copy GitHub link')
     }
   }, [workItem])
+
+  const canEditItem = (!!repoPath || !!projectOrigin) && workItem !== null
+
+  const handleStartEditTitle = useCallback(() => {
+    if (!workItem) {
+      return
+    }
+    setTitleDraft(workItem.title)
+    setEditingTitle(true)
+  }, [workItem])
+
+  const handleCancelEditTitle = useCallback(() => {
+    setEditingTitle(false)
+    setSavingTitle(false)
+  }, [])
+
+  const handleSaveTitle = useCallback(async () => {
+    if (!workItem) {
+      return
+    }
+    const next = titleDraft.trim()
+    if (!next || next === workItem.title) {
+      setEditingTitle(false)
+      return
+    }
+    setSavingTitle(true)
+    try {
+      await (workItem.type === 'pr'
+        ? runPullRequestTitleUpdate({
+            repoPath,
+            repoId: effectiveRepoId,
+            projectOrigin,
+            number: workItem.number,
+            title: next
+          })
+        : runIssueUpdate({
+            repoPath,
+            repoId: effectiveRepoId,
+            projectOrigin,
+            number: workItem.number,
+            updates: { title: next }
+          }))
+      patchWorkItemInStore(workItem.id, { title: next }, workItem.repoId)
+      if (detailsCacheKey) {
+        patchCachedDetailsTitleBody(detailsCacheKey, { title: next })
+      }
+      toast.success('Title updated')
+      setEditingTitle(false)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update title')
+    } finally {
+      setSavingTitle(false)
+    }
+  }, [
+    detailsCacheKey,
+    effectiveRepoId,
+    patchWorkItemInStore,
+    projectOrigin,
+    repoPath,
+    titleDraft,
+    workItem
+  ])
+
+  const handleSaveBody = useCallback(
+    async (nextBody: string): Promise<boolean> => {
+      if (!workItem) {
+        return false
+      }
+      try {
+        await runIssueUpdate({
+          repoPath,
+          repoId: effectiveRepoId,
+          projectOrigin,
+          number: workItem.number,
+          updates: { body: nextBody }
+        })
+        if (detailsCacheKey) {
+          patchCachedDetailsTitleBody(detailsCacheKey, { body: nextBody })
+        }
+        toast.success('Description updated')
+        return true
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Failed to update description')
+        return false
+      }
+    },
+    [detailsCacheKey, effectiveRepoId, projectOrigin, repoPath, workItem]
+  )
 
   const appendOptimisticComment = useCallback(
     (comment: PRComment) => {
@@ -3805,7 +4787,32 @@ export default function GitHubItemDialog({
       <SheetContent
         side="right"
         showCloseButton={false}
-        className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-[640px] lg:max-w-[760px] xl:max-w-[900px]"
+        className={cn(
+          'flex w-full flex-col gap-0 overflow-hidden p-0',
+          // Why: explicit `!` overrides because the base sheetContentVariants
+          // (sheet.tsx) bakes `sm:max-w-[560px]` into the right-side variant.
+          // Without `!important` it wins via cascade ordering.
+          expanded
+            ? '!max-w-full sm:!max-w-full lg:!max-w-full xl:!max-w-full'
+            : 'sm:max-w-[640px] lg:max-w-[760px] xl:max-w-[900px]'
+        )}
+        // Why: in expanded mode, anchor the left edge to the workspace
+        // sidebar's right edge so the sidebar stays interactive. The Sheet
+        // variant supplies `right: 0`, so explicitly clearing `width` and
+        // `max-width` (both of which the base classes set) lets the element
+        // size from the `left + right` anchors — without this the panel
+        // overshoots the viewport and the right-docked metadata sidebar
+        // falls off the edge of the screen.
+        style={
+          expanded
+            ? ({
+                left: expandedLeftCss,
+                width: 'auto',
+                maxWidth: 'none'
+              } as React.CSSProperties)
+            : undefined
+        }
+        overlayStyle={expanded ? { left: expandedLeftCss } : undefined}
         onOpenAutoFocus={(event) => {
           // Why: focusing the first actionable element inside the drawer
           // causes the "Start workspace" action to receive focus and
@@ -3839,9 +4846,62 @@ export default function GitHubItemDialog({
                     <span className="font-mono">#{workItem.number}</span>
                     <span>{workItem.type === 'pr' ? 'Pull request' : 'Issue'}</span>
                   </div>
-                  <h2 className="text-[15px] font-semibold leading-snug text-foreground">
-                    {workItem.title}
-                  </h2>
+                  {editingTitle ? (
+                    <div className="flex items-start gap-1.5">
+                      <Input
+                        autoFocus
+                        value={titleDraft}
+                        onChange={(e) => setTitleDraft(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault()
+                            void handleSaveTitle()
+                          } else if (e.key === 'Escape') {
+                            e.preventDefault()
+                            handleCancelEditTitle()
+                          }
+                        }}
+                        disabled={savingTitle}
+                        className="h-7 text-[15px] font-semibold"
+                        aria-label="Edit title"
+                      />
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        onClick={() => void handleSaveTitle()}
+                        disabled={savingTitle || !titleDraft.trim()}
+                        aria-label="Save title"
+                      >
+                        {savingTitle ? (
+                          <LoaderCircle className="size-4 animate-spin" />
+                        ) : (
+                          <Check className="size-4" />
+                        )}
+                      </Button>
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        onClick={handleCancelEditTitle}
+                        disabled={savingTitle}
+                        aria-label="Cancel title edit"
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    </div>
+                  ) : canEditItem ? (
+                    <button
+                      type="button"
+                      onClick={handleStartEditTitle}
+                      aria-label="Edit title"
+                      className="-mx-1 block w-full rounded-md px-1 text-left text-[15px] font-semibold leading-snug text-foreground transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none"
+                    >
+                      {workItem.title}
+                    </button>
+                  ) : (
+                    <h2 className="text-[15px] font-semibold leading-snug text-foreground">
+                      {workItem.title}
+                    </h2>
+                  )}
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
                     <span>{workItem.author ?? 'unknown'}</span>
                     <span>updated {formatRelativeTime(workItem.updatedAt)}</span>
@@ -3881,6 +4941,26 @@ export default function GitHubItemDialog({
                       <Button
                         variant="ghost"
                         size="icon-sm"
+                        onClick={() => setExpanded((prev) => !prev)}
+                        aria-label={expanded ? 'Collapse to drawer' : 'Expand to full screen'}
+                        aria-pressed={expanded}
+                      >
+                        {expanded ? (
+                          <Minimize2 className="size-4" />
+                        ) : (
+                          <Maximize2 className="size-4" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" sideOffset={6}>
+                      {expanded ? 'Collapse' : 'Expand'}
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => window.api.shell.openUrl(workItem.url)}
                         aria-label="Open on GitHub"
                       >
@@ -3910,7 +4990,11 @@ export default function GitHubItemDialog({
               </div>
             </div>
 
-            {(repoPath || projectOrigin) && (
+            {/* Why: when expanded, all metadata controls move into the
+                right-docked sidebar so a wide reading layout still has the
+                actions reachable. The inline horizontal section would
+                duplicate them, so we hide it in expanded mode. */}
+            {!expanded && (repoPath || projectOrigin) && (
               <GHEditSection
                 item={workItem}
                 repoPath={repoPath}
@@ -3937,184 +5021,234 @@ export default function GitHubItemDialog({
                 }}
                 assignees={details?.assignees ?? []}
                 onUse={onUse}
+                onCommentAdded={appendOptimisticComment}
               />
             )}
 
-            <div className="min-h-0 flex-1">
-              {error ? (
-                <div className="px-4 py-6 text-[12px] text-destructive">{error}</div>
-              ) : (
-                <Tabs
-                  value={tab}
-                  onValueChange={(value) => setTab(value as ItemDialogTab)}
-                  className="flex h-full min-h-0 flex-col gap-0"
-                >
-                  <TabsList
-                    variant="line"
-                    className="mx-4 mt-2 justify-start gap-3 border-b border-border/60 bg-transparent"
+            <div className="flex min-h-0 flex-1">
+              <div className="flex min-h-0 flex-1 flex-col">
+                {error ? (
+                  <div className="px-4 py-6 text-[12px] text-destructive">{error}</div>
+                ) : (
+                  <Tabs
+                    value={tab}
+                    onValueChange={(value) => setTab(value as ItemDialogTab)}
+                    className="flex h-full min-h-0 flex-col gap-0"
                   >
-                    <TabsTrigger value="conversation" className="px-2">
-                      <MessageSquare className="size-3.5" />
-                      Conversation
-                    </TabsTrigger>
+                    {/* Why: issues only have a Conversation tab, so the strip
+                      is a single-item header in every mode — hide it. PRs
+                      keep it because Conversation/Files are both meaningful. */}
                     {workItem.type === 'pr' && (
-                      <TabsTrigger value="files" className="px-2">
-                        <FileText className="size-3.5" />
-                        Files
-                        {files.length > 0 && (
-                          <span className="ml-1 text-[10px] text-muted-foreground">
-                            {files.length}
-                          </span>
-                        )}
-                      </TabsTrigger>
+                      <TabsList
+                        variant="line"
+                        className="mx-4 mt-2 justify-start gap-3 border-b border-border/60 bg-transparent"
+                      >
+                        <TabsTrigger value="conversation" className="px-2">
+                          <MessageSquare className="size-3.5" />
+                          Conversation
+                        </TabsTrigger>
+                        <TabsTrigger value="files" className="px-2">
+                          <FileText className="size-3.5" />
+                          Files
+                          {files.length > 0 && (
+                            <span className="ml-1 text-[10px] text-muted-foreground">
+                              {files.length}
+                            </span>
+                          )}
+                        </TabsTrigger>
+                      </TabsList>
                     )}
-                  </TabsList>
 
-                  <div className="min-h-0 flex-1 overflow-y-auto scrollbar-sleek">
-                    <TabsContent value="conversation" className="mt-0">
-                      <ConversationTab
-                        item={displayWorkItem ?? workItem}
-                        repoPath={repoPath}
-                        repoId={effectiveRepoId}
-                        body={body}
-                        comments={comments}
-                        files={files}
-                        headSha={details?.headSha}
-                        baseSha={details?.baseSha}
-                        loading={loading}
-                        checks={checks}
-                        participants={details?.participants ?? []}
-                        localState={localState}
-                        onStateChange={setLocalState}
-                        projectOrigin={projectOrigin}
-                        onUse={onUse}
-                        onMutated={() => {
-                          if (repoPath) {
-                            invalidateWorkItemDetailsCacheByMatch({
-                              repoPath,
-                              repoId: effectiveRepoId ?? undefined,
-                              type: workItem.type,
-                              number: workItem.number
-                            })
-                          }
-                        }}
-                        onChecksUpdated={(nextChecks) => {
-                          if (detailsCacheKey) {
-                            patchCachedPRChecks(detailsCacheKey, nextChecks)
-                          }
-                        }}
-                        onCommentAdded={appendOptimisticComment}
-                        onReviewersRequested={(nextReviewRequests) => {
-                          if (detailsCacheKey) {
-                            patchCachedPRReviewRequests(detailsCacheKey, nextReviewRequests)
-                          }
-                          onReviewRequestsChange?.(
-                            { id: workItem.id, repoId: workItem.repoId },
-                            nextReviewRequests
-                          )
-                        }}
-                      />
-                    </TabsContent>
+                    <div className="min-h-0 flex-1 overflow-y-auto scrollbar-sleek">
+                      <TabsContent value="conversation" className="mt-0">
+                        <ConversationTab
+                          item={displayWorkItem ?? workItem}
+                          repoPath={repoPath}
+                          repoId={effectiveRepoId}
+                          body={body}
+                          comments={comments}
+                          files={files}
+                          headSha={details?.headSha}
+                          baseSha={details?.baseSha}
+                          loading={loading}
+                          checks={checks}
+                          participants={details?.participants ?? []}
+                          localState={localState}
+                          onStateChange={setLocalState}
+                          projectOrigin={projectOrigin}
+                          onUse={onUse}
+                          canEditBody={canEditItem && workItem.type === 'issue'}
+                          onSaveBody={handleSaveBody}
+                          metadataInSidebar={expanded}
+                          onMutated={() => {
+                            if (repoPath) {
+                              invalidateWorkItemDetailsCacheByMatch({
+                                repoPath,
+                                repoId: effectiveRepoId ?? undefined,
+                                type: workItem.type,
+                                number: workItem.number
+                              })
+                            }
+                          }}
+                          onChecksUpdated={(nextChecks) => {
+                            if (detailsCacheKey) {
+                              patchCachedPRChecks(detailsCacheKey, nextChecks)
+                            }
+                          }}
+                          onCommentAdded={appendOptimisticComment}
+                          onReviewersRequested={(nextReviewRequests) => {
+                            if (detailsCacheKey) {
+                              patchCachedPRReviewRequests(detailsCacheKey, nextReviewRequests)
+                            }
+                            onReviewRequestsChange?.(
+                              { id: workItem.id, repoId: workItem.repoId },
+                              nextReviewRequests
+                            )
+                          }}
+                        />
+                      </TabsContent>
 
-                    {workItem.type === 'pr' && (
-                      <TabsContent value="files" className="mt-0">
-                        {loading && files.length === 0 ? (
-                          <div className="flex items-center justify-center py-10">
-                            <LoaderCircle className="size-5 animate-spin text-muted-foreground" />
-                          </div>
-                        ) : files.length === 0 ? (
-                          <div className="px-4 py-10 text-center text-[12px] text-muted-foreground">
-                            No files changed.
-                          </div>
-                        ) : (
-                          <div>
-                            {/* Files-tab toolbar: view-mode toggle */}
-                            <div className="flex items-center justify-between gap-3 border-b border-border/40 px-3 py-1.5">
-                              <span className="text-[11px] text-muted-foreground">
-                                {viewedFileCount} / {files.length} files viewed
-                              </span>
-                              <div className="flex items-center gap-1">
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <button
-                                      id="pr-files-flat-view"
-                                      type="button"
-                                      onClick={() => setDiffViewMode('flat')}
-                                      aria-label="Flat view"
-                                      aria-pressed={diffViewMode === 'flat'}
-                                      className={cn(
-                                        'flex size-6 items-center justify-center rounded transition hover:bg-muted',
-                                        diffViewMode === 'flat'
-                                          ? 'bg-muted text-foreground'
-                                          : 'text-muted-foreground'
-                                      )}
-                                    >
-                                      <AlignJustify className="size-3.5" />
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="bottom" sideOffset={4}>
-                                    Flat view
-                                  </TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <button
-                                      id="pr-files-tree-view"
-                                      type="button"
-                                      onClick={() => setDiffViewMode('tree')}
-                                      aria-label="Tree view"
-                                      aria-pressed={diffViewMode === 'tree'}
-                                      className={cn(
-                                        'flex size-6 items-center justify-center rounded transition hover:bg-muted',
-                                        diffViewMode === 'tree'
-                                          ? 'bg-muted text-foreground'
-                                          : 'text-muted-foreground'
-                                      )}
-                                    >
-                                      <LayoutList className="size-3.5" />
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="bottom" sideOffset={4}>
-                                    Tree view
-                                  </TooltipContent>
-                                </Tooltip>
-                              </div>
+                      {workItem.type === 'pr' && (
+                        <TabsContent value="files" className="mt-0">
+                          {loading && files.length === 0 ? (
+                            <div className="flex items-center justify-center py-10">
+                              <LoaderCircle className="size-5 animate-spin text-muted-foreground" />
                             </div>
-                            {diffViewMode === 'flat' ? (
-                              files.map((file) => (
-                                <PRFileRow
-                                  key={getPRFileRowKey(file)}
-                                  file={file}
+                          ) : files.length === 0 ? (
+                            <div className="px-4 py-10 text-center text-[12px] text-muted-foreground">
+                              No files changed.
+                            </div>
+                          ) : (
+                            <div>
+                              {/* Files-tab toolbar: view-mode toggle */}
+                              <div className="flex items-center justify-between gap-3 border-b border-border/40 px-3 py-1.5">
+                                <span className="text-[11px] text-muted-foreground">
+                                  {viewedFileCount} / {files.length} files viewed
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        id="pr-files-flat-view"
+                                        type="button"
+                                        onClick={() => setDiffViewMode('flat')}
+                                        aria-label="Flat view"
+                                        aria-pressed={diffViewMode === 'flat'}
+                                        className={cn(
+                                          'flex size-6 items-center justify-center rounded transition hover:bg-muted',
+                                          diffViewMode === 'flat'
+                                            ? 'bg-muted text-foreground'
+                                            : 'text-muted-foreground'
+                                        )}
+                                      >
+                                        <AlignJustify className="size-3.5" />
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom" sideOffset={4}>
+                                      Flat view
+                                    </TooltipContent>
+                                  </Tooltip>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        id="pr-files-tree-view"
+                                        type="button"
+                                        onClick={() => setDiffViewMode('tree')}
+                                        aria-label="Tree view"
+                                        aria-pressed={diffViewMode === 'tree'}
+                                        className={cn(
+                                          'flex size-6 items-center justify-center rounded transition hover:bg-muted',
+                                          diffViewMode === 'tree'
+                                            ? 'bg-muted text-foreground'
+                                            : 'text-muted-foreground'
+                                        )}
+                                      >
+                                        <LayoutList className="size-3.5" />
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom" sideOffset={4}>
+                                      Tree view
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </div>
+                              </div>
+                              {diffViewMode === 'flat' ? (
+                                files.map((file) => (
+                                  <PRFileRow
+                                    key={getPRFileRowKey(file)}
+                                    file={file}
+                                    repoPath={repoPath ?? ''}
+                                    repoId={effectiveRepoId ?? ''}
+                                    prNumber={workItem.number}
+                                    headSha={details?.headSha}
+                                    baseSha={details?.baseSha}
+                                    viewed={isPRFileViewed(file)}
+                                    viewedPending={pendingViewedPaths.has(file.path)}
+                                    onCommentAdded={appendOptimisticComment}
+                                    onViewedChange={handlePRFileViewedChange}
+                                  />
+                                ))
+                              ) : (
+                                <PRDiffTreeView
+                                  files={files}
                                   repoPath={repoPath ?? ''}
                                   repoId={effectiveRepoId ?? ''}
                                   prNumber={workItem.number}
                                   headSha={details?.headSha}
                                   baseSha={details?.baseSha}
-                                  viewed={isPRFileViewed(file)}
-                                  viewedPending={pendingViewedPaths.has(file.path)}
+                                  pendingViewedPaths={pendingViewedPaths}
                                   onCommentAdded={appendOptimisticComment}
                                   onViewedChange={handlePRFileViewedChange}
                                 />
-                              ))
-                            ) : (
-                              <PRDiffTreeView
-                                files={files}
-                                repoPath={repoPath ?? ''}
-                                repoId={effectiveRepoId ?? ''}
-                                prNumber={workItem.number}
-                                headSha={details?.headSha}
-                                baseSha={details?.baseSha}
-                                pendingViewedPaths={pendingViewedPaths}
-                                onCommentAdded={appendOptimisticComment}
-                                onViewedChange={handlePRFileViewedChange}
-                              />
-                            )}
-                          </div>
-                        )}
-                      </TabsContent>
-                    )}
-                  </div>
-                </Tabs>
+                              )}
+                            </div>
+                          )}
+                        </TabsContent>
+                      )}
+                    </div>
+                  </Tabs>
+                )}
+              </div>
+              {/* Why: in expanded mode, PRs now surface all their metadata
+                inline in the conversation tab's right panel (reviewers,
+                branch, actions, checks), so the floating right-docked
+                metadata sidebar is only rendered for issues — where labels,
+                assignees, linked PR, and status still need a dedicated
+                surface. */}
+              {expanded && workItem.type === 'issue' && (
+                <GHMetadataSidebar
+                  item={workItem}
+                  repoPath={repoPath}
+                  repoId={effectiveRepoId}
+                  projectOrigin={projectOrigin}
+                  localState={localState}
+                  localLabels={localLabels}
+                  onStateChange={setLocalState}
+                  onLabelsChange={setLocalLabels}
+                  onMutated={() => {
+                    if (repoPath) {
+                      invalidateWorkItemDetailsCacheByMatch({
+                        repoPath,
+                        repoId: effectiveRepoId ?? undefined,
+                        type: workItem.type,
+                        number: workItem.number
+                      })
+                    }
+                  }}
+                  assignees={details?.assignees ?? []}
+                  onUse={onUse}
+                  onCommentAdded={appendOptimisticComment}
+                  reviewersLoading={loading}
+                  onReviewersRequested={(nextReviewRequests) => {
+                    if (detailsCacheKey) {
+                      patchCachedPRReviewRequests(detailsCacheKey, nextReviewRequests)
+                    }
+                    onReviewRequestsChange?.(
+                      { id: workItem.id, repoId: workItem.repoId },
+                      nextReviewRequests
+                    )
+                  }}
+                />
               )}
             </div>
           </div>

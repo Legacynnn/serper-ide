@@ -250,6 +250,12 @@ export async function updateIssue(
     editArgs.push('--title', updates.title)
     hasEditArgs = true
   }
+  // Why: `gh issue edit --body` replaces the whole body — pass the literal
+  // new body the renderer sends. Empty string is intentional (clears body).
+  if (typeof updates.body === 'string') {
+    editArgs.push('--body', updates.body)
+    hasEditArgs = true
+  }
   for (const label of updates.addLabels ?? []) {
     editArgs.push('--add-label', label)
     hasEditArgs = true
