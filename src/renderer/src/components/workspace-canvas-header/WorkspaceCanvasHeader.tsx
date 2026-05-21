@@ -131,19 +131,18 @@ export default function WorkspaceCanvasHeader(): React.JSX.Element | null {
 
   return (
     <div
-      // Why: the header is a control bar (breadcrumb + open-in-editor), not a
-      // title bar, so the whole strip is `no-drag`. If the background were
-      // drag, Electron would swallow pointer events at the OS level —
-      // including the "click outside" pointerdown that Radix needs to close
-      // the editor dropdown — and the menu would stay open after clicking on
-      // the breadcrumb area. Window dragging from the canvas top edge is
-      // still available one row lower: TabGroupPanel's 32px tab strip keeps
-      // its own `WebkitAppRegion: 'drag'`. Why inset shadow over border-b:
-      // border-bottom + box-border would shift the content center to y=17.5
-      // and break alignment with the sibling sidebar toggle (see the
-      // `.titlebar-left` comment in main.css).
-      className="flex h-9 shrink-0 items-center justify-between gap-2 bg-card pr-2 shadow-[inset_0_-1px_0_var(--border)]"
-      style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+      // Why: the truly empty parts of this strip — the side spacers and the
+      // gap between the breadcrumb and the editor split-button — drag the
+      // window, matching the macOS hiddenInset titlebar contract. Interactive
+      // children below override with `no-drag` so Electron doesn't swallow
+      // the pointerdown that Radix relies on for outside-click dismissal of
+      // the editor dropdown. Window dragging from the canvas top edge is
+      // also available one row lower via TabGroupPanel's 32px tab strip.
+      // Why inset shadow over border-b: border-bottom + box-border would
+      // shift the content center to y=17.5 and break alignment with the
+      // sibling sidebar toggle (see the `.titlebar-left` comment in main.css).
+      className="flex h-9 shrink-0 items-center gap-2 bg-card pr-2 shadow-[inset_0_-1px_0_var(--border)]"
+      style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
       {/* Why: when the left sidebar is collapsed, the floating sidebar toggle
           sits in the same band as this header. Reserve its width as left
@@ -151,13 +150,16 @@ export default function WorkspaceCanvasHeader(): React.JSX.Element | null {
           clear gap. When the sidebar is open, fall back to a normal 2u gutter
           since the sidebar column itself provides the seam. */}
       <div
-        className="shrink-0"
+        className="shrink-0 self-stretch"
         style={{
           width: sidebarOpen ? '0.5rem' : 'var(--collapsed-sidebar-header-width)'
         }}
         aria-hidden
       />
-      <div className="flex min-w-0 flex-1 items-center gap-1.5">
+      <div
+        className="flex min-w-0 items-center gap-1.5"
+        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+      >
         {/* Why: per-project icon resolved from disk or GitHub, with the folder
             glyph as the fallback. Sized to match the existing 20px slot so the
             breadcrumb baseline stays aligned with the editor button row. */}
@@ -169,7 +171,16 @@ export default function WorkspaceCanvasHeader(): React.JSX.Element | null {
         </span>
       </div>
 
-      <div className="flex shrink-0 items-center">
+      {/* Why: explicit filler so the empty middle of the header is a real DOM
+          element that inherits the parent's `drag` region — without it, the
+          breadcrumb's `flex-1` would consume every empty pixel and leave no
+          drag surface between it and the editor button. */}
+      <div className="min-w-0 flex-1 self-stretch" aria-hidden />
+
+      <div
+        className="flex shrink-0 items-center"
+        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+      >
         {/* Why: split-button pattern — the main button triggers the action with
             the currently selected editor; the chevron half opens a dropdown
             that ONLY changes which editor is used, not what runs on click.

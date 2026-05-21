@@ -112,8 +112,20 @@ const SidebarHeader = React.memo(function SidebarHeader() {
 
   return (
     <>
-      <div className="mt-2 flex h-8 items-center justify-between px-2 gap-2">
-        <div className="flex min-w-0 items-center gap-1">
+      <div
+        // Why: the empty middle of this header (everything `justify-between`
+        // pushes out of) drags the window so the "Workspaces" strip behaves
+        // like an extension of the titlebar. The two flex children below
+        // override with `no-drag` so the kanban toggle, filter, sort menu and
+        // `+` button stay clickable and Radix's outside-click dismissal still
+        // fires when their popovers are open.
+        className="mt-2 flex h-8 items-center justify-between px-2 gap-2"
+        style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+      >
+        <div
+          className="flex min-w-0 items-center gap-1"
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+        >
           <span className="pl-2 pr-0.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/80 select-none">
             Workspaces
           </span>
@@ -136,7 +148,10 @@ const SidebarHeader = React.memo(function SidebarHeader() {
             </TooltipContent>
           </Tooltip>
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div
+          className="flex items-center gap-1.5 shrink-0"
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+        >
           <SidebarFilter preserveWorkspaceBoardOpen onMenuOpenChange={setWorkspaceBoardMenuOpen} />
           <DropdownMenu modal={false} onOpenChange={setWorkspaceBoardMenuOpen}>
             <Tooltip>
