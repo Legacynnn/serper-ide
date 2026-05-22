@@ -312,19 +312,35 @@ html.vesper-blur body {
 
 /* Why: in fullscreen the main window disables native vibrancy entirely (see
    createMainWindow.ts) because every macOS vibrancy material gets
-   accent-tinted inside a fullscreen Space, and the Space has no wallpaper
-   to actually blur anyway. The renderer paints its own near-opaque dark
-   surface here so the window reads as a clean translucent black instead of
-   green-tinted glass. ~92% alpha keeps a hint of softness while masking
-   anything underneath. */
+   accent-tinted inside a fullscreen Space (read as a green wash on this
+   user's setup), and the Space has no wallpaper to actually blur anyway.
+   The renderer paints its own surface here — a neutral lifted gray sitting
+   in the same family as the non-fullscreen --secondary (#1c1c1c) so the
+   window feels coherent and lifted from pure black rather than flat. Alpha
+   stays around ~90% so the body's backdrop-filter still diffuses stacked
+   translucent surfaces, giving fullscreen as much blur feel as we can
+   reach without OS vibrancy. */
 html.vesper-blur.fullscreen {
-  --background: #0a0a0aeb;
-  --card: #0a0a0aeb;
-  --bg-titlebar: #0a0a0aeb;
+  --background: #1c1c1ce6;
+  --card: #1c1c1ce6;
+  --bg-titlebar: #1c1c1cf0;
+  /* Why: keep opaque surfaces (popovers, menus, inputs, accent chips) in the
+     same neutral family as the translucent body so dropdowns and hover-fills
+     don't read as a different temperature from the window. */
+  --popover: #202020;
+  --secondary: #242424;
+  --muted: #242424;
+  --accent: #2a2a2a;
+  --input: #202020;
+  --sidebar-accent: #2a2a2a;
+}
+
+html.vesper-blur.fullscreen body {
+  backdrop-filter: blur(24px) saturate(115%);
 }
 
 html.vesper-blur.fullscreen .terminal-tab-strip [data-active='true'] {
-  background-color: #1c1c1ceb;
+  background-color: #262626eb;
 }
 
 /* Why: matches Zed's Vesper Blur tab spec — tab strip transparent, inactive
@@ -357,6 +373,33 @@ html.vesper-blur .terminal-tab-strip [data-active='true'] {
 html.vesper-blur [data-slot='sheet-content'],
 html.vesper-blur [data-slot='dialog-content'] {
   background-color: #101010fa;
+}
+
+/* Why: in fullscreen the body surface shifts to a neutral lifted gray (see
+   the fullscreen rule above). Match drawers and dialogs so the task drawer,
+   kanban sheets, GitHub item dialog, and PR conversations sit in the same
+   family instead of reading as deeper-black islands on the lifted background. */
+html.vesper-blur.fullscreen [data-slot='sheet-content'],
+html.vesper-blur.fullscreen [data-slot='dialog-content'] {
+  background-color: #1c1c1cfa;
+}
+
+/* Why: the diff-comment popover (the "Selected text" note popover on markdown
+   files) and its textarea both fill from --editor-surface, which is transparent
+   in vesper-blur. Without an override the popover renders ~5% opaque and the
+   markdown text underneath bleeds through. Paint near-opaque using the same
+   #101010fa / #1c1c1cfa pattern as sheets and dialogs. */
+html.vesper-blur .orca-diff-comment-popover {
+  background-color: #101010fa;
+}
+html.vesper-blur .orca-diff-comment-popover .orca-diff-comment-popover-textarea {
+  background-color: #1c1c1cfa;
+}
+html.vesper-blur.fullscreen .orca-diff-comment-popover {
+  background-color: #1c1c1cfa;
+}
+html.vesper-blur.fullscreen .orca-diff-comment-popover .orca-diff-comment-popover-textarea {
+  background-color: #262626fa;
 }
 
 /* ── Base Layer ──────────────────────────────────────── */

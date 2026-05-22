@@ -789,6 +789,9 @@
   font-family: Geist, sans-serif;
 }
 
+/* Why: use the opaque --popover token (not 92% of --background) so the menu
+   stays readable in vesper-blur, where --background is itself translucent and
+   compounds with this layer's alpha to make text wash out. */
 .rich-markdown-doc-link-menu {
   position: absolute;
   z-index: 30;
@@ -799,9 +802,9 @@
   overflow-y: auto;
   border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--background) 92%, transparent);
+  background: var(--popover);
+  color: var(--popover-foreground);
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(16px);
 }
 
 .rich-markdown-doc-link-item {
@@ -895,6 +898,8 @@
 
 /* ── Link Bubble ──────────────────────────────────────── */
 
+/* Why: same as the doc-link menu — solid --popover keeps the bubble readable
+   over translucent vesper-blur surfaces instead of stacking two alpha layers. */
 .rich-markdown-link-bubble {
   position: absolute;
   z-index: 30;
@@ -904,9 +909,9 @@
   padding: 4px 6px;
   border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--background) 92%, transparent);
+  background: var(--popover);
+  color: var(--popover-foreground);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-  backdrop-filter: blur(16px);
 }
 
 .rich-markdown-link-url {
