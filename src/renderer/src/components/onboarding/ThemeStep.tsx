@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Check, Monitor, Moon, Settings2, Sun } from 'lucide-react'
+import { Check, Monitor, Moon, Settings2, Sparkles, Sun } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { track } from '@/lib/telemetry'
@@ -9,6 +9,7 @@ import type {
   GlobalSettings
 } from '../../../../shared/types'
 import ghosttyIcon from '../../../../../resources/ghostty.svg'
+import { isLinuxUserAgent } from '../terminal-pane/pane-helpers'
 
 type ThemeStepProps = {
   theme: GlobalSettings['theme']
@@ -162,12 +163,34 @@ export function ThemeStep({ theme, onThemeChange, settings, updateSettings }: Th
   }[] = [
     { id: 'system', label: 'System', hint: 'Match OS', icon: Monitor },
     { id: 'dark', label: 'Dark', hint: 'Easy on the eyes', icon: Moon },
-    { id: 'light', label: 'Light', hint: 'Bright & crisp', icon: Sun }
+    { id: 'light', label: 'Light', hint: 'Bright & crisp', icon: Sun },
+    // Why: vesper-blur depends on macOS vibrancy / Windows acrylic which Linux
+    // has no native equivalent for. Hide the option on Linux entirely.
+    ...(isLinuxUserAgent()
+      ? []
+      : [
+          {
+            id: 'vesper-blur' as const,
+            label: 'Vesper Blur',
+            hint: 'Translucent',
+            icon: Sparkles
+          }
+        ])
   ]
+
+  const handleSelectTheme = (id: GlobalSettings['theme']): void => {
+    onThemeChange(id)
+    // Why: vesper-blur needs the OS-level vibrancy/acrylic material — auto-
+    // enable windowBackgroundBlur so the look matches the name from the first
+    // launch after onboarding.
+    if (id === 'vesper-blur' && settings && !(settings.windowBackgroundBlur ?? false)) {
+      void updateSettings({ windowBackgroundBlur: true })
+    }
+  }
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-3 gap-3">
+      <div className={cn('grid gap-3', themes.length === 4 ? 'grid-cols-4' : 'grid-cols-3')}>
         {themes.map(({ id, label, hint, icon: Icon }) => {
           const selected = theme === id
           return (
@@ -179,7 +202,7 @@ export function ThemeStep({ theme, onThemeChange, settings, updateSettings }: Th
                   ? 'border-violet-500/60 bg-violet-500/10 ring-2 ring-violet-500/30'
                   : 'border-border bg-muted/30 hover:bg-muted/60'
               )}
-              onClick={() => onThemeChange(id)}
+              onClick={() => handleSelectTheme(id)}
             >
               <div className="relative mb-3 h-24 overflow-hidden rounded-lg border border-border">
                 <ChromePreview variant={id} />
@@ -314,19 +337,28 @@ function ChromePreview({ variant }: { variant: GlobalSettings['theme'] }) {
       </div>
     )
   }
+  if (variant === 'vesper-blur') {
+    return <ChromeMock dark vesper />
+  }
   return <ChromeMock dark={variant === 'dark'} />
 }
 
-function ChromeMock({ dark }: { dark: boolean }) {
+function ChromeMock({ dark, vesper = false }: { dark: boolean; vesper?: boolean }) {
   // Tiny Orca chrome: sidebar with two rows + a content area with a tab and
   // a composer line. Pure Tailwind so it stays lightweight inside the tile.
-  const bg = dark ? 'bg-[#0f1115]' : 'bg-[#f7f8fa]'
-  const sidebar = dark ? 'bg-[#16181d]' : 'bg-[#eceef2]'
+  const bg = vesper ? 'bg-[#101010]' : dark ? 'bg-[#0f1115]' : 'bg-[#f7f8fa]'
+  const sidebar = vesper ? 'bg-white/[0.04]' : dark ? 'bg-[#16181d]' : 'bg-[#eceef2]'
   const sidebarBorder = dark ? 'border-white/5' : 'border-black/5'
   const row = dark ? 'bg-white/10' : 'bg-black/10'
   const rowDim = dark ? 'bg-white/5' : 'bg-black/5'
-  const tab = dark ? 'bg-[#1d2026] border-white/5' : 'bg-white border-black/5'
-  const accent = 'bg-violet-500/80'
+  const tab = vesper
+    ? 'bg-[#1c1c1c] border-white/5'
+    : dark
+      ? 'bg-[#1d2026] border-white/5'
+      : 'bg-white border-black/5'
+  // Why: vesper signature is the peach selection ring (#FFC799); swap the
+  // generic violet accent for that color so the preview previews the theme.
+  const accent = vesper ? 'bg-[#FFC799]' : 'bg-violet-500/80'
   return (
     <div className={cn('flex size-full', bg)}>
       <div className={cn('flex w-[34%] flex-col gap-1 border-r p-1.5', sidebar, sidebarBorder)}>

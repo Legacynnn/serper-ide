@@ -16,6 +16,8 @@ import {
 import { applyDiffEditorLineNumberOptions } from './diff-editor-line-number-options'
 import type { DiffComment } from '../../../../shared/types'
 import { isDiffComment } from '@/lib/diff-comment-compat'
+import { useDocumentTheme } from '@/lib/use-document-theme'
+import { VESPER_BLUR_MONACO_THEME } from '@/lib/monaco-vesper-blur-theme'
 
 type DiffViewerProps = {
   modelKey: string
@@ -82,9 +84,13 @@ export default function DiffViewer({
     settings?.terminalFontSize ?? 13,
     editorFontZoomLevel
   )
-  const isDark =
-    settings?.theme === 'dark' ||
-    (settings?.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  const themeVariant = useDocumentTheme()
+  const monacoTheme =
+    themeVariant === 'vesper-blur'
+      ? VESPER_BLUR_MONACO_THEME
+      : themeVariant === 'dark'
+        ? 'vs-dark'
+        : 'vs'
 
   const diffEditorRef = useRef<editor.IStandaloneDiffEditor | null>(null)
   const diffBodyRef = useRef<HTMLDivElement | null>(null)
@@ -404,7 +410,7 @@ export default function DiffViewer({
           language={language}
           original={originalContent}
           modified={modifiedContent}
-          theme={isDark ? 'vs-dark' : 'vs'}
+          theme={monacoTheme}
           onMount={handleMount}
           // Why: A single file can have multiple live diff tabs at once
           // (staged, unstaged, branch compare versions). The kept Monaco models

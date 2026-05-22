@@ -32,7 +32,10 @@ export function registerSettingsHandlers(
 
   ipcMain.handle('settings:set', (_event, args: Partial<GlobalSettings>) => {
     if (args.theme) {
-      nativeTheme.themeSource = args.theme
+      // Why: nativeTheme.themeSource only accepts 'system' | 'light' | 'dark'.
+      // Map our renderer-only 'vesper-blur' onto 'dark' so OS chrome (menus,
+      // native dialogs) follows the dark family.
+      nativeTheme.themeSource = args.theme === 'vesper-blur' ? 'dark' : args.theme
     }
     // Why: capture the pre-update value so we only emit when the value
     // actually changes. The settings UI sometimes re-saves the same value

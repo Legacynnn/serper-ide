@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { monaco } from '@/lib/monaco-setup'
 import { computeEditorFontSize } from '@/lib/editor-font-zoom'
-import { resolveDocumentTheme } from '@/lib/document-theme'
+import { useDocumentTheme } from '@/lib/use-document-theme'
+import { VESPER_BLUR_MONACO_THEME } from '@/lib/monaco-vesper-blur-theme'
 import { useAppStore } from '@/store'
 import { cn } from '@/lib/utils'
 
@@ -52,13 +53,19 @@ export default function MonacoCodeExcerpt({
     editorFontZoomLevel
   )
   const fontFamily = settings?.terminalFontFamily || 'monospace'
-  const isDark = resolveDocumentTheme(settings?.theme ?? 'system')
+  const themeVariant = useDocumentTheme()
+  const monacoTheme =
+    themeVariant === 'vesper-blur'
+      ? VESPER_BLUR_MONACO_THEME
+      : themeVariant === 'dark'
+        ? 'vs-dark'
+        : 'vs'
   const code = useMemo(() => lines.join('\n'), [lines])
   const [htmlLines, setHtmlLines] = useState<string[]>(() => lines.map(() => ''))
 
   useEffect(() => {
-    monaco.editor.setTheme(isDark ? 'vs-dark' : 'vs')
-  }, [isDark])
+    monaco.editor.setTheme(monacoTheme)
+  }, [monacoTheme])
 
   useEffect(() => {
     if (lines.length === 0) {

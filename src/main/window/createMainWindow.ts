@@ -188,7 +188,12 @@ export function createMainWindow(
     // Window/Help menus by pressing Alt, matching native Windows/Linux
     // conventions (File Explorer, Firefox, etc.).
     autoHideMenuBar: true,
-    backgroundColor: nativeTheme.shouldUseDarkColors ? '#0a0a0a' : '#ffffff',
+    // Why: when vibrancy/acrylic is on (blur=true), an opaque backgroundColor
+    // paints under the renderer and blocks the OS material from showing
+    // through. Setting it to fully transparent lets vibrancy reach the
+    // surface; otherwise we keep the dark/light fallback that fills the
+    // window during load and on multi-monitor edge cases.
+    backgroundColor: blur ? '#00000000' : nativeTheme.shouldUseDarkColors ? '#0a0a0a' : '#ffffff',
     // Why: on macOS 'hiddenInset' keeps the native traffic lights positioned
     // inside our custom 42px titlebar. On Windows 'hidden' removes the default
     // OS title bar (which would otherwise stack on top of our renderer titlebar
@@ -361,10 +366,25 @@ export function createMainWindow(
 
   mainWindow.on('enter-full-screen', () => {
     mainWindow.webContents.send('window:fullscreen-changed', true)
+    // Why: every vibrancy material we tried (under-window, hud,
+    // fullscreen-ui) gets tinted by macOS inside a fullscreen Space — there
+    // is no wallpaper to sample, so the OS fills the material with an
+    // accent/highlight color (visible as green on this user's setup). A
+    // fullscreen Space also has nothing behind the window to actually blur,
+    // so the "blur" was always cosmetic anyway. Disable vibrancy on enter
+    // and let the renderer paint its own translucent dark surface (see
+    // .vesper-blur.fullscreen in main.css), then restore on leave so the
+    // normal window picks up the wallpaper blur again.
+    if (blur && process.platform === 'darwin') {
+      mainWindow.setVibrancy(null)
+    }
   })
 
   mainWindow.on('leave-full-screen', () => {
     mainWindow.webContents.send('window:fullscreen-changed', false)
+    if (blur && process.platform === 'darwin') {
+      mainWindow.setVibrancy('under-window')
+    }
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {

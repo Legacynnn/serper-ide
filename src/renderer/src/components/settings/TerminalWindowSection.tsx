@@ -135,58 +135,68 @@ export function TerminalWindowSection({
         />
       </SearchableSetting>
 
-      <SearchableSetting
-        title="Window Blur"
-        description="Apply background blur to the terminal window. Requires restart."
-        keywords={['window', 'blur', 'background', 'transparency', 'vibrancy']}
-        className="space-y-3 px-1 py-2"
-      >
-        <div className="flex items-center justify-between gap-4">
-          <div className="space-y-0.5">
-            <Label>Window Blur</Label>
-            <p className="text-xs text-muted-foreground">
-              Apply background blur to the terminal window. Requires restart.
-            </p>
-          </div>
-          <button
-            role="switch"
-            aria-checked={settings.windowBackgroundBlur ?? false}
-            onClick={() => updateSettings({ windowBackgroundBlur: !settings.windowBackgroundBlur })}
-            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-transparent transition-colors ${
-              (settings.windowBackgroundBlur ?? false) ? 'bg-foreground' : 'bg-muted-foreground/30'
-            }`}
-          >
-            <span
-              className={`pointer-events-none block size-3.5 rounded-full bg-background shadow-sm transition-transform ${
-                (settings.windowBackgroundBlur ?? false) ? 'translate-x-4' : 'translate-x-0.5'
-              }`}
-            />
-          </button>
-        </div>
-
-        {blurPendingRestart ? (
-          <div className="flex items-center justify-between gap-3 rounded-md border border-yellow-500/50 bg-yellow-500/10 px-3 py-2.5">
-            <div className="min-w-0 flex-1 space-y-0.5">
-              <p className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
-                Restart required
-              </p>
+      {/* Why: vesper-blur owns the window blur — it auto-enables and depends on
+          it — so the standalone toggle here would let the user fight the theme.
+          Hide it whenever vesper-blur is active; the appearance picker shows
+          its own restart banner if needed. */}
+      {settings.theme !== 'vesper-blur' ? (
+        <SearchableSetting
+          title="Window Blur"
+          description="Apply background blur to the terminal window. Requires restart."
+          keywords={['window', 'blur', 'background', 'transparency', 'vibrancy']}
+          className="space-y-3 px-1 py-2"
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div className="space-y-0.5">
+              <Label>Window Blur</Label>
               <p className="text-xs text-muted-foreground">
-                Restart Orca to apply the window blur change.
+                Apply background blur to the terminal window. Requires restart.
               </p>
             </div>
-            <Button
-              size="sm"
-              variant="default"
-              className="shrink-0 gap-1.5"
-              disabled={relaunchingBlur}
-              onClick={() => void handleRelaunch()}
+            <button
+              role="switch"
+              aria-checked={settings.windowBackgroundBlur ?? false}
+              onClick={() =>
+                updateSettings({ windowBackgroundBlur: !settings.windowBackgroundBlur })
+              }
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-transparent transition-colors ${
+                (settings.windowBackgroundBlur ?? false)
+                  ? 'bg-foreground'
+                  : 'bg-muted-foreground/30'
+              }`}
             >
-              <RotateCw className={`size-3 ${relaunchingBlur ? 'animate-spin' : ''}`} />
-              {relaunchingBlur ? 'Restarting…' : 'Restart now'}
-            </Button>
+              <span
+                className={`pointer-events-none block size-3.5 rounded-full bg-background shadow-sm transition-transform ${
+                  (settings.windowBackgroundBlur ?? false) ? 'translate-x-4' : 'translate-x-0.5'
+                }`}
+              />
+            </button>
           </div>
-        ) : null}
-      </SearchableSetting>
+
+          {blurPendingRestart ? (
+            <div className="flex items-center justify-between gap-3 rounded-md border border-yellow-500/50 bg-yellow-500/10 px-3 py-2.5">
+              <div className="min-w-0 flex-1 space-y-0.5">
+                <p className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
+                  Restart required
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Restart Orca to apply the window blur change.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="default"
+                className="shrink-0 gap-1.5"
+                disabled={relaunchingBlur}
+                onClick={() => void handleRelaunch()}
+              >
+                <RotateCw className={`size-3 ${relaunchingBlur ? 'animate-spin' : ''}`} />
+                {relaunchingBlur ? 'Restarting…' : 'Restart now'}
+              </Button>
+            </div>
+          ) : null}
+        </SearchableSetting>
+      ) : null}
 
       <SearchableSetting
         title="Horizontal Padding"

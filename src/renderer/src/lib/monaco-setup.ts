@@ -10,6 +10,7 @@ import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 import { registerAstroLanguage } from './monaco-languages/register-astro'
 import { registerSvelteLanguage } from './monaco-languages/register-svelte'
 import { registerVueLanguage } from './monaco-languages/register-vue'
+import { VESPER_BLUR_MONACO_THEME, VESPER_BLUR_MONACO_THEME_DATA } from './monaco-vesper-blur-theme'
 
 globalThis.MonacoEnvironment = {
   getWorker(_workerId, label) {
@@ -71,6 +72,8 @@ monacoTS.javascriptDefaults.setCompilerOptions({
 registerVueLanguage(monaco)
 registerSvelteLanguage(monaco)
 registerAstroLanguage(monaco)
+
+monaco.editor.defineTheme(VESPER_BLUR_MONACO_THEME, VESPER_BLUR_MONACO_THEME_DATA)
 
 // Configure Monaco to use the locally bundled editor instead of CDN
 loader.config({ monaco })

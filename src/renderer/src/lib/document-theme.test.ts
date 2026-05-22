@@ -66,6 +66,7 @@ describe('document theme', () => {
   it('resolves explicit theme preferences', () => {
     expect(resolveDocumentTheme('dark')).toBe(true)
     expect(resolveDocumentTheme('light')).toBe(false)
+    expect(resolveDocumentTheme('vesper-blur')).toBe(true)
   })
 
   it('resolves system from matchMedia', () => {
@@ -81,6 +82,23 @@ describe('document theme', () => {
 
     applyDocumentTheme('light', { root, disableTransitions: false })
     expect(root.classList.contains('dark')).toBe(false)
+  })
+
+  it('toggles the vesper-blur class on top of .dark for vesper-blur theme', () => {
+    const root = createThemeRoot()
+
+    applyDocumentTheme('vesper-blur', { root, disableTransitions: false })
+    expect(root.classList.contains('dark')).toBe(true)
+    expect(root.classList.contains('vesper-blur')).toBe(true)
+    expect(root.classList.contains('light')).toBe(false)
+
+    applyDocumentTheme('dark', { root, disableTransitions: false })
+    expect(root.classList.contains('dark')).toBe(true)
+    expect(root.classList.contains('vesper-blur')).toBe(false)
+
+    applyDocumentTheme('light', { root, disableTransitions: false })
+    expect(root.classList.contains('dark')).toBe(false)
+    expect(root.classList.contains('vesper-blur')).toBe(false)
   })
 
   it('applies system root class from matchMedia', () => {

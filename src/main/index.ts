@@ -810,7 +810,10 @@ app.whenReady().then(async () => {
       onTabsChanged: (worktreeId) => runtimeService.notifyMobileSessionTabsChanged(worktreeId)
     })
   )
-  nativeTheme.themeSource = store.getSettings().theme ?? 'system'
+  // Why: nativeTheme.themeSource only accepts 'system' | 'light' | 'dark' —
+  // vesper-blur is a dark-family theme, so map it to 'dark' for OS chrome.
+  const storedTheme = store.getSettings().theme ?? 'system'
+  nativeTheme.themeSource = storedTheme === 'vesper-blur' ? 'dark' : storedTheme
   // Why: managed hook installation mutates user-global agent config. Each
   // installer runs inside its own try/catch so a malformed local config
   // (e.g. corrupted ~/.claude/settings.json) cannot brick Orca startup.

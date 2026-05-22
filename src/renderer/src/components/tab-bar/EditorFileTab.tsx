@@ -1,3 +1,6 @@
+/* oxlint-disable max-lines -- Why: this file co-locates the editor tab
+   render, its context menu, drag-and-drop wiring, and pin/unpin logic so
+   the tab-bar code stays comprehensible in one place. */
 import { useEffect, useRef, useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import {
@@ -210,6 +213,7 @@ export default function EditorFileTab({
           ref={setNodeRef}
           {...attributes}
           {...listeners}
+          data-active={isActive ? 'true' : 'false'}
           className={`group relative flex items-center h-full px-1.5 text-xs cursor-pointer select-none shrink-0 outline-none focus:outline-none focus-visible:outline-none border-t ${hasTabsToRight ? 'border-r' : ''} border-border bg-card ${getDropIndicatorClasses(dropIndicator ?? null)} ${
             isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
           }`}

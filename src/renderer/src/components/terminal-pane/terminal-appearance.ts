@@ -178,6 +178,17 @@ export function applyTerminalAppearance(
     theme = { ...theme, background: paneBackground }
   }
 
+  // Why: vesper-blur is meaningful only when the terminal panes also let the
+  // OS-level vibrancy show through. Force a fully-transparent xterm background
+  // (overriding whatever the user's terminal palette chose) so the underlying
+  // translucent window surface — and the desktop blurred behind it — is
+  // visible inside each pane. allowTransparency is enabled unconditionally
+  // below for the same reason.
+  if (settings.theme === 'vesper-blur') {
+    paneBackground = 'rgba(0, 0, 0, 0)'
+    theme = theme ? { ...theme, background: paneBackground } : { background: paneBackground }
+  }
+
   // Why: Ghostty's cursor-opacity applies alpha to the cursor color. We only
   // convert when the resolved cursor is a hex value; named CSS colors are
   // left untouched because hexToRgba expects a hex input.
@@ -198,8 +209,10 @@ export function applyTerminalAppearance(
     // Why: xterm's allowTransparency has measurable rendering cost, so clear
     // it explicitly when opacity is at (or above) 1 to avoid a stale `true`
     // bleeding in from a prior opacity setting that has since been reset.
+    // Vesper Blur forces it on so the panes can show vibrancy through them.
     pane.terminal.options.allowTransparency =
-      settings.terminalBackgroundOpacity !== undefined && settings.terminalBackgroundOpacity < 1
+      settings.theme === 'vesper-blur' ||
+      (settings.terminalBackgroundOpacity !== undefined && settings.terminalBackgroundOpacity < 1)
     const cursorStyle = settings.terminalCursorStyle ?? 'bar'
     pane.terminal.options.cursorStyle = cursorStyle
     pane.terminal.options.cursorInactiveStyle = resolveTerminalCursorInactiveStyle(cursorStyle)

@@ -11,7 +11,7 @@ export const DEFAULT_TERMINAL_DIVIDER_LIGHT = '#d4d4d8'
 
 export type EffectiveTerminalAppearance = {
   mode: 'dark' | 'light'
-  sourceTheme: 'system' | 'dark' | 'light'
+  sourceTheme: GlobalSettings['theme']
   themeName: string
   dividerColor: string
   theme: ITheme | null
@@ -49,9 +49,17 @@ export function resolveEffectiveTerminalAppearance(
   >,
   systemPrefersDark = getSystemPrefersDark()
 ): EffectiveTerminalAppearance {
-  const sourceTheme =
-    settings.theme === 'system' ? (systemPrefersDark ? 'dark' : 'light') : settings.theme
-  const useLightVariant = sourceTheme === 'light' && settings.terminalUseSeparateLightTheme
+  // Why: vesper-blur is a dark-family theme, so for terminal-palette purposes
+  // it resolves to 'dark' the same way an explicit Dark choice does.
+  const resolved: 'dark' | 'light' =
+    settings.theme === 'system'
+      ? systemPrefersDark
+        ? 'dark'
+        : 'light'
+      : settings.theme === 'light'
+        ? 'light'
+        : 'dark'
+  const useLightVariant = resolved === 'light' && settings.terminalUseSeparateLightTheme
   const themeName = useLightVariant
     ? settings.terminalThemeLight || DEFAULT_TERMINAL_THEME_LIGHT
     : settings.terminalThemeDark || DEFAULT_TERMINAL_THEME_DARK
@@ -60,7 +68,7 @@ export function resolveEffectiveTerminalAppearance(
     : normalizeColor(settings.terminalDividerColorDark, DEFAULT_TERMINAL_DIVIDER_DARK)
 
   return {
-    mode: sourceTheme,
+    mode: resolved,
     sourceTheme: settings.theme,
     themeName,
     dividerColor,

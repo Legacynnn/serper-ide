@@ -960,3 +960,89 @@ li:focus-within > .markdown-annotation-controls > .markdown-annotation-add {
 .markdown-dark .hljs-strong {
   font-weight: 700;
 }
+
+/* ── Vesper Blur markdown syntax ─────────────────────── */
+
+.markdown-vesper-blur .hljs {
+  color: #ffffff;
+  background: transparent;
+}
+
+.markdown-vesper-blur .hljs-comment,
+.markdown-vesper-blur .hljs-quote {
+  color: rgba(139, 139, 139, 0.58);
+  font-style: italic;
+}
+
+.markdown-vesper-blur .hljs-keyword,
+.markdown-vesper-blur .hljs-selector-tag,
+.markdown-vesper-blur .hljs-template-tag {
+  color: #a0a0a0;
+}
+
+.markdown-vesper-blur .hljs-string,
+.markdown-vesper-blur .hljs-doctag,
+.markdown-vesper-blur .hljs-regexp {
+  color: #99ffe4;
+}
+
+.markdown-vesper-blur .hljs-number,
+.markdown-vesper-blur .hljs-literal {
+  color: #ffc799;
+}
+
+.markdown-vesper-blur .hljs-title,
+.markdown-vesper-blur .hljs-section,
+.markdown-vesper-blur .hljs-type,
+.markdown-vesper-blur .hljs-built_in {
+  color: #ffc799;
+}
+
+.markdown-vesper-blur .hljs-attr,
+.markdown-vesper-blur .hljs-attribute {
+  color: #a0a0a0;
+}
+
+.markdown-vesper-blur .hljs-variable,
+.markdown-vesper-blur .hljs-template-variable {
+  color: #ffffff;
+}
+
+.markdown-vesper-blur .hljs-tag,
+.markdown-vesper-blur .hljs-name {
+  color: #ffc799;
+}
+
+.markdown-vesper-blur .hljs-symbol,
+.markdown-vesper-blur .hljs-bullet,
+.markdown-vesper-blur .hljs-selector-class,
+.markdown-vesper-blur .hljs-selector-id {
+  color: #ffc799;
+}
+
+.markdown-vesper-blur .hljs-meta {
+  color: #ffc799;
+}
+
+.markdown-vesper-blur .hljs-addition {
+  color: #99ffe4;
+  background: rgba(153, 255, 228, 0.1);
+}
+.markdown-vesper-blur .hljs-deletion {
+  color: #ff8080;
+  background: rgba(255, 128, 128, 0.1);
+}
+
+.markdown-vesper-blur .hljs-emphasis {
+  font-style: italic;
+}
+.markdown-vesper-blur .hljs-strong {
+  font-weight: 700;
+}
+
+/* Why: under .markdown-dark the <pre> background mirrors GitHub's #161b22.
+   Vesper Blur surfaces are translucent — keep code blocks transparent so the
+   panel's vibrancy/acrylic shows through. */
+.markdown-vesper-blur .markdown-body pre {
+  background: transparent;
+}

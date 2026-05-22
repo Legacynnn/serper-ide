@@ -3,6 +3,8 @@ source-mode markdown annotations, persistence-safe content sync, reveal
 handling, and editor-local UI overlays so split-pane state remains coherent. */
 import React, { useRef, useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import Editor, { type OnMount } from '@monaco-editor/react'
+import { useDocumentTheme } from '@/lib/use-document-theme'
+import { VESPER_BLUR_MONACO_THEME } from '@/lib/monaco-vesper-blur-theme'
 import type { editor } from 'monaco-editor'
 import type { MarkdownDocument } from '../../../../shared/types'
 import { useAppStore } from '@/store'
@@ -159,9 +161,10 @@ export default function MonacoEditor({
     top: number
     left?: number
   } | null>(null)
-  const isDark =
-    settings?.theme === 'dark' ||
-    (settings?.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  const themeVariant = useDocumentTheme()
+  const isDark = themeVariant === 'dark' || themeVariant === 'vesper-blur'
+  const monacoTheme =
+    themeVariant === 'vesper-blur' ? VESPER_BLUR_MONACO_THEME : isDark ? 'vs-dark' : 'vs'
 
   const updateMarkdownCompletionDocuments = useCallback((): void => {
     const modelKey = editorRef.current?.getModel()?.uri.toString() ?? null
@@ -660,7 +663,7 @@ export default function MonacoEditor({
         height={renderedEditorHeight === null ? '100%' : `${renderedEditorHeight}px`}
         language={language}
         value={content}
-        theme={isDark ? 'vs-dark' : 'vs'}
+        theme={monacoTheme}
         onChange={handleChange}
         onMount={handleMount}
         options={{

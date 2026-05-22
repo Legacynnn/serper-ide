@@ -1,9 +1,10 @@
-import type React from 'react'
+import type { JSX } from 'react'
 import type { GlobalSettings, StatusBarItem } from '../../../../shared/types'
 import { Label } from '../ui/label'
 import { Separator } from '../ui/separator'
 import { UIZoomControl } from './UIZoomControl'
 import { SearchableSetting } from './SearchableSetting'
+import { ThemePicker } from './ThemePicker'
 import { matchesSettingsSearch, type SettingsSearchEntry } from './settings-search'
 import { useAppStore } from '../../store'
 import { FontAutocomplete } from './SettingsFormControls'
@@ -13,7 +14,7 @@ import { useAvailableStatusBarToggles } from '../status-bar/use-available-status
 type AppearancePaneProps = {
   settings: GlobalSettings
   updateSettings: (updates: Partial<GlobalSettings>) => void
-  applyTheme: (theme: 'system' | 'dark' | 'light') => void
+  applyTheme: (theme: GlobalSettings['theme']) => void
   fontSuggestions: string[]
 }
 
@@ -171,7 +172,7 @@ export function AppearancePane({
   updateSettings,
   applyTheme,
   fontSuggestions
-}: AppearancePaneProps): React.JSX.Element {
+}: AppearancePaneProps): JSX.Element {
   const searchQuery = useAppStore((state) => state.settingsSearchQuery)
   const isMac = navigator.userAgent.includes('Mac')
   const zoomInLabel = isMac ? '⌘+' : 'Ctrl +'
@@ -188,30 +189,7 @@ export function AppearancePane({
           <p className="text-xs text-muted-foreground">Choose how Orca looks in the app window.</p>
         </div>
 
-        <SearchableSetting
-          title="Theme"
-          description="Choose how Orca looks in the app window."
-          keywords={['dark', 'light', 'system']}
-        >
-          <div className="flex w-fit gap-1 rounded-md border border-border/50 p-1">
-            {(['system', 'dark', 'light'] as const).map((option) => (
-              <button
-                key={option}
-                onClick={() => {
-                  updateSettings({ theme: option })
-                  applyTheme(option)
-                }}
-                className={`rounded-sm px-3 py-1 text-sm capitalize transition-colors ${
-                  settings.theme === option
-                    ? 'bg-accent font-medium text-accent-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-        </SearchableSetting>
+        <ThemePicker settings={settings} updateSettings={updateSettings} applyTheme={applyTheme} />
       </section>
     ) : null,
     matchesSettingsSearch(searchQuery, ZOOM_ENTRIES) ? (

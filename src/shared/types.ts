@@ -1382,7 +1382,7 @@ export type GlobalSettings = {
   branchPrefix: 'git-username' | 'custom' | 'none'
   branchPrefixCustom: string
   enableGitHubAttribution: boolean
-  theme: 'system' | 'dark' | 'light'
+  theme: 'system' | 'dark' | 'light' | 'vesper-blur'
   appFontFamily: string
   editorAutoSave: boolean
   editorAutoSaveDelayMs: number

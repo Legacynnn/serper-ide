@@ -1646,4 +1646,58 @@ describe('createMainWindow', () => {
     expect(browserWindowInstance.maximize).toHaveBeenCalledTimes(1)
     expect(browserWindowInstance.show).toHaveBeenCalledTimes(1)
   })
+
+  it('applies platform-native blur options when windowBackgroundBlur is enabled', () => {
+    const webContents = {
+      on: vi.fn(),
+      setZoomLevel: vi.fn(),
+      setBackgroundThrottling: vi.fn(),
+      invalidate: vi.fn(),
+      setWindowOpenHandler: vi.fn(),
+      send: vi.fn()
+    }
+    const browserWindowInstance = {
+      webContents,
+      on: vi.fn(),
+      isDestroyed: vi.fn(() => false),
+      isMaximized: vi.fn(() => false),
+      isFullScreen: vi.fn(() => false),
+      getSize: vi.fn(() => [1200, 800]),
+      setSize: vi.fn(),
+      setWindowButtonPosition: vi.fn(),
+      maximize: vi.fn(),
+      show: vi.fn(),
+      loadFile: vi.fn(),
+      loadURL: vi.fn()
+    }
+    browserWindowMock.mockImplementation(function () {
+      return browserWindowInstance
+    })
+
+    createMainWindow({
+      getUI: () => ({}) as never,
+      getSettings: () => ({ theme: 'vesper-blur', windowBackgroundBlur: true }) as never,
+      updateUI: vi.fn()
+    } as never)
+
+    const browserWindowOptions = browserWindowMock.mock.calls[0]?.[0]
+    if (process.platform === 'darwin') {
+      expect(browserWindowOptions).toMatchObject({
+        vibrancy: 'under-window',
+        transparent: true,
+        // Why: an opaque backgroundColor paints under the renderer and would
+        // block the vibrancy material — must be fully transparent here.
+        backgroundColor: '#00000000'
+      })
+    } else if (process.platform === 'win32') {
+      expect(browserWindowOptions).toMatchObject({
+        backgroundMaterial: 'acrylic',
+        backgroundColor: '#00000000'
+      })
+    } else {
+      // Linux has no native equivalent; assert blur options are not present.
+      expect(browserWindowOptions?.vibrancy).toBeUndefined()
+      expect(browserWindowOptions?.backgroundMaterial).toBeUndefined()
+    }
+  })
 })

@@ -39,7 +39,7 @@ export function DiffSectionItem({
   index,
   isBranchMode,
   sideBySide,
-  isDark,
+  monacoTheme,
   settings,
   sectionHeight,
   worktreeId,
@@ -57,7 +57,7 @@ export function DiffSectionItem({
   index: number
   isBranchMode: boolean
   sideBySide: boolean
-  isDark: boolean
+  monacoTheme: string
   settings: { terminalFontSize?: number; terminalFontFamily?: string } | null
   sectionHeight: number | undefined
   worktreeId: string
@@ -454,7 +454,7 @@ export function DiffSectionItem({
               language={language}
               original={section.originalContent}
               modified={section.modifiedContent}
-              theme={isDark ? 'vs-dark' : 'vs'}
+              theme={monacoTheme}
               onMount={handleMount}
               // Why: @monaco-editor/react can dispose models before widget teardown.
               // Keep them through unmount and dispose unattached models next tick.

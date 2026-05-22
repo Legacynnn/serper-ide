@@ -20,6 +20,7 @@ export default function MermaidViewer({
   const settings = useAppStore((s) => s.settings)
   const isDark =
     settings?.theme === 'dark' ||
+    settings?.theme === 'vesper-blur' ||
     (settings?.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
 
   // Why: Each viewing mode (source vs diagram) produces different DOM heights.

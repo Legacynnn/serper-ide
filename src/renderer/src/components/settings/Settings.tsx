@@ -25,7 +25,7 @@ import {
   TextCursorInput,
   UserCog
 } from 'lucide-react'
-import type { OrcaHooks } from '../../../../shared/types'
+import type { GlobalSettings, OrcaHooks } from '../../../../shared/types'
 import { getRepoKindLabel, isFolderRepo } from '../../../../shared/repo-kind'
 import { useAppStore } from '../../store'
 import { useSystemPrefersDark } from '@/components/terminal-pane/use-system-prefers-dark'
@@ -419,7 +419,7 @@ function Settings(): React.JSX.Element {
     }
   }
 
-  const applyTheme = useCallback((theme: 'system' | 'dark' | 'light') => {
+  const applyTheme = useCallback((theme: GlobalSettings['theme']) => {
     applyDocumentTheme(theme)
   }, [])
 

@@ -237,6 +237,128 @@
   --annotation-highlight: #fbbf24;
 }
 
+/* ── Vesper Blur (composes on .dark) ─────────────────── */
+
+/* Why: vesper-blur is a dark-family theme whose surfaces stay translucent so
+   the OS window vibrancy (macOS) / acrylic (Windows) shows through. It applies
+   on top of .dark so the dark token block remains the base — only what diverges
+   from base dark lives here. */
+.dark.vesper-blur {
+  /* Why: Vesper's spec uses #101010b8 (72% opaque) which leaves only 28% for
+     vibrancy — on dark wallpapers the blur is barely visible. Drop to 99 (60%
+     opaque) so the OS material reads as a clear blur while keeping text and
+     surfaces dark enough for comfortable reading. */
+  --background: #10101099;
+  --editor-surface: transparent;
+  --foreground: #ffffff;
+  --card: #10101099;
+  /* Why: titlebar reads as the "header" of the window and should feel anchored
+     — a higher alpha keeps it visually solid while panels/tabs around it stay
+     translucent. */
+  --bg-titlebar: #101010ee;
+  --card-foreground: #ffffff;
+  --popover: #161616;
+  --popover-foreground: #ffffff;
+  --primary: #ffc799;
+  --primary-foreground: #101010;
+  --secondary: #1c1c1c;
+  --secondary-foreground: #ffffff;
+  --muted: #1c1c1c;
+  --muted-foreground: #a0a0a0;
+  --accent: #282828;
+  --accent-foreground: #ffffff;
+  --destructive: #ff8080;
+  --destructive-foreground: #2a1515;
+  /* Why: Vesper sets borders fully transparent. On translucent surfaces that
+     erases panel dividers entirely; this 4% white keeps the geometry legible
+     while staying close to Vesper's intent. */
+  --border: rgb(255 255 255 / 0.04);
+  --input: #161616;
+  --ring: #ffc799;
+  --sidebar: transparent;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ffc799;
+  --sidebar-primary-foreground: #101010;
+  --sidebar-accent: #282828;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 0.04);
+  --sidebar-ring: #ffc799;
+  --git-decoration-added: #99ffe4;
+  --git-decoration-modified: #ffc799;
+  --git-decoration-deleted: #ff8080;
+  --git-decoration-renamed: #ffc799;
+  --git-decoration-untracked: #99ffe4;
+  --git-decoration-copied: #ffc799;
+  --git-decoration-ignored: #7e7e7e;
+  --annotation-highlight: #ffc799;
+}
+
+/* Why: Chromium can paint an opaque page-level background under <body> even
+   when the BrowserWindow has `transparent: true`. Force both <html> and the
+   #root layer transparent in vesper-blur so the only thing tinting the window
+   is body's translucent --background and the vibrancy material shows through.
+   In every other theme these surfaces stay at their normal opaque colors. */
+html.vesper-blur,
+html.vesper-blur body,
+html.vesper-blur #root,
+html.vesper-blur .app-layout,
+html.vesper-blur .content-area {
+  background: transparent;
+}
+
+html.vesper-blur body {
+  background-color: var(--background);
+}
+
+/* Why: in fullscreen the main window disables native vibrancy entirely (see
+   createMainWindow.ts) because every macOS vibrancy material gets
+   accent-tinted inside a fullscreen Space, and the Space has no wallpaper
+   to actually blur anyway. The renderer paints its own near-opaque dark
+   surface here so the window reads as a clean translucent black instead of
+   green-tinted glass. ~92% alpha keeps a hint of softness while masking
+   anything underneath. */
+html.vesper-blur.fullscreen {
+  --background: #0a0a0aeb;
+  --card: #0a0a0aeb;
+  --bg-titlebar: #0a0a0aeb;
+}
+
+html.vesper-blur.fullscreen .terminal-tab-strip [data-active='true'] {
+  background-color: #1c1c1ceb;
+}
+
+/* Why: matches Zed's Vesper Blur tab spec — tab strip transparent, inactive
+   tabs render no background, active tab pops out as a small solid surface
+   that anchors the user's focus. The titlebar itself stays anchored via the
+   bumped --bg-titlebar above. Each tab type (SortableTab, EditorFileTab,
+   BrowserTab) carries data-active; the strip wrapper carries data-tab-strip.
+   Scoped to .terminal-tab-strip so markdown-search highlights (also using
+   data-active) are not affected. */
+html.vesper-blur [data-tab-strip='true'] {
+  background-color: transparent;
+}
+
+html.vesper-blur .terminal-tab-strip [data-active='false'] {
+  background-color: transparent;
+}
+
+html.vesper-blur .terminal-tab-strip [data-active='true'] {
+  background-color: #1c1c1c;
+}
+
+/* Why: drawers (Sheet) and dialogs land on top of the dim overlay and carry
+   long-form content (task details, kanban columns, PR conversations). Their
+   default `bg-background` / `bg-sidebar` resolve to translucent tokens in
+   vesper-blur which hurts text contrast. Paint them near-opaque
+   (~98% alpha) so they stay readable while keeping a faint kinship with the
+   translucent theme. Specificity beats the Tailwind utilities that set
+   bg-sidebar/bg-background directly on the slot. Applies in fullscreen and
+   non-fullscreen alike — modal readability isn't mode-dependent. */
+html.vesper-blur [data-slot='sheet-content'],
+html.vesper-blur [data-slot='dialog-content'] {
+  background-color: #101010fa;
+}
+
 /* ── Base Layer ──────────────────────────────────────── */
 
 @layer base {

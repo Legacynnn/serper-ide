@@ -126,6 +126,7 @@ export default function BrowserTab({
           ref={setNodeRef}
           {...attributes}
           {...listeners}
+          data-active={isActive ? 'true' : 'false'}
           className={`group relative flex items-center h-full px-1.5 text-xs cursor-pointer select-none shrink-0 outline-none focus:outline-none focus-visible:outline-none border-t ${hasTabsToRight ? 'border-r' : ''} border-border bg-card ${getDropIndicatorClasses(dropIndicator ?? null)} ${
             isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
           }`}

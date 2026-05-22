@@ -40,6 +40,7 @@ import { getConnectionId } from '@/lib/connection-context'
 import { scrollTopCache, setWithLRU } from '@/lib/scroll-cache'
 import { detectLanguage } from '@/lib/language-detect'
 import type { DiffComment, MarkdownDocument, Worktree } from '../../../../shared/types'
+import { useDocumentTheme } from '@/lib/use-document-theme'
 import {
   fileUrlToAbsolutePath,
   getMarkdownPreviewLinkTarget,
@@ -296,9 +297,8 @@ export default function MarkdownPreview({
   )
   const editorFontZoomLevel = useAppStore((s) => s.editorFontZoomLevel)
   const editorFontSize = computeEditorFontSize(14, editorFontZoomLevel)
-  const isDark =
-    settings?.theme === 'dark' ||
-    (settings?.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  const themeVariant = useDocumentTheme()
+  const isDark = themeVariant === 'dark' || themeVariant === 'vesper-blur'
 
   const renderedContent = usePreserveSectionDuringExternalEdit(content, bodyRef)
 
@@ -1156,7 +1156,7 @@ export default function MarkdownPreview({
         ref={rootRef}
         tabIndex={0}
         style={{ fontSize: `${editorFontSize}px` }}
-        className={`markdown-preview h-full min-h-0 overflow-auto scrollbar-editor ${isDark ? 'markdown-dark' : 'markdown-light'}`}
+        className={`markdown-preview h-full min-h-0 overflow-auto scrollbar-editor markdown-${themeVariant}`}
       >
         {isSearchOpen ? (
           <div className="markdown-preview-search" onKeyDown={(event) => event.stopPropagation()}>

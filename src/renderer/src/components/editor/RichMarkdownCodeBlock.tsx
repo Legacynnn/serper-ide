@@ -47,6 +47,7 @@ export function RichMarkdownCodeBlock({
   const settings = useAppStore((s) => s.settings)
   const isDark =
     settings?.theme === 'dark' ||
+    settings?.theme === 'vesper-blur' ||
     (settings?.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
 
   const isMermaid = language === 'mermaid'

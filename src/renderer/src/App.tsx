@@ -899,11 +899,12 @@ function App(): React.JSX.Element {
       return
     }
 
-    if (settings.theme === 'dark') {
-      applyDocumentTheme('dark')
-      return undefined
-    } else if (settings.theme === 'light') {
-      applyDocumentTheme('light')
+    if (
+      settings.theme === 'dark' ||
+      settings.theme === 'light' ||
+      settings.theme === 'vesper-blur'
+    ) {
+      applyDocumentTheme(settings.theme)
       return undefined
     } else {
       // system
@@ -914,6 +915,15 @@ function App(): React.JSX.Element {
       return () => mq.removeEventListener('change', handler)
     }
   }, [settings])
+
+  // Why: macOS native fullscreen puts the window in its own Space whose
+  // background bleeds through the translucent vesper-blur surfaces as a green
+  // (system-accent) tint, regardless of which vibrancy material we pick.
+  // Toggle a class on <html> so the CSS can paint an opaque background in
+  // fullscreen for the blur theme and avoid the tint entirely.
+  useEffect(() => {
+    document.documentElement.classList.toggle('fullscreen', isFullScreen)
+  }, [isFullScreen])
 
   useEffect(() => {
     document.documentElement.style.setProperty(

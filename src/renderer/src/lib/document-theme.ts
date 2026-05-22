@@ -36,7 +36,7 @@ export function resolveDocumentTheme(
   theme: DocumentThemePreference,
   matchMedia?: ThemeMediaMatcher
 ): boolean {
-  if (theme === 'dark') {
+  if (theme === 'dark' || theme === 'vesper-blur') {
     return true
   }
   if (theme === 'light') {
@@ -61,6 +61,11 @@ export function applyDocumentTheme(
   // Mirror with `light` so consumers can observe the resolved theme
   // symmetrically (Tailwind keys only on `dark`, so this is style-neutral).
   root.classList.toggle('light', !shouldUseDarkTheme)
+  // Why: vesper-blur composes on top of the dark theme — root carries both
+  // `.dark` and `.vesper-blur` so existing dark-mode selectors still apply
+  // and the vesper-blur block in main.css only needs to override what
+  // diverges from base dark.
+  root.classList.toggle('vesper-blur', theme === 'vesper-blur')
 
   if (!disableTransitions) {
     return

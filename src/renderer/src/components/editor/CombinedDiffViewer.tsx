@@ -50,6 +50,8 @@ import type {
 import { Check, Copy, MessageSquare, PanelLeftOpen, Send, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { DiffSectionItem } from './DiffSectionItem'
+import { useDocumentTheme } from '@/lib/use-document-theme'
+import { VESPER_BLUR_MONACO_THEME } from '@/lib/monaco-vesper-blur-theme'
 import {
   CombinedDiffFileTree,
   createCombinedDiffSectionIndexMap,
@@ -162,9 +164,13 @@ export default function CombinedDiffViewer({
   const clearDiffComments = useAppStore((s) => s.clearDiffComments)
   const diffCommentsForWorktree = useAppStore((s) => s.getDiffComments(file.worktreeId))
   const activeGroupId = useAppStore((s) => s.activeGroupIdByWorktree[file.worktreeId])
-  const isDark =
-    settings?.theme === 'dark' ||
-    (settings?.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  const themeVariant = useDocumentTheme()
+  const monacoTheme =
+    themeVariant === 'vesper-blur'
+      ? VESPER_BLUR_MONACO_THEME
+      : themeVariant === 'dark'
+        ? 'vs-dark'
+        : 'vs'
 
   const diffCommentCount = diffCommentsForWorktree.length
   const diffCommentsPrompt = React.useMemo(
@@ -1181,7 +1187,7 @@ export default function CombinedDiffViewer({
                       index={virtualItem.index}
                       isBranchMode={isBranchMode}
                       sideBySide={sideBySide}
-                      isDark={isDark}
+                      monacoTheme={monacoTheme}
                       settings={settings}
                       sectionHeight={sectionHeights[virtualItem.index]}
                       worktreeId={file.worktreeId}

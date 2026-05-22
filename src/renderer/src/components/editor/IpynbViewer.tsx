@@ -25,7 +25,8 @@ import {
 import { monaco } from '@/lib/monaco-setup'
 import { computeEditorFontSize } from '@/lib/editor-font-zoom'
 import { getConnectionId } from '@/lib/connection-context'
-import { resolveDocumentTheme } from '@/lib/document-theme'
+import { useDocumentTheme } from '@/lib/use-document-theme'
+import { VESPER_BLUR_MONACO_THEME } from '@/lib/monaco-vesper-blur-theme'
 import { useAppStore } from '@/store'
 import { scrollTopCache, setWithLRU } from '@/lib/scroll-cache'
 import { cn } from '@/lib/utils'
@@ -249,7 +250,13 @@ function CodeCell({
   const fontSize = computeEditorFontSize(settings?.terminalFontSize ?? 13, editorFontZoomLevel)
   const lineCount = Math.max(3, source.split('\n').length + 1)
   const editorHeight = Math.min(520, Math.max(96, lineCount * (fontSize + 8)))
-  const isDark = resolveDocumentTheme(settings?.theme ?? 'system')
+  const themeVariant = useDocumentTheme()
+  const monacoTheme =
+    themeVariant === 'vesper-blur'
+      ? VESPER_BLUR_MONACO_THEME
+      : themeVariant === 'dark'
+        ? 'vs-dark'
+        : 'vs'
   const lines = useMemo(
     () => (source.length > 0 ? source.replace(/\n$/, '').split('\n') : ['']),
     [source]
@@ -273,8 +280,8 @@ function CodeCell({
   }, [onDeactivate, onSaveRequest])
 
   useEffect(() => {
-    monaco.editor.setTheme(isDark ? 'vs-dark' : 'vs')
-  }, [isDark])
+    monaco.editor.setTheme(monacoTheme)
+  }, [monacoTheme])
 
   if (!active) {
     return (
@@ -306,7 +313,7 @@ function CodeCell({
         height={editorHeight}
         defaultLanguage={cell.language}
         language={cell.language}
-        theme={isDark ? 'vs-dark' : 'vs'}
+        theme={monacoTheme}
         value={source}
         onMount={handleMount}
         onChange={(value) => onChange(value ?? '')}
