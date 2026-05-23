@@ -46,7 +46,7 @@ describe('formatCliError', () => {
         message: 'Parent workspace was not found.',
         data: {
           nextSteps: [
-            'Run `orca worktree list` and pass a valid --parent-worktree selector.',
+            'Run `serper worktree list` and pass a valid --parent-worktree selector.',
             'Retry with --no-parent to create without lineage.',
             123
           ]
@@ -58,7 +58,7 @@ describe('formatCliError', () => {
     expect(formatCliError(error)).toBe(
       [
         'Parent workspace was not found.',
-        'Next step: Run `orca worktree list` and pass a valid --parent-worktree selector.',
+        'Next step: Run `serper worktree list` and pass a valid --parent-worktree selector.',
         'Next step: Retry with --no-parent to create without lineage.'
       ].join('\n')
     )

@@ -100,7 +100,7 @@ const UiUpdate = z
     starNagAppVersion: NullableString.optional(),
     starNagNextThreshold: z.number().finite().optional(),
     starNagCompleted: z.boolean().optional(),
-    trustedOrcaHooks: z.record(z.string(), z.unknown()).optional(),
+    trustedSerperHooks: z.record(z.string(), z.unknown()).optional(),
     petVisible: z.boolean().optional(),
     petId: z.string().optional(),
     customPets: UnknownRecordArray.optional(),

@@ -16,7 +16,7 @@ describe('pairing offer', () => {
 
   it('encode then decode round-trips correctly', () => {
     const url = encodePairingOffer(offer)
-    expect(url).toMatch(/^orca:\/\/pair#/)
+    expect(url).toMatch(/^serper:\/\/pair#/)
 
     const decoded = decodePairingOffer(url)
     expect(decoded).toEqual(offer)
@@ -33,25 +33,25 @@ describe('pairing offer', () => {
   })
 
   it('rejects URLs without fragment', () => {
-    expect(() => decodePairingOffer('orca://pair')).toThrow('Invalid pairing URL')
+    expect(() => decodePairingOffer('serper://pair')).toThrow('Invalid pairing URL')
   })
 
   it('rejects payloads with missing fields', () => {
     const partial = { v: 2, endpoint: 'ws://host:1234' }
     const base64 = Buffer.from(JSON.stringify(partial)).toString('base64')
-    expect(() => decodePairingOffer(`orca://pair#${base64}`)).toThrow()
+    expect(() => decodePairingOffer(`serper://pair#${base64}`)).toThrow()
   })
 
   it('rejects payloads with wrong version', () => {
     const wrong = { ...offer, v: 1 }
     const base64 = Buffer.from(JSON.stringify(wrong)).toString('base64')
-    expect(() => decodePairingOffer(`orca://pair#${base64}`)).toThrow()
+    expect(() => decodePairingOffer(`serper://pair#${base64}`)).toThrow()
   })
 
   it('rejects payloads with missing publicKeyB64', () => {
     const wrong = { v: 2, endpoint: 'ws://host:1234', deviceToken: 'tok' }
     const base64 = Buffer.from(JSON.stringify(wrong)).toString('base64')
-    expect(() => decodePairingOffer(`orca://pair#${base64}`)).toThrow()
+    expect(() => decodePairingOffer(`serper://pair#${base64}`)).toThrow()
   })
 })
 
@@ -63,7 +63,7 @@ describe('parsePairingCode', () => {
     publicKeyB64: 'pubkey-xyz'
   }
 
-  it('parses a full orca://pair# URL', () => {
+  it('parses a full serper://pair# URL', () => {
     const url = encodePairingOffer(offer)
     expect(parsePairingCode(url)).toEqual(offer)
   })

@@ -181,7 +181,7 @@ function isTabClosedTransportError(message: string): boolean {
 }
 
 function pageUnavailableMessageForSession(sessionName: string): string {
-  const prefix = 'orca-tab-'
+  const prefix = 'serper-tab-'
   const browserPageId = sessionName.startsWith(prefix) ? sessionName.slice(prefix.length) : null
   return browserPageId
     ? `Browser page ${browserPageId} is no longer available`
@@ -492,7 +492,7 @@ export class AgentBrowserBridge {
       this.activeWebContentsId = nextWorktreeActiveWebContentsId
     }
     if (browserPageId) {
-      await this.destroySession(`orca-tab-${browserPageId}`)
+      await this.destroySession(`serper-tab-${browserPageId}`)
     }
     this.options.onTabsChanged?.(owningWorktreeId)
   }
@@ -504,7 +504,7 @@ export class AgentBrowserBridge {
   ): Promise<void> {
     // Why: Electron process swaps give same browserPageId but new webContentsId.
     // Old proxy's webContents is destroyed, so destroy session and let next command recreate.
-    const sessionName = `orca-tab-${browserPageId}`
+    const sessionName = `serper-tab-${browserPageId}`
     const session = this.sessions.get(sessionName)
     const oldWebContentsId = previousWebContentsId ?? session?.webContentsId
     const owningWorktreeId = this.browserManager.getWorktreeIdForTab(browserPageId)
@@ -1324,7 +1324,7 @@ export class AgentBrowserBridge {
         args.push('--state', normalizedState)
       }
       // Why: agent-browser's selector wait surface does not support `--state visible`
-      // or a documented per-command `--timeout`. Orca normalizes "visible" back
+      // or a documented per-command `--timeout`. Serper normalizes "visible" back
       // to the default selector wait semantics and enforces the requested timeout
       // at the bridge layer so missing selectors fail as browser_timeout instead
       // of hanging until the generic runtime RPC timeout fires.
@@ -1503,7 +1503,7 @@ export class AgentBrowserBridge {
       }
 
       // Why: agent-browser only supports width/height/scale for `set viewport`;
-      // it has no `mobile` flag. Orca's CLI exposes `--mobile`, so apply the
+      // it has no `mobile` flag. Serper's CLI exposes `--mobile`, so apply the
       // emulation directly through CDP to keep the public CLI contract honest.
       await dbg.sendCommand('Emulation.setDeviceMetricsOverride', {
         width,
@@ -1703,7 +1703,7 @@ export class AgentBrowserBridge {
     options: { ensureSession?: boolean } = {}
   ): Promise<T> {
     const target = this.resolveCommandTarget(worktreeId, browserPageId)
-    const sessionName = `orca-tab-${target.browserPageId}`
+    const sessionName = `serper-tab-${target.browserPageId}`
 
     if (options.ensureSession !== false) {
       await this.ensureSession(sessionName, target.browserPageId, target.webContentsId)
@@ -1856,7 +1856,7 @@ export class AgentBrowserBridge {
       }
 
       // Why: agent-browser's daemon persists session state (including the CDP port)
-      // across Orca restarts. A stale session ignores --cdp (already initialized) and
+      // across Serper restarts. A stale session ignores --cdp (already initialized) and
       // connects to the dead port. Must await close so the daemon forgets the session
       // before we pass --cdp with the new port.
       await new Promise<void>((resolve) => {

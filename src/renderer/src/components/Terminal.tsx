@@ -27,9 +27,9 @@ import { Button } from '@/components/ui/button'
 import TabBar from './tab-bar/TabBar'
 import TerminalPane from './terminal-pane/TerminalPane'
 import {
-  ORCA_EDITOR_REQUEST_FILE_CLOSE_EVENT,
-  ORCA_EDITOR_SAVE_AND_CLOSE_EVENT,
-  ORCA_EDITOR_REQUEST_CMD_SAVE_EVENT,
+  SERPER_EDITOR_REQUEST_FILE_CLOSE_EVENT,
+  SERPER_EDITOR_SAVE_AND_CLOSE_EVENT,
+  SERPER_EDITOR_REQUEST_CMD_SAVE_EVENT,
   type EditorRequestFileCloseDetail,
   requestEditorSaveQuiesce
 } from './editor/editor-autosave'
@@ -140,12 +140,15 @@ function Terminal(): React.JSX.Element | null {
   )
 
   // Why: the TabBar is rendered into the titlebar via a portal so tabs share
-  // the same row as the "Orca" title. The target element is created by App.tsx.
+  // the same row as the "Serper" title. The target element is created by App.tsx.
   // Uses useEffect because the DOM element doesn't exist during the render phase.
+  // The activeView dep re-queries when App.tsx swaps which titlebar slot is
+  // mounted (e.g. dashboard/tasks/automations replace titlebar-tabs with their
+  // own portal target while those surfaces are active).
   const [titlebarTabsTarget, setTitlebarTabsTarget] = useState<HTMLElement | null>(null)
   useEffect(() => {
     setTitlebarTabsTarget(document.getElementById('titlebar-tabs'))
-  }, [])
+  }, [activeView])
 
   useEffect(() => {
     if (!activeWorktreeId) {
@@ -192,7 +195,7 @@ function Terminal(): React.JSX.Element | null {
   // Why: while a save-and-close is awaiting the file to disappear from
   // openFiles, concurrent queueEditorCloseRequests calls (e.g. user clicks X
   // on another dirty tab, or a split-group dispatch fires
-  // ORCA_EDITOR_REQUEST_FILE_CLOSE_EVENT) must not re-open the dialog over
+  // SERPER_EDITOR_REQUEST_FILE_CLOSE_EVENT) must not re-open the dialog over
   // the in-flight save. Track the in-flight file here so
   // getNextQueuedEditorClose can skip it as an un-advanceable head.
   const inFlightSaveFileIdRef = useRef<string | null>(null)
@@ -388,7 +391,9 @@ function Terminal(): React.JSX.Element | null {
     // owns that write path now, so the dialog signals it through a custom
     // event instead of poking at editor component refs.
     setSaveDialogFileId(null)
-    window.dispatchEvent(new CustomEvent(ORCA_EDITOR_SAVE_AND_CLOSE_EVENT, { detail: { fileId } }))
+    window.dispatchEvent(
+      new CustomEvent(SERPER_EDITOR_SAVE_AND_CLOSE_EVENT, { detail: { fileId } })
+    )
     inFlightSaveFileIdRef.current = fileId
     let closed = false
     try {
@@ -494,12 +499,12 @@ function Terminal(): React.JSX.Element | null {
       queueEditorCloseRequests([fileId])
     }
     window.addEventListener(
-      ORCA_EDITOR_REQUEST_FILE_CLOSE_EVENT,
+      SERPER_EDITOR_REQUEST_FILE_CLOSE_EVENT,
       onRequestEditorClose as EventListener
     )
     return () =>
       window.removeEventListener(
-        ORCA_EDITOR_REQUEST_FILE_CLOSE_EVENT,
+        SERPER_EDITOR_REQUEST_FILE_CLOSE_EVENT,
         onRequestEditorClose as EventListener
       )
   }, [queueEditorCloseRequests])
@@ -1096,7 +1101,7 @@ function Terminal(): React.JSX.Element | null {
           const state = useAppStore.getState()
           if (state.activeTabType === 'editor' && state.activeFileId) {
             e.preventDefault()
-            window.dispatchEvent(new Event(ORCA_EDITOR_REQUEST_CMD_SAVE_EVENT))
+            window.dispatchEvent(new Event(SERPER_EDITOR_REQUEST_CMD_SAVE_EVENT))
             return
           }
         }

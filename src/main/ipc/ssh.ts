@@ -27,7 +27,7 @@ import {
   getPtyIdsForConnection,
   getSshPtyProvider
 } from './pty'
-import type { OrcaRuntimeService } from '../runtime/orca-runtime'
+import type { SerperRuntimeService } from '../runtime/serper-runtime'
 
 let sshStore: SshConnectionStore | null = null
 let connectionManager: SshConnectionManager | null = null
@@ -239,7 +239,7 @@ async function restorePortForwards(
 export function registerSshHandlers(
   store: Store,
   getMainWindow: () => BrowserWindow | null,
-  runtime?: OrcaRuntimeService
+  runtime?: SerperRuntimeService
 ): { connectionManager: SshConnectionManager; sshStore: SshConnectionStore } {
   // Why: on macOS, app re-activation creates a new BrowserWindow and re-calls
   // this function. ipcMain.handle() throws if a handler is already registered,

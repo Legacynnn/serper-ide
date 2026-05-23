@@ -1,4 +1,4 @@
-import { test, expect } from './helpers/orca-app'
+import { test, expect } from './helpers/serper-app'
 import { ensureTerminalVisible, waitForActiveWorktree, waitForSessionReady } from './helpers/store'
 
 type RightSidebarHeaderGeometry = {
@@ -18,9 +18,9 @@ type ScrolledActivityButtonGeometry = {
 
 test.describe('Right sidebar Windows titlebar spacing', () => {
   test('top activity buttons stay reachable when the right sidebar is narrowed', async ({
-    orcaPage
+    serperPage
   }) => {
-    await orcaPage.addInitScript(() => {
+    await serperPage.addInitScript(() => {
       const userAgent =
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/146 Safari/537.36'
       Object.defineProperty(navigator, 'userAgent', {
@@ -28,16 +28,16 @@ test.describe('Right sidebar Windows titlebar spacing', () => {
         configurable: true
       })
     })
-    await orcaPage.reload({ waitUntil: 'domcontentloaded' })
-    await orcaPage.waitForFunction(() => Boolean(window.__store), null, { timeout: 30_000 })
-    await waitForSessionReady(orcaPage)
-    await waitForActiveWorktree(orcaPage)
-    await ensureTerminalVisible(orcaPage)
+    await serperPage.reload({ waitUntil: 'domcontentloaded' })
+    await serperPage.waitForFunction(() => Boolean(window.__store), null, { timeout: 30_000 })
+    await waitForSessionReady(serperPage)
+    await waitForActiveWorktree(serperPage)
+    await ensureTerminalVisible(serperPage)
 
     await expect
       .poll(
         async () =>
-          orcaPage.evaluate(() => ({
+          serperPage.evaluate(() => ({
             hasWindowsUserAgent: navigator.userAgent.includes('Windows'),
             hasWindowsTitlebarChrome: Boolean(document.querySelector('.window-controls'))
           })),
@@ -48,7 +48,7 @@ test.describe('Right sidebar Windows titlebar spacing', () => {
       )
       .toEqual({ hasWindowsUserAgent: true, hasWindowsTitlebarChrome: true })
 
-    await orcaPage.evaluate(() => {
+    await serperPage.evaluate(() => {
       const store = window.__store
       if (!store) {
         throw new Error('window.__store is not available - is the app in dev mode?')
@@ -62,7 +62,7 @@ test.describe('Right sidebar Windows titlebar spacing', () => {
     })
 
     const measureHeader = async (): Promise<RightSidebarHeaderGeometry | null> =>
-      orcaPage.evaluate(() => {
+      serperPage.evaluate(() => {
         const controls = document.querySelector<HTMLElement>('.window-controls')
         const header = document.querySelector<HTMLElement>('.right-sidebar-header-inset')
         const strip = header?.querySelector<HTMLElement>('.right-sidebar-activity-strip') ?? null
@@ -119,7 +119,7 @@ test.describe('Right sidebar Windows titlebar spacing', () => {
     expect(headerGeometry!.stripScrollWidth).toBeGreaterThan(headerGeometry!.stripClientWidth)
     expect(headerGeometry!.firstButtonCenterHitsFirst).toBe(true)
 
-    await orcaPage.evaluate(() => {
+    await serperPage.evaluate(() => {
       const strip = document.querySelector<HTMLElement>('.right-sidebar-activity-strip')
       if (!strip) {
         throw new Error('Right sidebar activity strip is missing')
@@ -129,35 +129,37 @@ test.describe('Right sidebar Windows titlebar spacing', () => {
     // Why: hidden Electron e2e windows can throttle requestAnimationFrame for a
     // long time; scrollLeft is synchronous, so a short Playwright-side delay is
     // enough to let layout settle without depending on renderer frame cadence.
-    await orcaPage.waitForTimeout(50)
+    await serperPage.waitForTimeout(50)
 
-    const scrolledGeometry = await orcaPage.evaluate((): ScrolledActivityButtonGeometry | null => {
-      const controls = document.querySelector<HTMLElement>('.window-controls')
-      const header = document.querySelector<HTMLElement>('.right-sidebar-header-inset')
-      const activityButtons = Array.from(
-        header?.querySelectorAll<HTMLButtonElement>(
-          'button[aria-label]:not([aria-label="Toggle right sidebar"])'
-        ) ?? []
-      )
-      const lastButton = activityButtons.at(-1)
+    const scrolledGeometry = await serperPage.evaluate(
+      (): ScrolledActivityButtonGeometry | null => {
+        const controls = document.querySelector<HTMLElement>('.window-controls')
+        const header = document.querySelector<HTMLElement>('.right-sidebar-header-inset')
+        const activityButtons = Array.from(
+          header?.querySelectorAll<HTMLButtonElement>(
+            'button[aria-label]:not([aria-label="Toggle right sidebar"])'
+          ) ?? []
+        )
+        const lastButton = activityButtons.at(-1)
 
-      if (!controls || !lastButton) {
-        return null
+        if (!controls || !lastButton) {
+          return null
+        }
+
+        const controlsRect = controls.getBoundingClientRect()
+        const lastRect = lastButton.getBoundingClientRect()
+        const lastCenterX = lastRect.left + lastRect.width / 2
+        const lastCenterY = lastRect.top + lastRect.height / 2
+        const elementAtLastCenter = document.elementFromPoint(lastCenterX, lastCenterY)
+
+        return {
+          controlsLeft: controlsRect.left,
+          lastButtonRight: lastRect.right,
+          lastButtonCenterHitsLast:
+            elementAtLastCenter !== null && lastButton.contains(elementAtLastCenter)
+        }
       }
-
-      const controlsRect = controls.getBoundingClientRect()
-      const lastRect = lastButton.getBoundingClientRect()
-      const lastCenterX = lastRect.left + lastRect.width / 2
-      const lastCenterY = lastRect.top + lastRect.height / 2
-      const elementAtLastCenter = document.elementFromPoint(lastCenterX, lastCenterY)
-
-      return {
-        controlsLeft: controlsRect.left,
-        lastButtonRight: lastRect.right,
-        lastButtonCenterHitsLast:
-          elementAtLastCenter !== null && lastButton.contains(elementAtLastCenter)
-      }
-    })
+    )
 
     expect(scrolledGeometry).not.toBeNull()
     expect(scrolledGeometry!.lastButtonRight).toBeLessThanOrEqual(scrolledGeometry!.controlsLeft)

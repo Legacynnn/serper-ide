@@ -53,7 +53,7 @@ describe('run-electron-vite-dev', () => {
   it.skipIf(process.platform === 'win32')(
     'kills the descendant process tree on SIGINT',
     async () => {
-      const tempDir = mkdtempSync(join(tmpdir(), 'orca-dev-wrapper-'))
+      const tempDir = mkdtempSync(join(tmpdir(), 'serper-dev-wrapper-'))
       const pidFile = join(tempDir, 'grandchild.pid')
       const wrapperPath = resolve('config/scripts/run-electron-vite-dev.mjs')
       const fakeCliPath = resolve('src/main/startup/__fixtures__/fake-electron-vite-dev-cli.mjs')
@@ -62,11 +62,11 @@ describe('run-electron-vite-dev', () => {
         cwd: resolve('.'),
         env: {
           ...process.env,
-          ORCA_ELECTRON_VITE_CLI: fakeCliPath,
-          ORCA_SKIP_DEV_CLI_PREPARE: '1',
-          ORCA_SKIP_DEV_ELECTRON_APP_PREPARE: '1',
-          ORCA_SKIP_DEV_WEB_PREPARE: '1',
-          ORCA_DEV_WRAPPER_TEST_PID_FILE: pidFile
+          SERPER_ELECTRON_VITE_CLI: fakeCliPath,
+          SERPER_SKIP_DEV_CLI_PREPARE: '1',
+          SERPER_SKIP_DEV_ELECTRON_APP_PREPARE: '1',
+          SERPER_SKIP_DEV_WEB_PREPARE: '1',
+          SERPER_DEV_WRAPPER_TEST_PID_FILE: pidFile
         },
         stdio: 'ignore'
       })
@@ -104,7 +104,7 @@ describe('run-electron-vite-dev', () => {
   )
 
   it('forwards dev instance identity to electron-vite', async () => {
-    const tempDir = mkdtempSync(join(tmpdir(), 'orca-dev-wrapper-'))
+    const tempDir = mkdtempSync(join(tmpdir(), 'serper-dev-wrapper-'))
     const pidFile = join(tempDir, 'grandchild.pid')
     const envFile = join(tempDir, 'env.json')
     const wrapperPath = resolve('config/scripts/run-electron-vite-dev.mjs')
@@ -114,16 +114,16 @@ describe('run-electron-vite-dev', () => {
       cwd: resolve('.'),
       env: {
         ...process.env,
-        ORCA_ELECTRON_VITE_CLI: fakeCliPath,
-        ORCA_SKIP_DEV_CLI_PREPARE: '1',
-        ORCA_SKIP_DEV_ELECTRON_APP_PREPARE: '1',
-        ORCA_SKIP_DEV_WEB_PREPARE: '1',
-        ORCA_DEV_WRAPPER_TEST_PID_FILE: pidFile,
-        ORCA_DEV_WRAPPER_TEST_ENV_FILE: envFile,
-        ORCA_DEV_BRANCH: 'feature/billing-shell',
-        ORCA_DEV_WORKTREE_NAME: 'payment-ui',
-        ORCA_DEV_DOCK_BADGE_LABEL: undefined,
-        ORCA_DEV_DOCK_TITLE: undefined
+        SERPER_ELECTRON_VITE_CLI: fakeCliPath,
+        SERPER_SKIP_DEV_CLI_PREPARE: '1',
+        SERPER_SKIP_DEV_ELECTRON_APP_PREPARE: '1',
+        SERPER_SKIP_DEV_WEB_PREPARE: '1',
+        SERPER_DEV_WRAPPER_TEST_PID_FILE: pidFile,
+        SERPER_DEV_WRAPPER_TEST_ENV_FILE: envFile,
+        SERPER_DEV_BRANCH: 'feature/billing-shell',
+        SERPER_DEV_WORKTREE_NAME: 'payment-ui',
+        SERPER_DEV_DOCK_BADGE_LABEL: undefined,
+        SERPER_DEV_DOCK_TITLE: undefined
       },
       stdio: 'ignore'
     })
@@ -161,7 +161,7 @@ describe('run-electron-vite-dev', () => {
     expect(envSnapshot.worktreeName).toBe('payment-ui')
     expect(envSnapshot.repoRoot).toBe(resolve('.'))
     expect(envSnapshot.badgeLabel).toBeNull()
-    expect(envSnapshot.dockTitle).toBe('Orca: feature/billing-shell')
+    expect(envSnapshot.dockTitle).toBe('Serper: feature/billing-shell')
     expect(envSnapshot.stableName).toBeNull()
     expect(envSnapshot.electronExecPath).toBeNull()
 
@@ -169,7 +169,7 @@ describe('run-electron-vite-dev', () => {
   })
 
   it('consumes the stable-name flag before forwarding args to electron-vite', async () => {
-    const tempDir = mkdtempSync(join(tmpdir(), 'orca-dev-wrapper-'))
+    const tempDir = mkdtempSync(join(tmpdir(), 'serper-dev-wrapper-'))
     const pidFile = join(tempDir, 'grandchild.pid')
     const envFile = join(tempDir, 'env.json')
     const wrapperPath = resolve('config/scripts/run-electron-vite-dev.mjs')
@@ -182,13 +182,13 @@ describe('run-electron-vite-dev', () => {
         cwd: resolve('.'),
         env: {
           ...process.env,
-          ORCA_ELECTRON_VITE_CLI: fakeCliPath,
-          ORCA_SKIP_DEV_CLI_PREPARE: '1',
-          ORCA_SKIP_DEV_WEB_PREPARE: '1',
-          ORCA_DEV_WRAPPER_TEST_PID_FILE: pidFile,
-          ORCA_DEV_WRAPPER_TEST_ENV_FILE: envFile,
-          ORCA_DEV_BRANCH: 'feature/stable-name',
-          ORCA_DEV_WORKTREE_NAME: 'stable-ui'
+          SERPER_ELECTRON_VITE_CLI: fakeCliPath,
+          SERPER_SKIP_DEV_CLI_PREPARE: '1',
+          SERPER_SKIP_DEV_WEB_PREPARE: '1',
+          SERPER_DEV_WRAPPER_TEST_PID_FILE: pidFile,
+          SERPER_DEV_WRAPPER_TEST_ENV_FILE: envFile,
+          SERPER_DEV_BRANCH: 'feature/stable-name',
+          SERPER_DEV_WORKTREE_NAME: 'stable-ui'
         },
         stdio: 'ignore'
       }

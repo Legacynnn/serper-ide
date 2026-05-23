@@ -152,10 +152,10 @@ describe('getPRForBranch', () => {
   it('resolves fork PRs from the upstream PR repo with the origin head owner', async () => {
     resolvePRRepositoryCandidatesMock.mockResolvedValueOnce({
       candidates: [
-        { owner: 'stablyai', repo: 'orca' },
-        { owner: 'fork', repo: 'orca' }
+        { owner: 'Legacynnn', repo: 'serper' },
+        { owner: 'fork', repo: 'serper' }
       ],
-      headRepo: { owner: 'fork', repo: 'orca' }
+      headRepo: { owner: 'fork', repo: 'serper' }
     })
     ghExecFileAsyncMock.mockResolvedValueOnce({
       stdout: JSON.stringify([
@@ -163,7 +163,7 @@ describe('getPRForBranch', () => {
           number: 1738,
           title: 'Fork PR',
           state: 'open',
-          html_url: 'https://github.com/stablyai/orca/pull/1738',
+          html_url: 'https://github.com/Legacynnn/serper/pull/1738',
           updated_at: '2026-03-28T00:00:00Z',
           draft: false,
           mergeable_state: 'clean',
@@ -176,23 +176,23 @@ describe('getPRForBranch', () => {
     const pr = await getPRForBranch('/repo-root', 'feature/test')
 
     expect(ghExecFileAsyncMock).toHaveBeenCalledWith(
-      ['api', 'repos/stablyai/orca/pulls?head=fork%3Afeature%2Ftest&state=all&per_page=1'],
+      ['api', 'repos/Legacynnn/serper/pulls?head=fork%3Afeature%2Ftest&state=all&per_page=1'],
       { cwd: '/repo-root' }
     )
     expect(pr).toMatchObject({
       number: 1738,
-      prRepo: { owner: 'stablyai', repo: 'orca' },
-      headRepo: { owner: 'fork', repo: 'orca' }
+      prRepo: { owner: 'Legacynnn', repo: 'serper' },
+      headRepo: { owner: 'fork', repo: 'serper' }
     })
   })
 
   it('looks up a linked PR number across PR repo candidates', async () => {
     resolvePRRepositoryCandidatesMock.mockResolvedValueOnce({
       candidates: [
-        { owner: 'stablyai', repo: 'orca' },
-        { owner: 'fork', repo: 'orca' }
+        { owner: 'Legacynnn', repo: 'serper' },
+        { owner: 'fork', repo: 'serper' }
       ],
-      headRepo: { owner: 'fork', repo: 'orca' }
+      headRepo: { owner: 'fork', repo: 'serper' }
     })
     gitExecFileAsyncMock.mockResolvedValueOnce({ stdout: 'linked-head-oid\n', stderr: '' })
     ghExecFileAsyncMock
@@ -202,7 +202,7 @@ describe('getPRForBranch', () => {
           number: 99,
           title: 'Linked fork PR',
           state: 'OPEN',
-          url: 'https://github.com/fork/orca/pull/99',
+          url: 'https://github.com/fork/serper/pull/99',
           statusCheckRollup: [],
           updatedAt: '2026-03-28T00:00:00Z',
           isDraft: false,
@@ -223,7 +223,7 @@ describe('getPRForBranch', () => {
         'view',
         '99',
         '--repo',
-        'stablyai/orca',
+        'Legacynnn/serper',
         '--json',
         'number,title,state,url,statusCheckRollup,updatedAt,isDraft,mergeable,baseRefName,headRefName,baseRefOid,headRefOid'
       ],
@@ -236,13 +236,13 @@ describe('getPRForBranch', () => {
         'view',
         '99',
         '--repo',
-        'fork/orca',
+        'fork/serper',
         '--json',
         'number,title,state,url,statusCheckRollup,updatedAt,isDraft,mergeable,baseRefName,headRefName,baseRefOid,headRefOid'
       ],
       { cwd: '/repo-root' }
     )
-    expect(pr?.prRepo).toEqual({ owner: 'fork', repo: 'orca' })
+    expect(pr?.prRepo).toEqual({ owner: 'fork', repo: 'serper' })
   })
 
   it('prefers exact linked PR lookup when the repo identity is known', async () => {
@@ -737,52 +737,52 @@ describe('getPRForBranch', () => {
   })
 
   it('resolves fork PR push target using the origin URL protocol', async () => {
-    getOwnerRepoMock.mockResolvedValueOnce({ owner: 'stablyai', repo: 'orca' })
-    getOwnerRepoForRemoteMock.mockResolvedValueOnce({ owner: 'stablyai', repo: 'orca' })
+    getOwnerRepoMock.mockResolvedValueOnce({ owner: 'Legacynnn', repo: 'serper' })
+    getOwnerRepoForRemoteMock.mockResolvedValueOnce({ owner: 'Legacynnn', repo: 'serper' })
     ghExecFileAsyncMock.mockResolvedValueOnce({
       stdout: JSON.stringify({
         head: {
           ref: 'prateek/fix-sidebar-agents-toggle',
           repo: {
-            full_name: 'prateek/orca',
-            name: 'orca',
-            clone_url: 'https://github.com/prateek/orca.git',
-            ssh_url: 'git@github.com:prateek/orca.git',
+            full_name: 'prateek/serper',
+            name: 'serper',
+            clone_url: 'https://github.com/prateek/serper.git',
+            ssh_url: 'git@github.com:prateek/serper.git',
             owner: { login: 'prateek' }
           }
         }
       })
     })
     gitExecFileAsyncMock.mockResolvedValueOnce({
-      stdout: 'git@github.com:stablyai/orca.git\n',
+      stdout: 'git@github.com:Legacynnn/serper.git\n',
       stderr: ''
     })
 
     const target = await getPullRequestPushTarget('/repo-root', 1738)
 
-    expect(ghExecFileAsyncMock).toHaveBeenCalledWith(['api', 'repos/stablyai/orca/pulls/1738'], {
+    expect(ghExecFileAsyncMock).toHaveBeenCalledWith(['api', 'repos/Legacynnn/serper/pulls/1738'], {
       cwd: '/repo-root'
     })
     expect(target).toEqual({
-      remoteName: 'pr-prateek-orca',
+      remoteName: 'pr-prateek-serper',
       branchName: 'prateek/fix-sidebar-agents-toggle',
-      remoteUrl: 'git@github.com:prateek/orca.git'
+      remoteUrl: 'git@github.com:prateek/serper.git'
     })
   })
 
   it('uses origin for same-repository PR push targets', async () => {
-    getOwnerRepoMock.mockResolvedValueOnce({ owner: 'stablyai', repo: 'orca' })
-    getOwnerRepoForRemoteMock.mockResolvedValueOnce({ owner: 'stablyai', repo: 'orca' })
+    getOwnerRepoMock.mockResolvedValueOnce({ owner: 'Legacynnn', repo: 'serper' })
+    getOwnerRepoForRemoteMock.mockResolvedValueOnce({ owner: 'Legacynnn', repo: 'serper' })
     ghExecFileAsyncMock.mockResolvedValueOnce({
       stdout: JSON.stringify({
         head: {
           ref: 'fix-sidebar',
           repo: {
-            full_name: 'stablyai/orca',
-            name: 'orca',
-            clone_url: 'https://github.com/stablyai/orca.git',
-            ssh_url: 'git@github.com:stablyai/orca.git',
-            owner: { login: 'stablyai' }
+            full_name: 'Legacynnn/serper',
+            name: 'serper',
+            clone_url: 'https://github.com/Legacynnn/serper.git',
+            ssh_url: 'git@github.com:Legacynnn/serper.git',
+            owner: { login: 'Legacynnn' }
           }
         }
       })
@@ -798,12 +798,12 @@ describe('getPRForBranch', () => {
   it('probes additional PR repo candidates when the first lookup is not found', async () => {
     resolvePRRepositoryCandidatesMock.mockResolvedValueOnce({
       candidates: [
-        { owner: 'fork', repo: 'orca' },
-        { owner: 'stablyai', repo: 'orca' }
+        { owner: 'fork', repo: 'serper' },
+        { owner: 'Legacynnn', repo: 'serper' }
       ],
-      headRepo: { owner: 'fork', repo: 'orca' }
+      headRepo: { owner: 'fork', repo: 'serper' }
     })
-    getOwnerRepoForRemoteMock.mockResolvedValueOnce({ owner: 'fork', repo: 'orca' })
+    getOwnerRepoForRemoteMock.mockResolvedValueOnce({ owner: 'fork', repo: 'serper' })
     ghExecFileAsyncMock
       .mockRejectedValueOnce(new Error('HTTP 404: Not Found'))
       .mockResolvedValueOnce({
@@ -811,10 +811,10 @@ describe('getPRForBranch', () => {
           head: {
             ref: 'feature/test',
             repo: {
-              full_name: 'fork/orca',
-              name: 'orca',
-              clone_url: 'https://github.com/fork/orca.git',
-              ssh_url: 'git@github.com:fork/orca.git',
+              full_name: 'fork/serper',
+              name: 'serper',
+              clone_url: 'https://github.com/fork/serper.git',
+              ssh_url: 'git@github.com:fork/serper.git',
               owner: { login: 'fork' }
             }
           }
@@ -825,12 +825,16 @@ describe('getPRForBranch', () => {
       remoteName: 'origin',
       branchName: 'feature/test'
     })
-    expect(ghExecFileAsyncMock).toHaveBeenNthCalledWith(1, ['api', 'repos/fork/orca/pulls/1849'], {
-      cwd: '/repo-root'
-    })
+    expect(ghExecFileAsyncMock).toHaveBeenNthCalledWith(
+      1,
+      ['api', 'repos/fork/serper/pulls/1849'],
+      {
+        cwd: '/repo-root'
+      }
+    )
     expect(ghExecFileAsyncMock).toHaveBeenNthCalledWith(
       2,
-      ['api', 'repos/stablyai/orca/pulls/1849'],
+      ['api', 'repos/Legacynnn/serper/pulls/1849'],
       { cwd: '/repo-root' }
     )
   })
@@ -936,23 +940,28 @@ describe('GitHub GraphQL rate-limit guard', () => {
             user: { login: 'octo', avatar_url: 'https://avatar', type: 'User' },
             body: 'top-level',
             created_at: '2026-04-01T00:00:00Z',
-            html_url: 'https://github.com/stablyai/orca/pull/7#issuecomment-10'
+            html_url: 'https://github.com/Legacynnn/serper/pull/7#issuecomment-10'
           }
         ])
       })
       .mockResolvedValueOnce({ stdout: '[]' })
 
-    await getPRComments('/repo-root', 7, { prRepo: { owner: 'stablyai', repo: 'orca' } }, undefined)
+    await getPRComments(
+      '/repo-root',
+      7,
+      { prRepo: { owner: 'Legacynnn', repo: 'serper' } },
+      undefined
+    )
 
     expect(getOwnerRepoMock).not.toHaveBeenCalled()
     expect(ghExecFileAsyncMock).toHaveBeenNthCalledWith(
       1,
-      ['api', '--cache', '60s', 'repos/stablyai/orca/issues/7/comments?per_page=100'],
+      ['api', '--cache', '60s', 'repos/Legacynnn/serper/issues/7/comments?per_page=100'],
       { cwd: '/repo-root' }
     )
     expect(ghExecFileAsyncMock).toHaveBeenNthCalledWith(
       2,
-      ['api', '--cache', '60s', 'repos/stablyai/orca/pulls/7/reviews?per_page=100'],
+      ['api', '--cache', '60s', 'repos/Legacynnn/serper/pulls/7/reviews?per_page=100'],
       { cwd: '/repo-root' }
     )
   })
@@ -961,16 +970,16 @@ describe('GitHub GraphQL rate-limit guard', () => {
     ghExecFileAsyncMock.mockResolvedValue({ stdout: '', stderr: '' })
 
     await expect(
-      mergePR('/repo-root', 7, 'squash', undefined, { owner: 'stablyai', repo: 'orca' })
+      mergePR('/repo-root', 7, 'squash', undefined, { owner: 'Legacynnn', repo: 'serper' })
     ).resolves.toEqual({ ok: true })
     await expect(
-      updatePRTitle('/repo-root', 7, 'New title', undefined, { owner: 'stablyai', repo: 'orca' })
+      updatePRTitle('/repo-root', 7, 'New title', undefined, { owner: 'Legacynnn', repo: 'serper' })
     ).resolves.toBe(true)
 
     expect(getOwnerRepoMock).not.toHaveBeenCalled()
     expect(ghExecFileAsyncMock).toHaveBeenNthCalledWith(
       1,
-      ['pr', 'merge', '7', '--squash', '--repo', 'stablyai/orca'],
+      ['pr', 'merge', '7', '--squash', '--repo', 'Legacynnn/serper'],
       expect.objectContaining({
         cwd: '/repo-root',
         env: expect.objectContaining({ GH_PROMPT_DISABLED: '1' })
@@ -978,7 +987,7 @@ describe('GitHub GraphQL rate-limit guard', () => {
     )
     expect(ghExecFileAsyncMock).toHaveBeenNthCalledWith(
       2,
-      ['pr', 'edit', '7', '--title', 'New title', '--repo', 'stablyai/orca'],
+      ['pr', 'edit', '7', '--title', 'New title', '--repo', 'Legacynnn/serper'],
       { cwd: '/repo-root' }
     )
   })

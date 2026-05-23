@@ -31,7 +31,7 @@ afterEach(() => {
 })
 
 describe('openHttpLink', () => {
-  it('routes into Orca when openLinksInApp is on and a worktree is known', () => {
+  it('routes into Serper when openLinksInApp is on and a worktree is known', () => {
     storeState.settings = { openLinksInApp: true }
 
     openHttpLink('https://example.com/', { worktreeId: 'wt-1' })
@@ -43,7 +43,7 @@ describe('openHttpLink', () => {
     expect(openUrlMock).not.toHaveBeenCalled()
   })
 
-  it('defaults to Orca routing when settings have not hydrated', () => {
+  it('defaults to Serper routing when settings have not hydrated', () => {
     storeState.settings = undefined
 
     openHttpLink('https://example.com/', { worktreeId: 'wt-1' })

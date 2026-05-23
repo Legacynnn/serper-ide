@@ -128,7 +128,7 @@ describe('hosted review slice', () => {
     mockApi.hostedReview.create.mockResolvedValueOnce({
       ok: true,
       number: 12,
-      url: 'https://github.com/acme/orca/pull/12'
+      url: 'https://github.com/acme/serper/pull/12'
     })
     const store = makeStore()
 
@@ -157,7 +157,7 @@ describe('hosted review slice', () => {
     runtimeRpc.callRuntimeRpc.mockResolvedValueOnce({
       ok: true,
       number: 12,
-      url: 'https://github.com/acme/orca/pull/12'
+      url: 'https://github.com/acme/serper/pull/12'
     })
     const store = makeStore({
       activeRuntimeEnvironmentId: 'env-win'

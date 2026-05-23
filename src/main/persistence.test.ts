@@ -74,7 +74,7 @@ async function createStore() {
 }
 
 function dataFile(): string {
-  return join(testState.dir, 'orca-data.json')
+  return join(testState.dir, 'serper-data.json')
 }
 
 function writeDataFile(data: unknown): void {
@@ -192,7 +192,7 @@ function makeSessionWithBrowserHistory(count: number): WorkspaceSessionState {
 
 describe('Store', () => {
   beforeEach(() => {
-    testState.dir = mkdtempSync(join(tmpdir(), 'orca-test-'))
+    testState.dir = mkdtempSync(join(tmpdir(), 'serper-test-'))
   })
 
   afterEach(() => {
@@ -1441,7 +1441,7 @@ describe('Store', () => {
 
   it('missing terminalMacOptionAsAlt in persisted file defaults to "auto" and flags migrated', async () => {
     // Existing file predates the setting entirely. Treat like upgrade from
-    // pre-Option-as-Alt Orca: land on 'auto' and mark migrated so we don't
+    // pre-Option-as-Alt Serper: land on 'auto' and mark migrated so we don't
     // re-examine.
     writeDataFile({
       schemaVersion: 1,
@@ -4012,7 +4012,7 @@ describe('Store', () => {
   // inference because the `telemetry` field is new in this release: keying
   // on its presence would misclassify every pre-telemetry install as fresh,
   // silently flipping existing users to default-on and violating the social
-  // contract they installed Orca under.
+  // contract they installed Serper under.
 
   it('classifies a truly fresh install as new-user cohort (file absent → optedIn=true)', async () => {
     // No data file written — truly fresh install of the telemetry release.
@@ -4052,7 +4052,7 @@ describe('Store', () => {
   it('still classifies as existing-user cohort when the data file is corrupt', async () => {
     // Load-bearing: `fileExistedOnLoad` stays true even when the parse
     // throws, so the corrupt-file catch path must also apply the migration.
-    // Otherwise a user whose `orca-data.json` got corrupted would be
+    // Otherwise a user whose `serper-data.json` got corrupted would be
     // silently opted in as if they were a fresh install.
     mkdirSync(testState.dir, { recursive: true })
     writeFileSync(dataFile(), '{{{corrupt json', 'utf-8')

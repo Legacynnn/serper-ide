@@ -371,13 +371,13 @@ describe('repos:add + repos:clone', () => {
 
   it('defaults repos:clone badgeColor to DEFAULT_REPO_BADGE_COLOR', async () => {
     const result = await handlers.get('repos:clone')!(null, {
-      url: 'https://example.com/orca.git',
+      url: 'https://example.com/serper.git',
       destination: '/tmp'
     })
 
     expect(mockStore.addRepo).toHaveBeenCalledWith(
       expect.objectContaining({
-        path: '/tmp/orca',
+        path: '/tmp/serper',
         badgeColor: DEFAULT_REPO_BADGE_COLOR,
         kind: 'git'
       })
@@ -388,8 +388,8 @@ describe('repos:add + repos:clone', () => {
   it('preserves existing badgeColor when repos:clone upgrades folder->git after dedupe', async () => {
     const existing = {
       id: 'folder-repo',
-      path: '/tmp/orca',
-      displayName: 'orca',
+      path: '/tmp/serper',
+      displayName: 'serper',
       badgeColor: '#8b5cf6',
       addedAt: 1,
       kind: 'folder'
@@ -399,7 +399,7 @@ describe('repos:add + repos:clone', () => {
     mockStore.updateRepo.mockReturnValue(upgraded)
 
     const result = await handlers.get('repos:clone')!(null, {
-      url: 'https://example.com/orca.git',
+      url: 'https://example.com/serper.git',
       destination: '/tmp'
     })
 

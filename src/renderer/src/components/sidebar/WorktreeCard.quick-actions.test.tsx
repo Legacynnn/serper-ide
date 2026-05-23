@@ -57,15 +57,15 @@ vi.mock('./SshDisconnectedDialog', () => ({
 
 vi.mock('./WorktreeContextMenu', () => ({
   default: ({ children }: { children: ReactNode }) => <>{children}</>,
-  CLOSE_ALL_CONTEXT_MENUS_EVENT: 'orca:test-close-context-menus',
-  WORKTREE_CONTEXT_MENU_SCOPE_ATTR: 'data-orca-context-menu-scope'
+  CLOSE_ALL_CONTEXT_MENUS_EVENT: 'serper:test-close-context-menus',
+  WORKTREE_CONTEXT_MENU_SCOPE_ATTR: 'data-serper-context-menu-scope'
 }))
 
 function makeRepo(): Repo {
   return {
     id: 'repo-1',
     path: '/repo',
-    displayName: 'orca',
+    displayName: 'serper',
     badgeColor: '#999999',
     addedAt: 1
   }

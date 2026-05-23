@@ -8,7 +8,7 @@ import { ModelManager } from './model-manager'
 
 vi.mock('electron', () => ({
   app: {
-    getPath: () => '/tmp/orca-speech-models-test'
+    getPath: () => '/tmp/serper-speech-models-test'
   }
 }))
 
@@ -31,7 +31,7 @@ describe('ModelManager', () => {
   })
 
   it('verifies downloaded archive hashes before extraction', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'orca-model-manager-'))
+    const dir = mkdtempSync(join(tmpdir(), 'serper-model-manager-'))
     try {
       const archivePath = join(dir, 'model.tar.bz2')
       writeFileSync(archivePath, 'known archive bytes')
@@ -48,7 +48,7 @@ describe('ModelManager', () => {
   })
 
   it('rejects non-HTTPS model downloads', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'orca-model-manager-'))
+    const dir = mkdtempSync(join(tmpdir(), 'serper-model-manager-'))
     try {
       const manager = new ModelManager(dir) as unknown as ModelManagerInternals
 

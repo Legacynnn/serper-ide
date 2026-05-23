@@ -1766,7 +1766,7 @@ describe('shutdownWorktreeTerminals (sleep) — agent status hygiene', () => {
   })
 })
 
-// Why: CLI-spawned background terminals stamp ORCA_PANE_KEY into the PTY env
+// Why: CLI-spawned background terminals stamp SERPER_PANE_KEY into the PTY env
 // at spawn time. The renderer must adopt the tab under the same id so hook
 // events route to the correct slot.
 describe('createTab tabId hint', () => {

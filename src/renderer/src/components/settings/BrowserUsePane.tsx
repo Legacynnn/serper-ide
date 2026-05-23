@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Import, Loader2, MousePointerClick } from 'lucide-react'
 import { toast } from 'sonner'
 import type { CliInstallStatus } from '../../../../shared/cli-install-types'
-import { ORCA_CLI_SKILL_INSTALL_COMMAND } from '@/lib/agent-feature-install-commands'
+import { SERPER_CLI_SKILL_INSTALL_COMMAND } from '@/lib/agent-feature-install-commands'
 import {
   BROWSER_USE_ENABLED_STORAGE_KEY,
   BROWSER_USE_SKILL_INSTALLED_STORAGE_KEY
@@ -111,9 +111,9 @@ export function BrowserUseSetup({
     try {
       const next = await window.api.cli.install()
       setCliStatus(next)
-      toast.success('Registered `orca` in PATH.')
+      toast.success('Registered `serper` in PATH.')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to register `orca` in PATH.')
+      toast.error(error instanceof Error ? error.message : 'Failed to register `serper` in PATH.')
     } finally {
       setCliBusy(false)
     }
@@ -121,7 +121,7 @@ export function BrowserUseSetup({
 
   const handleCopySkillCommand = async (): Promise<void> => {
     try {
-      await window.api.ui.writeClipboardText(ORCA_CLI_SKILL_INSTALL_COMMAND)
+      await window.api.ui.writeClipboardText(SERPER_CLI_SKILL_INSTALL_COMMAND)
       toast.success('Copied install command. Run it on this computer.')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to copy command.')
@@ -251,8 +251,8 @@ export function BrowserUseSetup({
 
       {showStep1 ? (
         <SearchableSetting
-          title="Enable Orca CLI"
-          description="Register the orca shell command so agents can drive the browser."
+          title="Enable Serper CLI"
+          description="Register the serper shell command so agents can drive the browser."
           keywords={BROWSER_USE_PANE_SEARCH_ENTRIES[0].keywords}
           className="rounded-xl border border-border/60 bg-card/50 p-4"
         >
@@ -262,10 +262,11 @@ export function BrowserUseSetup({
               state={cliEnabled ? 'done' : cliBusy ? 'in-progress' : 'pending'}
             />
             <div className="min-w-0 flex-1 space-y-1">
-              <p className="text-sm font-medium">Enable Orca CLI</p>
+              <p className="text-sm font-medium">Enable Serper CLI</p>
               <p className="text-xs text-muted-foreground">
-                Registers the <code className="rounded bg-muted px-1 py-0.5 text-[11px]">orca</code>{' '}
-                command so agents can orchestrate the browser from their shell.
+                Registers the{' '}
+                <code className="rounded bg-muted px-1 py-0.5 text-[11px]">serper</code> command so
+                agents can orchestrate the browser from their shell.
               </p>
               {cliStatus?.commandPath && cliEnabled ? (
                 <p className="text-[11px] text-muted-foreground">
@@ -302,14 +303,14 @@ export function BrowserUseSetup({
       {showStep2 ? (
         <SearchableSetting
           title="Install Browser Use Skill"
-          description="Install the orca-cli agent skill so agents know how to use the browser."
+          description="Install the serper-cli agent skill so agents know how to use the browser."
           keywords={BROWSER_USE_PANE_SEARCH_ENTRIES[1].keywords}
           className={`rounded-xl border border-border/60 bg-card/50 p-4 ${
             cliEnabled ? '' : 'opacity-60'
           }`}
         >
           <BrowserUseSkillStep
-            command={ORCA_CLI_SKILL_INSTALL_COMMAND}
+            command={SERPER_CLI_SKILL_INSTALL_COMMAND}
             skillInstalled={skillInstalled}
             disabled={!cliEnabled}
             onCopy={() => void handleCopySkillCommand()}
@@ -335,7 +336,7 @@ export function BrowserUseSetup({
             <div className="min-w-0 flex-1 space-y-1">
               <p className="text-sm font-medium">Import Browser Cookies</p>
               <p className="text-xs text-muted-foreground">
-                Bring your existing logins into Orca so agents can reach authenticated pages.
+                Bring your existing logins into Serper so agents can reach authenticated pages.
                 Imports into the default profile.
               </p>
               {sourceLabel ? (

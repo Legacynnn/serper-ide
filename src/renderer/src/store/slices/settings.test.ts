@@ -34,7 +34,7 @@ const env2Lineage: WorktreeLineage = {
 }
 
 beforeEach(() => {
-  delete (globalThis as { __ORCA_WEB_CLIENT__?: boolean }).__ORCA_WEB_CLIENT__
+  delete (globalThis as { __SERPER_WEB_CLIENT__?: boolean }).__SERPER_WEB_CLIENT__
   clearRuntimeCompatibilityCacheForTests()
   vi.clearAllMocks()
   runtimeEnvironmentCall.mockImplementation(({ method }: { method: string }) => {
@@ -204,7 +204,7 @@ describe('createSettingsSlice runtime switching', () => {
   })
 
   it('does not close host-owned mirrored resources when a paired web client switches servers', async () => {
-    ;(globalThis as { __ORCA_WEB_CLIENT__?: boolean }).__ORCA_WEB_CLIENT__ = true
+    ;(globalThis as { __SERPER_WEB_CLIENT__?: boolean }).__SERPER_WEB_CLIENT__ = true
     const store = createTestStore()
     store.setState({
       settings: { activeRuntimeEnvironmentId: 'env-1' } as AppState['settings'],
@@ -287,7 +287,7 @@ describe('createSettingsSlice runtime switching', () => {
 
   it('keeps the current environment when the selected remote server is unreachable', async () => {
     runtimeEnvironmentCall.mockRejectedValueOnce(
-      new Error('Remote Orca runtime closed the connection.')
+      new Error('Remote Serper runtime closed the connection.')
     )
     const store = createTestStore()
     store.setState({
@@ -310,7 +310,7 @@ describe('createSettingsSlice runtime switching', () => {
     expect(store.getState().repos.map((repo) => repo.id)).toEqual(['repo-env-1'])
     expect(store.getState().ptyIdsByTabId).toEqual({ tab1: ['remote:env-1@@terminal-a'] })
     expect(toast.error).toHaveBeenCalledWith('Failed to switch servers', {
-      description: 'Remote Orca runtime closed the connection.'
+      description: 'Remote Serper runtime closed the connection.'
     })
   })
 

@@ -7,7 +7,7 @@ import { join, delimiter } from 'path'
 import { randomUUID } from 'crypto'
 import { type BrowserWindow, ipcMain, app } from 'electron'
 export { getBashShellReadyRcfileContent } from '../providers/local-pty-shell-ready'
-import type { OrcaRuntimeService } from '../runtime/orca-runtime'
+import type { SerperRuntimeService } from '../runtime/serper-runtime'
 import type { Store } from '../persistence'
 import type { GlobalSettings } from '../../shared/types'
 import { openCodeHookService } from '../opencode/hook-service'
@@ -81,11 +81,11 @@ const ptyPaneKey = new Map<string, string>()
 const paneKeyPtyId = new Map<string, string>()
 
 const AGENT_HOOK_RUNTIME_ENV_KEYS = [
-  'ORCA_AGENT_HOOK_PORT',
-  'ORCA_AGENT_HOOK_TOKEN',
-  'ORCA_AGENT_HOOK_ENV',
-  'ORCA_AGENT_HOOK_VERSION',
-  'ORCA_AGENT_HOOK_ENDPOINT'
+  'SERPER_AGENT_HOOK_PORT',
+  'SERPER_AGENT_HOOK_TOKEN',
+  'SERPER_AGENT_HOOK_ENV',
+  'SERPER_AGENT_HOOK_VERSION',
+  'SERPER_AGENT_HOOK_ENDPOINT'
 ] as const
 
 export function getPtyIdForPaneKey(paneKey: string): string | undefined {
@@ -249,7 +249,7 @@ function readInheritedPath(baseEnv: Record<string, string>): string {
 /**
  * Mutates `baseEnv` in place with all host-local PTY env vars and returns it.
  *
- * This is the single source of truth for the env shape an Orca PTY needs
+ * This is the single source of truth for the env shape an Serper PTY needs
  * BEFORE the provider-specific wrapper (LocalPtyProvider's TERM/LANG defaults,
  * DaemonPtyAdapter's subprocess env). Callers are responsible for the SSH
  * guard — if `args.connectionId` is set, do NOT call this function, because
@@ -270,8 +270,8 @@ export function buildPtyHostEnv(
   // in lock-step across spawn paths without pushing process.env onto the
   // IPC wire unnecessarily.
   const preexistingOpenCodeConfigDir =
-    baseEnv.ORCA_OPENCODE_SOURCE_CONFIG_DIR ??
-    process.env.ORCA_OPENCODE_SOURCE_CONFIG_DIR ??
+    baseEnv.SERPER_OPENCODE_SOURCE_CONFIG_DIR ??
+    process.env.SERPER_OPENCODE_SOURCE_CONFIG_DIR ??
     baseEnv.OPENCODE_CONFIG_DIR ??
     process.env.OPENCODE_CONFIG_DIR ??
     readShellStartupEnvVar(
@@ -280,8 +280,8 @@ export function buildPtyHostEnv(
       baseEnv.SHELL ?? process.env.SHELL
     )
   const preexistingPiAgentDir =
-    baseEnv.ORCA_PI_SOURCE_AGENT_DIR ??
-    process.env.ORCA_PI_SOURCE_AGENT_DIR ??
+    baseEnv.SERPER_PI_SOURCE_AGENT_DIR ??
+    process.env.SERPER_PI_SOURCE_AGENT_DIR ??
     baseEnv.PI_CODING_AGENT_DIR ??
     process.env.PI_CODING_AGENT_DIR ??
     readShellStartupEnvVar(
@@ -291,28 +291,28 @@ export function buildPtyHostEnv(
     )
 
   // Why: OPENCODE_CONFIG_DIR is a singular path, not a colon-list, so a user
-  // value cannot coexist with an Orca-only injection. Hand the user's value
+  // value cannot coexist with an Serper-only injection. Hand the user's value
   // (when present) to the hook service and let it materialize a per-PTY
-  // mirror overlay that lets the user's plugins and Orca's status plugin
+  // mirror overlay that lets the user's plugins and Serper's status plugin
   // load together — same pattern Pi uses below for PI_CODING_AGENT_DIR. See
   // docs/opencode-config-dir-collision.md.
   Object.assign(baseEnv, openCodeHookService.buildPtyEnv(id, preexistingOpenCodeConfigDir))
   if (baseEnv.OPENCODE_CONFIG_DIR) {
     // Why: ~/.zshrc can re-export the user's default after spawn; shell-ready
     // wrappers restore this PTY-scoped value after user startup files run.
-    baseEnv.ORCA_OPENCODE_CONFIG_DIR = baseEnv.OPENCODE_CONFIG_DIR
+    baseEnv.SERPER_OPENCODE_CONFIG_DIR = baseEnv.OPENCODE_CONFIG_DIR
     if (preexistingOpenCodeConfigDir) {
-      // Why: terminals launched from another Orca terminal inherit the overlay
+      // Why: terminals launched from another Serper terminal inherit the overlay
       // as OPENCODE_CONFIG_DIR; keep the original source so overlays do not
       // mirror overlays and drop the user's real config.
-      baseEnv.ORCA_OPENCODE_SOURCE_CONFIG_DIR = preexistingOpenCodeConfigDir
+      baseEnv.SERPER_OPENCODE_SOURCE_CONFIG_DIR = preexistingOpenCodeConfigDir
     }
   }
 
-  // Why: Claude/Codex native hooks run inside the shell process, so Orca
+  // Why: Claude/Codex native hooks run inside the shell process, so Serper
   // must inject the loopback receiver coordinates before the agent starts.
   // Without these env vars the global hook config cannot map callbacks back
-  // to the correct Orca pane.
+  // to the correct Serper pane.
   for (const key of AGENT_HOOK_RUNTIME_ENV_KEYS) {
     delete baseEnv[key]
   }
@@ -330,32 +330,32 @@ export function buildPtyHostEnv(
   if (baseEnv.PI_CODING_AGENT_DIR) {
     // Why: ~/.zshrc can re-export the user's default after spawn; shell-ready
     // wrappers restore this PTY-scoped value after user startup files run.
-    baseEnv.ORCA_PI_CODING_AGENT_DIR = baseEnv.PI_CODING_AGENT_DIR
+    baseEnv.SERPER_PI_CODING_AGENT_DIR = baseEnv.PI_CODING_AGENT_DIR
     if (preexistingPiAgentDir) {
-      // Why: preserve the original Pi root across nested Orca terminals; the
+      // Why: preserve the original Pi root across nested Serper terminals; the
       // public env var is intentionally restored to the current PTY overlay.
-      baseEnv.ORCA_PI_SOURCE_AGENT_DIR = preexistingPiAgentDir
+      baseEnv.SERPER_PI_SOURCE_AGENT_DIR = preexistingPiAgentDir
     }
   }
 
   // Why: Codex account switching now materializes auth into one shared
-  // runtime home (~/.codex), and Codex launched inside Orca terminals must
+  // runtime home (~/.codex), and Codex launched inside Serper terminals must
   // use that same prepared home as quota fetches and other entry points.
-  // Keep the override PTY-scoped so Orca does not mutate the app process
+  // Keep the override PTY-scoped so Serper does not mutate the app process
   // environment or the user's unrelated external shells.
   if (opts.selectedCodexHomePath) {
     baseEnv.CODEX_HOME = opts.selectedCodexHomePath
   }
 
-  // Why: in dev mode the `orca` CLI defaults to the production userData
-  // path, which routes status updates to the packaged Orca instead of this
-  // dev instance. Injecting ORCA_USER_DATA_PATH ensures CLI calls from
+  // Why: in dev mode the `serper` CLI defaults to the production userData
+  // path, which routes status updates to the packaged Serper instead of this
+  // dev instance. Injecting SERPER_USER_DATA_PATH ensures CLI calls from
   // agents running inside dev terminals reach the correct runtime. We also
-  // prepend the dev CLI launcher directory to PATH so `orca` resolves to
-  // the dev build (which supports ORCA_USER_DATA_PATH) instead of the
-  // production binary at /usr/local/bin/orca.
+  // prepend the dev CLI launcher directory to PATH so `serper` resolves to
+  // the dev build (which supports SERPER_USER_DATA_PATH) instead of the
+  // production binary at /usr/local/bin/serper.
   if (!opts.isPackaged) {
-    baseEnv.ORCA_USER_DATA_PATH ??= opts.userDataPath
+    baseEnv.SERPER_USER_DATA_PATH ??= opts.userDataPath
     const devCliBin = join(opts.userDataPath, 'cli', 'bin')
     const inheritedPath = readInheritedPath(baseEnv)
     // Why: avoid a trailing delimiter when PATH is empty — some shells
@@ -366,15 +366,15 @@ export function buildPtyHostEnv(
   }
 
   // Why: GitHub attribution should only affect commands launched from
-  // Orca's own PTYs. Injecting lightweight PATH shims at spawn-time keeps
-  // the behavior local to Orca instead of rewriting user git config or
+  // Serper's own PTYs. Injecting lightweight PATH shims at spawn-time keeps
+  // the behavior local to Serper instead of rewriting user git config or
   // touching external shells.
   if (!opts.githubAttributionEnabled) {
-    delete baseEnv.ORCA_ENABLE_GIT_ATTRIBUTION
-    delete baseEnv.ORCA_GIT_COMMIT_TRAILER
-    delete baseEnv.ORCA_GH_PR_FOOTER
-    delete baseEnv.ORCA_GH_ISSUE_FOOTER
-    delete baseEnv.ORCA_ATTRIBUTION_SHIM_DIR
+    delete baseEnv.SERPER_ENABLE_GIT_ATTRIBUTION
+    delete baseEnv.SERPER_GIT_COMMIT_TRAILER
+    delete baseEnv.SERPER_GH_PR_FOOTER
+    delete baseEnv.SERPER_GH_ISSUE_FOOTER
+    delete baseEnv.SERPER_ATTRIBUTION_SHIM_DIR
   }
   applyTerminalAttributionEnv(baseEnv, {
     enabled: opts.githubAttributionEnabled,
@@ -566,7 +566,7 @@ export function unbindLocalProviderListeners(): void {
 
 export function registerPtyHandlers(
   mainWindow: BrowserWindow,
-  runtime?: OrcaRuntimeService,
+  runtime?: SerperRuntimeService,
   getSelectedCodexHomePath?: () => string | null,
   getSettings?: () => GlobalSettings,
   prepareClaudeAuth?: () => Promise<ClaudeRuntimeAuthPreparation>,
@@ -610,16 +610,16 @@ export function registerPtyHandlers(
         })
         // Why: agents need their own terminal handle at process start so they
         // can self-identify in orchestration messages without an extra RPC.
-        const requestedHandle = baseEnv.ORCA_TERMINAL_HANDLE
+        const requestedHandle = baseEnv.SERPER_TERMINAL_HANDLE
         const preAllocatedHandle =
           requestedHandle && trustedTerminalHandleEnv.has(requestedHandle)
             ? requestedHandle
             : runtime?.preAllocateHandleForPty(id)
         if (requestedHandle && requestedHandle !== preAllocatedHandle) {
-          delete env.ORCA_TERMINAL_HANDLE
+          delete env.SERPER_TERMINAL_HANDLE
         }
         if (preAllocatedHandle) {
-          env.ORCA_TERMINAL_HANDLE = preAllocatedHandle
+          env.SERPER_TERMINAL_HANDLE = preAllocatedHandle
         }
         return env
       },
@@ -879,7 +879,7 @@ export function registerPtyHandlers(
         ? { ...args.env, ...claudeAuth.envPatch }
         : args.env
       if (args.preAllocatedHandle) {
-        env = { ...env, ORCA_TERMINAL_HANDLE: args.preAllocatedHandle }
+        env = { ...env, SERPER_TERMINAL_HANDLE: args.preAllocatedHandle }
       }
       if (isDaemonHostSpawn && sessionId) {
         if (!isSafePtySessionId(sessionId, app.getPath('userData'))) {
@@ -950,7 +950,7 @@ export function registerPtyHandlers(
       // Why: runtime-owned CLI PTYs bypass the renderer `pty:spawn` handler,
       // so record their spawn-time paneKey here too. Synthetic hook titles and
       // paneKey-scoped cache cleanup both depend on this reverse lookup.
-      const paneKey = rememberPaneKeyForPty(result.id, env?.ORCA_PANE_KEY)
+      const paneKey = rememberPaneKeyForPty(result.id, env?.SERPER_PANE_KEY)
       if (!args.connectionId) {
         registerPty({
           ptyId: result.id,
@@ -1099,7 +1099,7 @@ export function registerPtyHandlers(
         tabId?: string
         leafId?: string
         // Why: telemetry-plan.md§Agent launch semantics. The renderer
-        // threads what Orca was *asked* to launch through this field; main
+        // threads what Serper was *asked* to launch through this field; main
         // fires `agent_started` only after `provider.spawn` resolves. Loose
         // typing on the IPC boundary because the main-side schema
         // validator is the single enforcement point — `track()` will drop
@@ -1162,26 +1162,26 @@ export function registerPtyHandlers(
         args.sessionId ?? (isDaemonHostSpawn ? mintPtySessionId(args.worktreeId) : undefined)
       // Why: the renderer sets pane env for SSH too. Only forward it to the
       // remote when the relay hook path is enabled; otherwise a newer relay
-      // could emit statuses this Orca build is not prepared to route.
+      // could emit statuses this Serper build is not prepared to route.
       let sshSourceEnv = args.env
       if (args.connectionId && !isRemoteAgentHooksEnabled()) {
         if (
           sshSourceEnv &&
-          ('ORCA_PANE_KEY' in sshSourceEnv ||
-            'ORCA_TAB_ID' in sshSourceEnv ||
-            'ORCA_WORKTREE_ID' in sshSourceEnv)
+          ('SERPER_PANE_KEY' in sshSourceEnv ||
+            'SERPER_TAB_ID' in sshSourceEnv ||
+            'SERPER_WORKTREE_ID' in sshSourceEnv)
         ) {
           const stripped = { ...sshSourceEnv }
-          delete stripped.ORCA_PANE_KEY
-          delete stripped.ORCA_TAB_ID
-          delete stripped.ORCA_WORKTREE_ID
+          delete stripped.SERPER_PANE_KEY
+          delete stripped.SERPER_TAB_ID
+          delete stripped.SERPER_WORKTREE_ID
           sshSourceEnv = stripped
         }
       }
       const baseEnvWithAuth = claudeAuth
         ? { ...sshSourceEnv, ...claudeAuth.envPatch }
         : sshSourceEnv
-      const spawnPaneKey = baseEnvWithAuth?.ORCA_PANE_KEY
+      const spawnPaneKey = baseEnvWithAuth?.SERPER_PANE_KEY
       const parsedSpawnPaneKey = parseValidPaneKey(spawnPaneKey)
       const verifiedPaneKey =
         parsedSpawnPaneKey &&
@@ -1206,23 +1206,23 @@ export function registerPtyHandlers(
       const stablePaneKey = verifiedPaneKey ?? migrationUnsupportedPaneKey
       const baseEnv = baseEnvWithAuth ? { ...baseEnvWithAuth } : undefined
       if (baseEnv && stablePaneKey) {
-        baseEnv.ORCA_PANE_KEY = stablePaneKey
+        baseEnv.SERPER_PANE_KEY = stablePaneKey
         if (typeof args.tabId === 'string') {
-          baseEnv.ORCA_TAB_ID = args.tabId
+          baseEnv.SERPER_TAB_ID = args.tabId
         } else if (!args.connectionId) {
-          delete baseEnv.ORCA_TAB_ID
+          delete baseEnv.SERPER_TAB_ID
         }
         if (typeof args.worktreeId === 'string') {
-          baseEnv.ORCA_WORKTREE_ID = args.worktreeId
+          baseEnv.SERPER_WORKTREE_ID = args.worktreeId
         } else if (!args.connectionId) {
-          delete baseEnv.ORCA_WORKTREE_ID
+          delete baseEnv.SERPER_WORKTREE_ID
         }
       } else if (baseEnv) {
-        // Why: ORCA_PANE_KEY crosses into shells and hook registries. Only the
+        // Why: SERPER_PANE_KEY crosses into shells and hook registries. Only the
         // key proven to match this spawn's tab+leaf may leave the IPC boundary.
-        delete baseEnv.ORCA_PANE_KEY
-        delete baseEnv.ORCA_TAB_ID
-        delete baseEnv.ORCA_WORKTREE_ID
+        delete baseEnv.SERPER_PANE_KEY
+        delete baseEnv.SERPER_TAB_ID
+        delete baseEnv.SERPER_WORKTREE_ID
       }
       const validatedPaneKey = stablePaneKey
       const validatedLeafId = verifiedLeafId ?? metadataLeafId
@@ -1273,7 +1273,7 @@ export function registerPtyHandlers(
         }
       }
       const spawnEnv = preAllocatedHandle
-        ? { ...env, ORCA_TERMINAL_HANDLE: preAllocatedHandle }
+        ? { ...env, SERPER_TERMINAL_HANDLE: preAllocatedHandle }
         : env
       const envToDelete = claudeAuth?.stripAuthEnv
         ? [...CLAUDE_AUTH_ENV_VARS, 'ANTHROPIC_CUSTOM_HEADERS']
@@ -1389,7 +1389,7 @@ export function registerPtyHandlers(
       }
       ptyOwnership.set(result.id, args.connectionId ?? null)
       if (store && args.connectionId) {
-        // Why: remote PTYs live in the SSH relay grace window after Orca
+        // Why: remote PTYs live in the SSH relay grace window after Serper
         // detaches. Persist their IDs immediately so reconnect can reattach
         // instead of treating the tab as a fresh shell.
         store.upsertSshRemotePtyLease({
@@ -1497,7 +1497,7 @@ export function registerPtyHandlers(
       if (isClaudeLaunch) {
         markClaudePtySpawned(result.id)
       }
-      // Why: renderer sets ORCA_PANE_KEY in `args.env` for every pane-owned
+      // Why: renderer sets SERPER_PANE_KEY in `args.env` for every pane-owned
       // spawn (see pty-connection.ts). Recording the mapping here lets
       // clearProviderPtyState clear the agent-hooks server's per-paneKey
       // caches when the PTY exits.
@@ -1795,13 +1795,13 @@ export function registerPtyHandlers(
 }
 
 export function registerHeadlessPtyRuntime(
-  runtime: OrcaRuntimeService,
+  runtime: SerperRuntimeService,
   getSelectedCodexHomePath?: () => string | null,
   getSettings?: () => GlobalSettings,
   prepareClaudeAuth?: () => Promise<ClaudeRuntimeAuthPreparation>,
   store?: Store
 ): void {
-  // Why: headless `orca serve` has no renderer window, but the runtime still
+  // Why: headless `serper serve` has no renderer window, but the runtime still
   // needs the same PTY controller and provider listeners as desktop so remote
   // clients can create, stream, inspect, and stop terminals.
   const headlessWindow = {

@@ -103,7 +103,7 @@ const STATUS_BAR_TOGGLES: readonly {
 const THEME_ENTRIES: SettingsSearchEntry[] = [
   {
     title: 'Theme',
-    description: 'Choose how Orca looks in the app window.',
+    description: 'Choose how Serper looks in the app window.',
     keywords: ['dark', 'light', 'system']
   }
 ]
@@ -119,8 +119,8 @@ const ZOOM_ENTRIES: SettingsSearchEntry[] = [
 const TYPOGRAPHY_ENTRIES: SettingsSearchEntry[] = [
   {
     title: 'IDE Font',
-    description: 'Choose the font used by the Orca interface.',
-    keywords: ['font', 'typeface', 'typography', 'ide', 'orca', 'interface', 'app', 'ui']
+    description: 'Choose the font used by the Serper interface.',
+    keywords: ['font', 'typeface', 'typography', 'ide', 'serper', 'interface', 'app', 'ui']
   }
 ]
 
@@ -140,8 +140,8 @@ const LAYOUT_ENTRIES: SettingsSearchEntry[] = [
 const TITLEBAR_ENTRIES: SettingsSearchEntry[] = [
   {
     title: 'Titlebar App Name',
-    description: 'Show Orca in the titlebar.',
-    keywords: ['titlebar', 'orca', 'app', 'name', 'brand']
+    description: 'Show Serper in the titlebar.',
+    keywords: ['titlebar', 'serper', 'app', 'name', 'brand']
   }
 ]
 
@@ -186,7 +186,9 @@ export function AppearancePane({
       <section key="theme" className="space-y-4">
         <div className="space-y-1">
           <h3 className="text-sm font-semibold">Theme</h3>
-          <p className="text-xs text-muted-foreground">Choose how Orca looks in the app window.</p>
+          <p className="text-xs text-muted-foreground">
+            Choose how Serper looks in the app window.
+          </p>
         </div>
 
         <ThemePicker settings={settings} updateSettings={updateSettings} applyTheme={applyTheme} />
@@ -218,14 +220,14 @@ export function AppearancePane({
         <div className="space-y-1">
           <h3 className="text-sm font-semibold">Typography</h3>
           <p className="text-xs text-muted-foreground">
-            Choose the font used by the Orca interface.
+            Choose the font used by the Serper interface.
           </p>
         </div>
 
         <SearchableSetting
           title="IDE Font"
-          description="Choose the font used by the Orca interface."
-          keywords={['font', 'typeface', 'typography', 'ide', 'orca', 'interface', 'app', 'ui']}
+          description="Choose the font used by the Serper interface."
+          keywords={['font', 'typeface', 'typography', 'ide', 'serper', 'interface', 'app', 'ui']}
           className="space-y-2"
         >
           <Label>IDE Font</Label>
@@ -301,13 +303,13 @@ export function AppearancePane({
 
         <SearchableSetting
           title="Titlebar App Name"
-          description="Show Orca in the titlebar."
-          keywords={['titlebar', 'orca', 'app', 'name', 'brand']}
+          description="Show Serper in the titlebar."
+          keywords={['titlebar', 'serper', 'app', 'name', 'brand']}
           className="flex items-center justify-between gap-4 px-1 py-2"
         >
           <div className="space-y-0.5">
             <Label>Titlebar App Name</Label>
-            <p className="text-xs text-muted-foreground">Show Orca in the titlebar.</p>
+            <p className="text-xs text-muted-foreground">Show Serper in the titlebar.</p>
           </div>
           <ToggleSwitchButton
             checked={settings.showTitlebarAppName}

@@ -522,7 +522,7 @@ export class Coordinator {
 
     const dispatch = this.db.createDispatchContext(task.id, targetHandle)
 
-    // Why: agents dispatched by the coordinator must use orca-dev in dev mode
+    // Why: agents dispatched by the coordinator must use serper-dev in dev mode
     // so they talk to the dev runtime's socket, not production (Section 6.4).
     // Why (§3.4): `strippedSpec` drops the `allow-stale-base: true` line so
     // the worker's `--- TASK ---` block does not contain the infra flag (which
@@ -536,7 +536,7 @@ export class Coordinator {
       // part of its instructions).
       taskSpec: strippedSpec,
       coordinatorHandle: this.opts.coordinatorHandle,
-      devMode: process.env.ORCA_USER_DATA_PATH?.includes('orca-dev'),
+      devMode: process.env.SERPER_USER_DATA_PATH?.includes('serper-dev'),
       // Why (§3.2): drift section fires only when behind > 0. The preamble
       // builder gates on this itself; passing the object unconditionally lets
       // the coordinator stay dumb about the display rule.

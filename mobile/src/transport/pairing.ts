@@ -8,21 +8,21 @@ import { PairingOfferSchema, type PairingOffer } from './types'
 export function decodePairingUrl(url: string): PairingOffer | null {
   try {
     const hashIndex = url.indexOf('#')
-    if (!url.startsWith('orca://pair') || hashIndex === -1) return null
+    if (!url.startsWith('serper://pair') || hashIndex === -1) return null
     return decodePairingBase64(url.slice(hashIndex + 1))
   } catch {
     return null
   }
 }
 
-// Why: accept either an `orca://pair#<base64>` URL or the bare base64
+// Why: accept either an `serper://pair#<base64>` URL or the bare base64
 // string so the paste-pair flow can take whichever the user actually
 // copied from desktop.
 export function parsePairingCode(input: string): PairingOffer | null {
   const trimmed = input.trim()
   if (!trimmed) return null
   try {
-    if (trimmed.startsWith('orca://pair')) {
+    if (trimmed.startsWith('serper://pair')) {
       return decodePairingUrl(trimmed)
     }
     return decodePairingBase64(trimmed)

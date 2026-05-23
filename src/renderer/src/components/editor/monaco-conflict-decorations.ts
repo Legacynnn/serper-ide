@@ -49,14 +49,14 @@ function makeMarkerDecoration(
     range: makeMarkerRange(lineNumber, line),
     options: {
       isWholeLine: true,
-      className: 'orca-conflict-marker-line',
-      linesDecorationsClassName: 'orca-conflict-line-decoration',
-      marginClassName: 'orca-conflict-margin',
+      className: 'serper-conflict-marker-line',
+      linesDecorationsClassName: 'serper-conflict-line-decoration',
+      marginClassName: 'serper-conflict-margin',
       hoverMessage: { value: label },
       linesDecorationsTooltip: label,
       after: {
         content: ` ${label}`,
-        inlineClassName: 'orca-conflict-marker-label'
+        inlineClassName: 'serper-conflict-marker-label'
       }
     }
   }
@@ -75,7 +75,7 @@ function makeSectionDecoration(
     range: makeWholeLineRange(startLineNumber, endLineNumber),
     options: {
       isWholeLine: true,
-      className: `orca-conflict-section-line orca-conflict-${section}-line`
+      className: `serper-conflict-section-line serper-conflict-${section}-line`
     }
   }
 }

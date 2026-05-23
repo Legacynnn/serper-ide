@@ -123,7 +123,7 @@ export const createRepoSlice: StateCreator<AppState, [], [], RepoSlice> = (set, 
       }
       const alreadyAdded = get().repos.some((r) => r.id === repo.id)
       if (alreadyAdded) {
-        get().clearOrcaHookTrustForRepo(repo.id)
+        get().clearSerperHookTrustForRepo(repo.id)
       }
       set((s) => {
         if (s.repos.some((r) => r.id === repo.id)) {
@@ -210,7 +210,7 @@ export const createRepoSlice: StateCreator<AppState, [], [], RepoSlice> = (set, 
         ? window.api.repos.remove({ repoId })
         : callRuntimeRpc(target, 'repo.rm', { repo: repoId }, { timeoutMs: 15_000 }))
 
-      get().clearOrcaHookTrustForRepo(repoId)
+      get().clearSerperHookTrustForRepo(repoId)
       const repoPath = get().repos.find((repo) => repo.id === repoId)?.path
       get().evictGitHubRepoCaches(repoId, repoPath)
       const { clearRepoSlugCacheEntry } = await import('../../lib/repo-slug-index')

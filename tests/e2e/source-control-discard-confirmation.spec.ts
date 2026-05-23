@@ -1,4 +1,4 @@
-import { test, expect } from './helpers/orca-app'
+import { test, expect } from './helpers/serper-app'
 import { waitForActiveWorktree, waitForSessionReady } from './helpers/store'
 import type { Page } from '@playwright/test'
 
@@ -33,7 +33,7 @@ async function seedUntrackedFile(page: Page): Promise<SeededUntrackedFile> {
     }
 
     const separator = worktree.path.includes('\\') ? '\\' : '/'
-    const fileName = `orca-discard-confirm-${Date.now()}.txt`
+    const fileName = `serper-discard-confirm-${Date.now()}.txt`
     const relativePath = fileName
     await window.api.fs.writeFile({
       filePath: `${worktree.path}${separator}${relativePath}`,
@@ -73,16 +73,16 @@ async function refreshGitStatus(page: Page): Promise<void> {
 }
 
 test.describe('Source Control discard confirmation', () => {
-  test.beforeEach(async ({ orcaPage }) => {
-    await waitForSessionReady(orcaPage)
-    await waitForActiveWorktree(orcaPage)
+  test.beforeEach(async ({ serperPage }) => {
+    await waitForSessionReady(serperPage)
+    await waitForActiveWorktree(serperPage)
   })
 
-  test('cancel keeps an untracked file and confirm deletes it', async ({ orcaPage }) => {
-    const seededFile = await seedUntrackedFile(orcaPage)
-    await openSourceControl(orcaPage)
+  test('cancel keeps an untracked file and confirm deletes it', async ({ serperPage }) => {
+    const seededFile = await seedUntrackedFile(serperPage)
+    await openSourceControl(serperPage)
 
-    const row = orcaPage
+    const row = serperPage
       .locator('[data-testid="source-control-entry"]')
       .filter({ hasText: seededFile.fileName })
     await expect(row).toBeVisible()
@@ -90,7 +90,7 @@ test.describe('Source Control discard confirmation', () => {
     await row.hover()
     await row.getByRole('button', { name: 'Delete untracked file' }).click()
 
-    const dialog = orcaPage.getByRole('dialog', {
+    const dialog = serperPage.getByRole('dialog', {
       name: `Delete "${seededFile.fileName}"?`
     })
     await expect(dialog).toBeVisible()
@@ -102,16 +102,16 @@ test.describe('Source Control discard confirmation', () => {
 
     await row.hover()
     await row.getByRole('button', { name: 'Delete untracked file' }).click()
-    await orcaPage
+    await serperPage
       .getByRole('dialog', { name: `Delete "${seededFile.fileName}"?` })
       .getByRole('button', { name: 'Delete' })
       .click()
 
     await expect(row).toHaveCount(0, { timeout: 10_000 })
 
-    await refreshGitStatus(orcaPage)
+    await refreshGitStatus(serperPage)
     await expect(
-      orcaPage.locator('[data-testid="source-control-entry"]').filter({
+      serperPage.locator('[data-testid="source-control-entry"]').filter({
         hasText: seededFile.fileName
       })
     ).toHaveCount(0)

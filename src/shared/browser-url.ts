@@ -1,4 +1,4 @@
-import { ORCA_BROWSER_BLANK_URL } from './constants'
+import { SERPER_BROWSER_BLANK_URL } from './constants'
 
 const LOCAL_ADDRESS_PATTERN =
   /^(?:localhost|127(?:\.\d{1,3}){3}|0\.0\.0\.0|\[[0-9a-f:]+\])(?::\d+)?(?:\/.*)?$/i
@@ -152,8 +152,8 @@ export function normalizeBrowserNavigationUrl(
   options: SearchUrlOptions = {}
 ): string | null {
   const trimmed = rawUrl.trim()
-  if (trimmed.length === 0 || trimmed === 'about:blank' || trimmed === ORCA_BROWSER_BLANK_URL) {
-    return ORCA_BROWSER_BLANK_URL
+  if (trimmed.length === 0 || trimmed === 'about:blank' || trimmed === SERPER_BROWSER_BLANK_URL) {
+    return SERPER_BROWSER_BLANK_URL
   }
 
   if (LOCAL_ADDRESS_PATTERN.test(trimmed)) {
@@ -206,7 +206,7 @@ export function normalizeBrowserNavigationUrl(
 
 export function normalizeExternalBrowserUrl(rawUrl: string): string | null {
   const normalized = normalizeBrowserNavigationUrl(rawUrl)
-  if (normalized === null || normalized === ORCA_BROWSER_BLANK_URL) {
+  if (normalized === null || normalized === SERPER_BROWSER_BLANK_URL) {
     return null
   }
   // Why: external-link opening (shell.openExternal, will-navigate) must only

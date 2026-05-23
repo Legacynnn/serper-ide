@@ -10,7 +10,7 @@ import { isFolderRepo } from '../../shared/repo-kind'
 import { getSshFilesystemProvider } from '../providers/ssh-filesystem-dispatch'
 import {
   hasHooksFile,
-  hasUnrecognizedOrcaYamlKeys,
+  hasUnrecognizedSerperYamlKeys,
   loadHooks,
   readIssueCommand,
   writeIssueCommand
@@ -27,7 +27,7 @@ export function registerHooksHandlers(store: Store): void {
       return { hasHooks: false, hooks: null, mayNeedUpdate: false }
     }
 
-    // Why: remote repos read orca.yaml via the SSH filesystem provider.
+    // Why: remote repos read serper.yaml via the SSH filesystem provider.
     // Parsing happens in the main process since it's CPU-cheap and avoids
     // adding YAML parsing to the relay.
     if (repo.connectionId) {
@@ -36,7 +36,7 @@ export function registerHooksHandlers(store: Store): void {
         return { hasHooks: false, hooks: null, mayNeedUpdate: false }
       }
       try {
-        const result = await fsProvider.readFile(join(repo.path, '.orca.yaml'))
+        const result = await fsProvider.readFile(join(repo.path, '.serper.yaml'))
         if (result.isBinary) {
           return { hasHooks: false, hooks: null, mayNeedUpdate: false }
         }
@@ -50,11 +50,11 @@ export function registerHooksHandlers(store: Store): void {
 
     const has = hasHooksFile(repo.path)
     const hooks = has ? loadHooks(repo.path) : null
-    // Why: when a newer Orca version adds a top-level key to `orca.yaml`, older
+    // Why: when a newer Serper version adds a top-level key to `serper.yaml`, older
     // versions that don't recognise it return null and show "could not be parsed".
     // Detecting well-formed but unrecognised keys lets the UI suggest updating
     // instead of implying the file is broken.
-    const mayNeedUpdate = has && !hooks && hasUnrecognizedOrcaYamlKeys(repo.path)
+    const mayNeedUpdate = has && !hooks && hasUnrecognizedSerperYamlKeys(repo.path)
     return {
       hasHooks: has,
       hooks,
@@ -86,12 +86,12 @@ export function registerHooksHandlers(store: Store): void {
         }
       }
       try {
-        const result = await fsProvider.readFile(join(repo.path, '.orca', 'issue-command'))
+        const result = await fsProvider.readFile(join(repo.path, '.serper', 'issue-command'))
         return {
           localContent: result.isBinary ? null : result.content,
           sharedContent: null,
           effectiveContent: result.isBinary ? null : result.content,
-          localFilePath: join(repo.path, '.orca', 'issue-command'),
+          localFilePath: join(repo.path, '.serper', 'issue-command'),
           source: 'local' as const
         }
       } catch {
@@ -121,7 +121,7 @@ export function registerHooksHandlers(store: Store): void {
         if (!fsProvider) {
           return
         }
-        await fsProvider.writeFile(join(repo.path, '.orca', 'issue-command'), args.content)
+        await fsProvider.writeFile(join(repo.path, '.serper', 'issue-command'), args.content)
         return
       }
 

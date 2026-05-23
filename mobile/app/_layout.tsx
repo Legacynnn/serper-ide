@@ -6,7 +6,7 @@ import * as SplashScreen from 'expo-splash-screen'
 import * as Notifications from 'expo-notifications'
 import * as Linking from 'expo-linking'
 import { colors } from '../src/theme/mobile-theme'
-import { OrcaLogo } from '../src/components/OrcaLogo'
+import { SerperLogo } from '../src/components/SerperLogo'
 import { RpcClientProvider } from '../src/transport/client-context'
 import { getNotificationNavigationPath } from '../src/notifications/notification-routing'
 import { loadHosts } from '../src/transport/host-store'
@@ -30,13 +30,13 @@ Notifications.setNotificationHandler({
   })
 })
 
-// Why: extract the path+payload that follows the orca://pair anchor so we
+// Why: extract the path+payload that follows the serper://pair anchor so we
 // can route it to the confirm screen. Accept either a hash payload
-// (`orca://pair#<base64>`, the QR / shared form) or a query param
-// (`orca://pair?code=<...>`, future-proof for share sheets that strip
+// (`serper://pair#<base64>`, the QR / shared form) or a query param
+// (`serper://pair?code=<...>`, future-proof for share sheets that strip
 // fragments).
 function extractPairCode(url: string): string | null {
-  if (!url.startsWith('orca://pair')) return null
+  if (!url.startsWith('serper://pair')) return null
   const hashIndex = url.indexOf('#')
   if (hashIndex !== -1) {
     return url.slice(hashIndex + 1) || null
@@ -53,7 +53,7 @@ export default function RootLayout() {
   const router = useRouter()
   const handledNotificationIdsRef = useRef<Set<string>>(new Set())
 
-  // Why: route `orca://pair#<code>` deep links to the confirm screen so
+  // Why: route `serper://pair#<code>` deep links to the confirm screen so
   // the same pairing flow runs whether the link arrived via QR scan,
   // paste, AirDrop, Messages, or `xcrun simctl openurl`. getInitialURL
   // covers cold-start (link tapped while app was closed); the listener
@@ -165,7 +165,7 @@ export default function RootLayout() {
             name="index"
             options={{
               headerShown: false,
-              headerTitle: () => <OrcaLogo size={22} />
+              headerTitle: () => <SerperLogo size={22} />
             }}
           />
           <Stack.Screen name="pair-scan" options={{ headerShown: false }} />

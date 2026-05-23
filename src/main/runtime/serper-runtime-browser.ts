@@ -1,4 +1,4 @@
-/* eslint-disable max-lines -- Why: this file is a command adapter for one external surface, Agent Browser automation. It stays separate from OrcaRuntimeService so runtime state does not grow further while browser routing remains easy to scan in one place. */
+/* eslint-disable max-lines -- Why: this file is a command adapter for one external surface, Agent Browser automation. It stays separate from SerperRuntimeService so runtime state does not grow further while browser routing remains easy to scan in one place. */
 import { randomUUID } from 'crypto'
 import { ipcMain, webContents, type BrowserWindow } from 'electron'
 import { getRepoIdFromWorktreeId } from '../../shared/worktree-id'
@@ -270,7 +270,7 @@ export class RuntimeBrowserCommands {
 
   // Why: agent-browser drives navigation via CDP, which bypasses Electron's
   // webview event system. The renderer's did-navigate / page-title-updated
-  // listeners never fire, leaving the Zustand store (and thus the Orca UI's
+  // listeners never fire, leaving the Zustand store (and thus the Serper UI's
   // address bar and tab title) stale. Push updates from main → renderer after
   // any navigation-causing command so the UI stays in sync.
   private notifyRendererNavigation(browserPageId: string, url: string, title: string): void {
@@ -1276,7 +1276,7 @@ export class RuntimeBrowserCommands {
     if (!this.host.getAvailableAuthoritativeWindow()) {
       throw new BrowserError(
         'browser_error',
-        'Browser tab creation requires a desktop renderer; headless orca serve does not support browser panes yet.'
+        'Browser tab creation requires a desktop renderer; headless serper serve does not support browser panes yet.'
       )
     }
     const { browserPageId } = await this.createBrowserTabInRenderer(

@@ -19,7 +19,7 @@ function makeRepo(path: string, connectionId: string | null = null): Repo {
 
 describe('skill discovery', () => {
   it('discovers home and repo SKILL.md packages with provider metadata', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'orca-skills-'))
+    const root = await mkdtemp(join(tmpdir(), 'serper-skills-'))
     const home = join(root, 'home')
     const repo = join(root, 'repo')
     const codexSkill = join(home, '.codex', 'skills', 'review')

@@ -5,7 +5,7 @@ export type BrowserFocusRequestDetail = {
   target: BrowserFocusTarget
 }
 
-export const ORCA_BROWSER_FOCUS_REQUEST_EVENT = 'orca:browser-focus-request'
+export const SERPER_BROWSER_FOCUS_REQUEST_EVENT = 'serper:browser-focus-request'
 
 const pendingBrowserFocusByPageId = new Map<string, BrowserFocusTarget>()
 

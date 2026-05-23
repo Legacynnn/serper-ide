@@ -66,7 +66,7 @@ export async function sendRemoteRuntimeRequest<TResult>(
         ok: false,
         error: new RemoteRuntimeClientError(
           'runtime_timeout',
-          'Timed out waiting for the remote Orca runtime to respond.'
+          'Timed out waiting for the remote Serper runtime to respond.'
         )
       })
     }, timeoutMs)
@@ -119,7 +119,7 @@ export async function sendRemoteRuntimeRequest<TResult>(
         ok: false,
         error: new RemoteRuntimeClientError(
           'remote_runtime_unavailable',
-          'Could not connect to the remote Orca runtime.'
+          'Could not connect to the remote Serper runtime.'
         )
       })
     })
@@ -130,7 +130,7 @@ export async function sendRemoteRuntimeRequest<TResult>(
           ok: false,
           error: new RemoteRuntimeClientError(
             'remote_runtime_unavailable',
-            'Remote Orca runtime closed the connection.'
+            'Remote Serper runtime closed the connection.'
           )
         })
       }
@@ -145,7 +145,7 @@ export async function sendRemoteRuntimeRequest<TResult>(
           ok: false,
           error: new RemoteRuntimeClientError(
             'invalid_runtime_response',
-            'Remote Orca runtime returned an unexpected binary frame.'
+            'Remote Serper runtime returned an unexpected binary frame.'
           )
         })
         return
@@ -163,7 +163,7 @@ export async function sendRemoteRuntimeRequest<TResult>(
           ok: false,
           error: new RemoteRuntimeClientError(
             'invalid_runtime_response',
-            'Remote Orca runtime returned an undecryptable frame.'
+            'Remote Serper runtime returned an undecryptable frame.'
           )
         })
         return
@@ -186,7 +186,7 @@ export async function sendRemoteRuntimeRequest<TResult>(
           ok: false,
           error: new RemoteRuntimeClientError(
             'invalid_runtime_response',
-            'Remote Orca runtime returned an invalid E2EE handshake frame.'
+            'Remote Serper runtime returned an invalid E2EE handshake frame.'
           )
         })
         return
@@ -200,7 +200,7 @@ export async function sendRemoteRuntimeRequest<TResult>(
           ok: false,
           error: new RemoteRuntimeClientError(
             'invalid_runtime_response',
-            'Remote Orca runtime returned an unexpected E2EE handshake frame.'
+            'Remote Serper runtime returned an unexpected E2EE handshake frame.'
           )
         })
         return
@@ -220,7 +220,7 @@ export async function sendRemoteRuntimeRequest<TResult>(
           ok: false,
           error: new RemoteRuntimeClientError(
             'invalid_runtime_response',
-            'Remote Orca runtime returned an invalid E2EE auth frame.'
+            'Remote Serper runtime returned an invalid E2EE auth frame.'
           )
         })
         return
@@ -237,7 +237,7 @@ export async function sendRemoteRuntimeRequest<TResult>(
           ok: false,
           error: new RemoteRuntimeClientError(
             code,
-            'Remote Orca runtime rejected the pairing token.'
+            'Remote Serper runtime rejected the pairing token.'
           )
         })
         return
@@ -265,7 +265,7 @@ export async function sendRemoteRuntimeRequest<TResult>(
           ok: false,
           error: new RemoteRuntimeClientError(
             'invalid_runtime_response',
-            'Remote Orca runtime returned an invalid response frame.'
+            'Remote Serper runtime returned an invalid response frame.'
           )
         })
         return
@@ -280,7 +280,7 @@ export async function sendRemoteRuntimeRequest<TResult>(
           ok: false,
           error: new RemoteRuntimeClientError(
             'invalid_runtime_response',
-            'Remote Orca runtime returned an invalid response frame.'
+            'Remote Serper runtime returned an invalid response frame.'
           )
         })
         return
@@ -291,7 +291,7 @@ export async function sendRemoteRuntimeRequest<TResult>(
           ok: false,
           error: new RemoteRuntimeClientError(
             'invalid_runtime_response',
-            'Remote Orca runtime returned a mismatched response id.'
+            'Remote Serper runtime returned a mismatched response id.'
           )
         })
         return
@@ -321,7 +321,7 @@ export async function subscribeRemoteRuntimeRequest<TResult>(
       fail(
         new RemoteRuntimeClientError(
           'runtime_timeout',
-          'Timed out waiting for the remote Orca runtime subscription to start.'
+          'Timed out waiting for the remote Serper runtime subscription to start.'
         )
       )
     }, timeoutMs)
@@ -383,7 +383,7 @@ export async function subscribeRemoteRuntimeRequest<TResult>(
       fail(
         new RemoteRuntimeClientError(
           'remote_runtime_unavailable',
-          'Could not connect to the remote Orca runtime.'
+          'Could not connect to the remote Serper runtime.'
         )
       )
     })
@@ -394,7 +394,7 @@ export async function subscribeRemoteRuntimeRequest<TResult>(
         reject(
           new RemoteRuntimeClientError(
             'remote_runtime_unavailable',
-            'Remote Orca runtime closed the connection.'
+            'Remote Serper runtime closed the connection.'
           )
         )
         return
@@ -419,7 +419,7 @@ export async function subscribeRemoteRuntimeRequest<TResult>(
         fail(
           new RemoteRuntimeClientError(
             'invalid_runtime_response',
-            'Remote Orca runtime returned an undecryptable frame.'
+            'Remote Serper runtime returned an undecryptable frame.'
           )
         )
         return
@@ -441,7 +441,7 @@ export async function subscribeRemoteRuntimeRequest<TResult>(
         fail(
           new RemoteRuntimeClientError(
             'invalid_runtime_response',
-            'Remote Orca runtime returned an invalid E2EE handshake frame.'
+            'Remote Serper runtime returned an invalid E2EE handshake frame.'
           )
         )
         return
@@ -454,7 +454,7 @@ export async function subscribeRemoteRuntimeRequest<TResult>(
         fail(
           new RemoteRuntimeClientError(
             'invalid_runtime_response',
-            'Remote Orca runtime returned an unexpected E2EE handshake frame.'
+            'Remote Serper runtime returned an unexpected E2EE handshake frame.'
           )
         )
         return
@@ -473,7 +473,7 @@ export async function subscribeRemoteRuntimeRequest<TResult>(
         fail(
           new RemoteRuntimeClientError(
             'invalid_runtime_response',
-            'Remote Orca runtime returned an invalid E2EE auth frame.'
+            'Remote Serper runtime returned an invalid E2EE auth frame.'
           )
         )
         return
@@ -486,7 +486,9 @@ export async function subscribeRemoteRuntimeRequest<TResult>(
           (authenticated as { error?: { code?: unknown } }).error?.code === 'unauthorized'
             ? 'unauthorized'
             : 'invalid_runtime_response'
-        fail(new RemoteRuntimeClientError(code, 'Remote Orca runtime rejected the pairing token.'))
+        fail(
+          new RemoteRuntimeClientError(code, 'Remote Serper runtime rejected the pairing token.')
+        )
         return
       }
       state = 'ready'
@@ -512,7 +514,7 @@ export async function subscribeRemoteRuntimeRequest<TResult>(
         fail(
           new RemoteRuntimeClientError(
             'invalid_runtime_response',
-            'Remote Orca runtime returned an invalid response frame.'
+            'Remote Serper runtime returned an invalid response frame.'
           )
         )
         return
@@ -526,7 +528,7 @@ export async function subscribeRemoteRuntimeRequest<TResult>(
         fail(
           new RemoteRuntimeClientError(
             'invalid_runtime_response',
-            'Remote Orca runtime returned a mismatched response id.'
+            'Remote Serper runtime returned a mismatched response id.'
           )
         )
         return
@@ -539,7 +541,7 @@ export async function subscribeRemoteRuntimeRequest<TResult>(
         fail(
           new RemoteRuntimeClientError(
             'invalid_runtime_response',
-            'Remote Orca runtime returned binary data before authentication.'
+            'Remote Serper runtime returned binary data before authentication.'
           )
         )
         return
@@ -549,7 +551,7 @@ export async function subscribeRemoteRuntimeRequest<TResult>(
         fail(
           new RemoteRuntimeClientError(
             'invalid_runtime_response',
-            'Remote Orca runtime returned an undecryptable binary frame.'
+            'Remote Serper runtime returned an undecryptable binary frame.'
           )
         )
         return

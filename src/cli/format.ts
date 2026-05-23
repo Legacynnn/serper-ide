@@ -54,13 +54,13 @@ export function printResult<TResult>(
 export function formatCliError(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error)
   if (error instanceof RuntimeClientError && error.code === 'runtime_unavailable') {
-    return `${message}\nOrca is not running. Run 'orca open' first.`
+    return `${message}\nSerper is not running. Run 'serper open' first.`
   }
   if (
     error instanceof RuntimeRpcFailureError &&
     error.response.error.code === 'runtime_unavailable'
   ) {
-    return `${message}\nOrca is not running. Run 'orca open' first.`
+    return `${message}\nSerper is not running. Run 'serper open' first.`
   }
   if (error instanceof RuntimeRpcFailureError) {
     const data = error.response.error.data
@@ -477,7 +477,7 @@ function prepareCliJsonResult<TResult>(
 const COMPUTER_SCREENSHOT_TTL_MS = 24 * 60 * 60 * 1000
 
 function computerScreenshotTempDir(): string {
-  const outputDir = join(tmpdir(), 'orca-computer-use')
+  const outputDir = join(tmpdir(), 'serper-computer-use')
   mkdirSync(outputDir, { recursive: true, mode: 0o700 })
   const stat = lstatSync(outputDir)
   if (!stat.isDirectory() || stat.isSymbolicLink()) {
@@ -556,7 +556,7 @@ export function formatComputerAction(verb: string, result: ComputerActionResult)
     result.snapshot.window.id === null || result.snapshot.window.id === undefined
       ? ''
       : ` --window-id ${result.snapshot.window.id}`
-  return `${formatActionVerb(verb)} completed${path}${verification}; ${result.snapshot.elementCount} elements in current window. Use \`orca computer get-app-state --app ${app}${windowId}\` to inspect.`
+  return `${formatActionVerb(verb)} completed${path}${verification}; ${result.snapshot.elementCount} elements in current window. Use \`serper computer get-app-state --app ${app}${windowId}\` to inspect.`
 }
 
 function formatActionVerification(verification: ComputerActionVerification | undefined): string {

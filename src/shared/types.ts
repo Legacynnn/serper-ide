@@ -183,12 +183,12 @@ export type Worktree = {
   isPinned: boolean
   sortOrder: number
   lastActivityAt: number
-  /** Set once when Orca creates the worktree. Absent for worktrees discovered
+  /** Set once when Serper creates the worktree. Absent for worktrees discovered
    *  on disk or persisted before this field existed. Used by the sidebar to
    *  grant newly-created worktrees a short grace window at the top of Recent,
    *  immune to ambient PTY-bump reordering in other worktrees. */
   createdAt?: number
-  /** Agent selected when Orca originally created the worktree. Used only to
+  /** Agent selected when Serper originally created the worktree. Used only to
    *  seed a replacement terminal if the user later reopens the worktree after
    *  closing every visible surface. */
   createdWithAgent?: TuiAgent
@@ -199,7 +199,7 @@ export type Worktree = {
   sparsePresetId?: string
   /** Intended create base for stale-base probes. Persisted metadata, not UI drift state. */
   baseRef?: string
-  /** Remote/branch Orca should publish review commits to when it created this worktree. */
+  /** Remote/branch Serper should publish review commits to when it created this worktree. */
   pushTarget?: GitPushTarget
   workspaceStatus?: WorkspaceStatus
   diffComments?: DiffComment[]
@@ -229,9 +229,9 @@ export type WorktreeMeta = {
   isPinned: boolean
   sortOrder: number
   lastActivityAt: number
-  /** See {@link Worktree.createdAt}. Persisted to orca-data.json. */
+  /** See {@link Worktree.createdAt}. Persisted to serper-data.json. */
   createdAt?: number
-  /** See {@link Worktree.createdWithAgent}. Persisted to orca-data.json. */
+  /** See {@link Worktree.createdWithAgent}. Persisted to serper-data.json. */
   createdWithAgent?: TuiAgent
   sparseDirectories?: string[]
   sparseBaseRef?: string
@@ -288,7 +288,7 @@ export type WorktreeLineageWarning = {
 // Why: users leave review notes on specific lines of the modified side of
 // a diff so they can be handed back to an AI agent (pasted into a terminal
 // or used to bootstrap a new agent session). Stored on WorktreeMeta so the
-// existing persistence layer writes them to orca-data.json automatically.
+// existing persistence layer writes them to serper-data.json automatically.
 export type DiffCommentSource = 'diff' | 'markdown'
 
 export type DiffComment = {
@@ -364,7 +364,7 @@ export type TerminalTab = {
   worktreeId: string
   title: string
   /** Stable fallback label for default-named terminals ("Terminal 1", etc.).
-   *  Why: agent CLIs overwrite the live title via OSC updates, but Orca still
+   *  Why: agent CLIs overwrite the live title via OSC updates, but Serper still
    *  needs the original terminal label for numbering and reset behavior. */
   defaultTitle?: string
   customTitle: string | null
@@ -440,7 +440,7 @@ export type BrowserPage = {
 export type BrowserWorkspace = {
   id: string
   worktreeId: string
-  /** Stable display label for the outer Orca tab ("Browser 1", "Browser 2", …).
+  /** Stable display label for the outer Serper tab ("Browser 1", "Browser 2", …).
    *  Optional so sessions persisted before this field was added fall back
    *  gracefully to the URL-derived label in getBrowserTabLabel. */
   label?: string
@@ -453,7 +453,7 @@ export type BrowserWorkspace = {
   activePageId?: string | null
   pageIds?: string[]
   // Why: the active page owns real browser chrome state now, but the top-level
-  // Orca tab strip still renders one workspace entry. Mirror the active page's
+  // Serper tab strip still renders one workspace entry. Mirror the active page's
   // title/url/loading metadata here so existing workspace-level UI can stay
   // stable while Phase 2 introduces nested browser pages.
   url: string
@@ -785,7 +785,7 @@ export type GitHubPRReviewCommentInput = {
 }
 
 export type GitHubWorkItemDetails = {
-  // Why: main-process doesn't know Orca's Repo.id, so this inner item omits
+  // Why: main-process doesn't know Serper's Repo.id, so this inner item omits
   // repoId. The renderer stamps it when routing the details through the store.
   item: Omit<GitHubWorkItem, 'repoId'>
   body: string
@@ -1053,8 +1053,8 @@ export type LinearTeam = {
   key: string
 }
 
-// ─── Hooks (orca.yaml) ──────────────────────────────────────────────
-export type OrcaHooks = {
+// ─── Hooks (serper.yaml) ──────────────────────────────────────────────
+export type SerperHooks = {
   scripts: {
     setup?: string // Runs after worktree is created
     archive?: string // Runs before worktree is archived
@@ -1276,7 +1276,7 @@ export type ClaudeRateLimitAccountsState = {
   activeAccountId: string | null
 }
 
-/** All AI coding agents Orca knows how to launch. Used for the agent picker in the new-workspace
+/** All AI coding agents Serper knows how to launch. Used for the agent picker in the new-workspace
  *  flow and for the default-agent setting. Extend this union as new agents are added. */
 export type TuiAgent =
   | 'claude' // Claude Code
@@ -1462,7 +1462,7 @@ export type GlobalSettings = {
    *  usable without the setup output crowding the initial pane. */
   setupScriptLaunchMode: SetupScriptLaunchMode
   terminalScrollbackBytes: number
-  /** Why: opening arbitrary links inside Orca uses an isolated guest browser surface.
+  /** Why: opening arbitrary links inside Serper uses an isolated guest browser surface.
    *  The setting stays opt-in so existing workflows continue to use the system browser
    *  until the user explicitly wants worktree-scoped in-app browsing. */
   openLinksInApp: boolean
@@ -1472,7 +1472,7 @@ export type GlobalSettings = {
   showGitIgnoredFiles?: boolean
   /** Preferred Source Control changes layout. Per-user, not per-workspace. */
   sourceControlViewMode: SourceControlViewMode
-  /** Whether to show the Orca app name in the titlebar. */
+  /** Whether to show the Serper app name in the titlebar. */
   showTitlebarAppName: boolean
   /** Why: some users do not use the Tasks feature and prefer to keep the
    *  left sidebar free of its button entirely. Hiding the button here also
@@ -1510,12 +1510,12 @@ export type GlobalSettings = {
   promptCacheTtlMs: number
   /** Why: Codex rate-limit account routing is a durable app preference owned by
    *  the main process, not transient UI state. Persisting the selected managed
-   *  auth here lets Orca prepare shared ~/.codex before the renderer hydrates,
+   *  auth here lets Serper prepare shared ~/.codex before the renderer hydrates,
    *  while keeping this scope explicitly separate from Codex usage analytics
    *  and external terminal sessions. */
   codexManagedAccounts: CodexManagedAccount[]
   activeCodexManagedAccountId: string | null
-  /** Why: Claude Code keeps conversations under one shared config root. Orca
+  /** Why: Claude Code keeps conversations under one shared config root. Serper
    *  persists only per-account auth material here so switching accounts does
    *  not fork prior chat/session context the way CLAUDE_CONFIG_DIR swapping would. */
   claudeManagedAccounts: ClaudeManagedAccount[]
@@ -1530,7 +1530,7 @@ export type GlobalSettings = {
    *  - TuiAgent: a specific agent id */
   defaultTuiAgent: TuiAgent | 'blank' | null
   /** Why: worktree deletion is destructive (git worktree remove + rm -rf of the
-   *  working directory), so Orca shows a confirmation dialog by default. Users
+   *  working directory), so Serper shows a confirmation dialog by default. Users
    *  who delete frequently can opt into skipping the dialog via a "Don't ask
    *  again" checkbox inside it or from the General settings pane. We keep this
    *  defaulted to false so first-time behavior stays safe. */
@@ -1569,7 +1569,7 @@ export type GlobalSettings = {
   geminiCliOAuthEnabled: boolean
   /** Per-agent CLI command overrides. A missing key means use the catalog default binary name. */
   agentCmdOverrides: Partial<Record<TuiAgent, string>>
-  /** When true, Orca requests local awake assertions while hook-reported agents are working. */
+  /** When true, Serper requests local awake assertions while hook-reported agents are working. */
   keepComputerAwakeWhileAgentsRun: boolean
   /** Why: macOS terminals must choose between letting Option compose layout
    *  characters (@ on German, € on French) or treating Option as Meta/Esc for
@@ -1873,7 +1873,7 @@ export type PersistedUIState = {
   lastUpdateCheckAt: number | null
   pendingUpdateNudgeId?: string | null
   dismissedUpdateNudgeId?: string | null
-  /** Whether Orca has already attempted to trigger the macOS notification
+  /** Whether Serper has already attempted to trigger the macOS notification
    *  permission dialog via a startup notification. Prevents re-firing on
    *  every launch. */
   notificationPermissionRequested?: boolean
@@ -1935,10 +1935,10 @@ export type PersistedUIState = {
    *  notification should fire. Starts at 50 and doubles each time the user
    *  dismisses the notification without starring. */
   starNagNextThreshold?: number
-  /** Once the user has starred Orca (from any entry point) we permanently
+  /** Once the user has starred Serper (from any entry point) we permanently
    *  suppress the nag — no further thresholds, no notifications. */
   starNagCompleted?: boolean
-  trustedOrcaHooks?: PersistedTrustedOrcaHooks
+  trustedSerperHooks?: PersistedTrustedSerperHooks
   /** Whether the experimental pet overlay is currently visible. Separate
    *  from the experimentalPet settings flag so "Hide pet" from the
    *  status-bar menu is a reversible dismiss (re-show without re-enabling the
@@ -2021,21 +2021,21 @@ export type SpriteAnimation = {
   frames: number
 }
 
-export type PersistedTrustedOrcaHookEntry = {
+export type PersistedTrustedSerperHookEntry = {
   contentHash: string
   approvedAt: number
 }
 
-export type PersistedTrustedOrcaHookRepo = {
+export type PersistedTrustedSerperHookRepo = {
   all?: {
     approvedAt: number
   }
-  setup?: PersistedTrustedOrcaHookEntry
-  archive?: PersistedTrustedOrcaHookEntry
-  issueCommand?: PersistedTrustedOrcaHookEntry
+  setup?: PersistedTrustedSerperHookEntry
+  archive?: PersistedTrustedSerperHookEntry
+  issueCommand?: PersistedTrustedSerperHookEntry
 }
 
-export type PersistedTrustedOrcaHooks = Record<string, PersistedTrustedOrcaHookRepo>
+export type PersistedTrustedSerperHooks = Record<string, PersistedTrustedSerperHookRepo>
 
 export type LegacyPaneKeyAliasEntry = {
   ptyId: string
@@ -2223,7 +2223,7 @@ export type AppMemory = UsageValues & {
   main: UsageValues
   renderer: UsageValues
   other: UsageValues
-  /** Oldest-first memory samples (bytes) for the whole Orca app, one per
+  /** Oldest-first memory samples (bytes) for the whole Serper app, one per
    *  successful collection. Used to render the sparkline in the dashboard.
    *  Empty before the first snapshot is recorded. */
   history: number[]

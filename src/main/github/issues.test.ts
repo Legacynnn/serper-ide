@@ -47,26 +47,26 @@ describe('issue source operations', () => {
   })
 
   it('gets a single issue from the issue owner/repo', async () => {
-    getIssueOwnerRepoMock.mockResolvedValueOnce({ owner: 'stablyai', repo: 'orca' })
+    getIssueOwnerRepoMock.mockResolvedValueOnce({ owner: 'Legacynnn', repo: 'serper' })
     ghExecFileAsyncMock.mockResolvedValueOnce({
       stdout: JSON.stringify({
         number: 923,
         title: 'Use upstream issues',
         state: 'open',
-        html_url: 'https://github.com/stablyai/orca/issues/923',
+        html_url: 'https://github.com/Legacynnn/serper/issues/923',
         labels: []
       })
     })
 
     await expect(getIssue('/repo-root', 923)).resolves.toMatchObject({ number: 923 })
     expect(ghExecFileAsyncMock).toHaveBeenCalledWith(
-      ['api', '--cache', '300s', 'repos/stablyai/orca/issues/923'],
+      ['api', '--cache', '300s', 'repos/Legacynnn/serper/issues/923'],
       { cwd: '/repo-root' }
     )
   })
 
   it('lists issues from the issue owner/repo', async () => {
-    getIssueOwnerRepoMock.mockResolvedValueOnce({ owner: 'stablyai', repo: 'orca' })
+    getIssueOwnerRepoMock.mockResolvedValueOnce({ owner: 'Legacynnn', repo: 'serper' })
     ghExecFileAsyncMock.mockResolvedValueOnce({ stdout: '[]' })
 
     await expect(listIssues('/repo-root', 5)).resolves.toEqual({ items: [] })
@@ -76,7 +76,7 @@ describe('issue source operations', () => {
         'api',
         '--cache',
         '120s',
-        'repos/stablyai/orca/issues?per_page=5&state=open&sort=updated&direction=desc'
+        'repos/Legacynnn/serper/issues?per_page=5&state=open&sort=updated&direction=desc'
       ],
       { cwd: '/repo-root' }
     )
@@ -86,7 +86,7 @@ describe('issue source operations', () => {
     // Why: parent design doc §3 — a 403 on a private upstream must not
     // masquerade as "No issues". The envelope carries an error the UI can
     // render as a banner with retry, not a silent empty list.
-    getIssueOwnerRepoMock.mockResolvedValueOnce({ owner: 'stablyai', repo: 'orca' })
+    getIssueOwnerRepoMock.mockResolvedValueOnce({ owner: 'Legacynnn', repo: 'serper' })
     ghExecFileAsyncMock.mockRejectedValueOnce(
       new Error('HTTP 403: Resource not accessible by integration')
     )
@@ -98,25 +98,25 @@ describe('issue source operations', () => {
   })
 
   it('creates issues in the issue owner/repo', async () => {
-    getIssueOwnerRepoMock.mockResolvedValueOnce({ owner: 'stablyai', repo: 'orca' })
+    getIssueOwnerRepoMock.mockResolvedValueOnce({ owner: 'Legacynnn', repo: 'serper' })
     ghExecFileAsyncMock.mockResolvedValueOnce({
       stdout: JSON.stringify({
         number: 924,
-        html_url: 'https://github.com/stablyai/orca/issues/924'
+        html_url: 'https://github.com/Legacynnn/serper/issues/924'
       })
     })
 
     await expect(createIssue('/repo-root', 'New issue', 'Body')).resolves.toEqual({
       ok: true,
       number: 924,
-      url: 'https://github.com/stablyai/orca/issues/924'
+      url: 'https://github.com/Legacynnn/serper/issues/924'
     })
     expect(ghExecFileAsyncMock).toHaveBeenCalledWith(
       [
         'api',
         '-X',
         'POST',
-        'repos/stablyai/orca/issues',
+        'repos/Legacynnn/serper/issues',
         '--raw-field',
         'title=New issue',
         '--raw-field',

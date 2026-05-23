@@ -1,10 +1,10 @@
 import type { CommandHandler } from '../dispatch'
 import { formatCliStatus, formatStatus, printResult } from '../format'
-import { RuntimeClientError, serveOrcaApp } from '../runtime-client'
+import { RuntimeClientError, serveSerperApp } from '../runtime-client'
 
 export const CORE_HANDLERS: Record<string, CommandHandler> = {
   open: async ({ client, json }) => {
-    const result = await client.openOrca()
+    const result = await client.openSerper()
     printResult(result, json, formatCliStatus)
   },
   serve: async ({ flags, json }) => {
@@ -21,7 +21,7 @@ export const CORE_HANDLERS: Record<string, CommandHandler> = {
         throw new RuntimeClientError('invalid_argument', `Invalid --port value: ${rawPort}`)
       }
     }
-    const exitCode = await serveOrcaApp({
+    const exitCode = await serveSerperApp({
       json,
       port: typeof rawPort === 'string' ? rawPort : null,
       pairingAddress:

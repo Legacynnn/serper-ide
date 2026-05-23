@@ -25,7 +25,7 @@ export type PtySpawnOptions = {
   env?: Record<string, string>
   envToDelete?: string[]
   command?: string
-  /** Orca worktree identity. When present, the local provider scopes shell
+  /** Serper worktree identity. When present, the local provider scopes shell
    *  history to this worktree so ArrowUp only surfaces local commands. */
   worktreeId?: string
   /** Daemon session ID for reattach. When provided, the daemon reconnects

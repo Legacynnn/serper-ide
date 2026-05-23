@@ -180,7 +180,7 @@ export function TerminalWindowSection({
                   Restart required
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Restart Orca to apply the window blur change.
+                  Restart Serper to apply the window blur change.
                 </p>
               </div>
               <Button

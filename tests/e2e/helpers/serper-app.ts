@@ -1,5 +1,5 @@
 /**
- * Shared Electron fixture for Orca E2E tests.
+ * Shared Electron fixture for Serper E2E tests.
  *
  * Why: Playwright's native _electron.launch() is used instead of CDP.
  * It launches the Electron app directly from the built output, gives
@@ -29,10 +29,10 @@ import { TEST_REPO_PATH_FILE } from '../global-setup'
 import { cleanupE2EDaemons, closeElectronAppForE2E } from './electron-process-shutdown'
 import { getE2ECompletedOnboardingProfile } from './e2e-completed-onboarding-profile'
 
-type OrcaTestFixtures = {
+type SerperTestFixtures = {
   electronApp: ElectronApplication
   sharedPage: Page
-  orcaPage: Page
+  serperPage: Page
   // Why: every fresh userData dir paints the first-launch onboarding overlay
   // (closedAt=null), which is `fixed inset-0 z-[100]` and intercepts pointer
   // events for every other test. Dismiss it by default; onboarding.spec.ts
@@ -40,22 +40,22 @@ type OrcaTestFixtures = {
   dismissOnboarding: boolean
 }
 
-type OrcaWorkerFixtures = {
+type SerperWorkerFixtures = {
   /** Absolute path to the test git repo created by globalSetup. */
   testRepoPath: string
 }
 
-// Why: parse + warn at module scope so a bad ORCA_E2E_SLOWMO_MS value logs once
+// Why: parse + warn at module scope so a bad SERPER_E2E_SLOWMO_MS value logs once
 // per worker instead of once per test (otherwise hundreds of lines per CI run).
-const ORCA_E2E_SLOWMO_MS_RAW = process.env.ORCA_E2E_SLOWMO_MS
-const ORCA_E2E_SLOWMO_MS = ((): number => {
-  if (ORCA_E2E_SLOWMO_MS_RAW === undefined) {
+const SERPER_E2E_SLOWMO_MS_RAW = process.env.SERPER_E2E_SLOWMO_MS
+const SERPER_E2E_SLOWMO_MS = ((): number => {
+  if (SERPER_E2E_SLOWMO_MS_RAW === undefined) {
     return 0
   }
-  const parsed = Number(ORCA_E2E_SLOWMO_MS_RAW)
+  const parsed = Number(SERPER_E2E_SLOWMO_MS_RAW)
   if (!Number.isFinite(parsed)) {
     console.warn(
-      `[orca-e2e] ORCA_E2E_SLOWMO_MS="${ORCA_E2E_SLOWMO_MS_RAW}" is not a number; ignoring (using 0).`
+      `[serper-e2e] SERPER_E2E_SLOWMO_MS="${SERPER_E2E_SLOWMO_MS_RAW}" is not a number; ignoring (using 0).`
     )
     return 0
   }
@@ -63,16 +63,16 @@ const ORCA_E2E_SLOWMO_MS = ((): number => {
 })()
 
 function shouldLaunchHeadful(testInfo: TestInfo): boolean {
-  // Why: ORCA_E2E_FORCE_HEADFUL lets a developer watch any spec in a real
+  // Why: SERPER_E2E_FORCE_HEADFUL lets a developer watch any spec in a real
   // window without retagging it `@headful` or switching projects.
-  if (process.env.ORCA_E2E_FORCE_HEADFUL === '1') {
+  if (process.env.SERPER_E2E_FORCE_HEADFUL === '1') {
     return true
   }
-  return testInfo.project.metadata.orcaHeadful === true
+  return testInfo.project.metadata.serperHeadful === true
 }
 
 function forwardElectronProcessLogs(app: ElectronApplication, testInfo: TestInfo): void {
-  if (process.env.ORCA_E2E_FORWARD_APP_LOGS !== '1') {
+  if (process.env.SERPER_E2E_FORWARD_APP_LOGS !== '1') {
     return
   }
 
@@ -108,7 +108,7 @@ function isValidGitRepo(repoPath: string): boolean {
 }
 
 function createSeededTestRepo(): string {
-  const testRepoDir = mkdtempSync(path.join(os.tmpdir(), 'orca-e2e-repo-'))
+  const testRepoDir = mkdtempSync(path.join(os.tmpdir(), 'serper-e2e-repo-'))
 
   execSync('git init', { cwd: testRepoDir, stdio: 'pipe' })
   execSync('git config user.email "e2e@test.local"', { cwd: testRepoDir, stdio: 'pipe' })
@@ -116,12 +116,12 @@ function createSeededTestRepo(): string {
 
   writeFileSync(
     path.join(testRepoDir, 'README.md'),
-    '# Orca E2E Test Repo\n\nThis repo was created automatically for Playwright tests.\n'
+    '# Serper E2E Test Repo\n\nThis repo was created automatically for Playwright tests.\n'
   )
   writeFileSync(path.join(testRepoDir, 'CLAUDE.md'), '# CLAUDE.md\n\nTest instructions for E2E.\n')
   writeFileSync(
     path.join(testRepoDir, 'package.json'),
-    `${JSON.stringify({ name: 'orca-e2e-test', version: '0.0.0', private: true }, null, 2)}\n`
+    `${JSON.stringify({ name: 'serper-e2e-test', version: '0.0.0', private: true }, null, 2)}\n`
   )
   writeFileSync(path.join(testRepoDir, '.gitignore'), 'node_modules/\n')
   mkdirSync(path.join(testRepoDir, 'src'), { recursive: true })
@@ -132,7 +132,7 @@ function createSeededTestRepo(): string {
 
   // Why: worker-scoped fixture fallbacks can run in parallel; UUIDs avoid
   // colliding on the same temp repo/worktree when workers start together.
-  const worktreeDir = path.join(testRepoDir, '..', `orca-e2e-worktree-${randomUUID()}`)
+  const worktreeDir = path.join(testRepoDir, '..', `serper-e2e-worktree-${randomUUID()}`)
   execSync(`git worktree add "${worktreeDir}" -b e2e-secondary`, {
     cwd: testRepoDir,
     stdio: 'pipe'
@@ -143,14 +143,14 @@ function createSeededTestRepo(): string {
 }
 
 /**
- * Extended Playwright test with Orca-specific fixtures.
+ * Extended Playwright test with Serper-specific fixtures.
  *
- * `orcaPage` — the main Orca renderer window.
+ * `serperPage` — the main Serper renderer window.
  *
  * Test-scoped: each test gets a fresh Electron instance and isolated
  * userData directory so state cannot leak across specs through persistence.
  */
-export const test = base.extend<OrcaTestFixtures, OrcaWorkerFixtures>({
+export const test = base.extend<SerperTestFixtures, SerperWorkerFixtures>({
   // Worker-scoped: read the test repo path once
   testRepoPath: [
     // oxlint-disable-next-line no-empty-pattern -- Playwright fixture callbacks require object destructuring here.
@@ -169,7 +169,7 @@ export const test = base.extend<OrcaTestFixtures, OrcaWorkerFixtures>({
   // Test-scoped: one Electron app per test
   electronApp: async ({ dismissOnboarding }, provideFixture, testInfo) => {
     const mainPath = path.join(process.cwd(), 'out', 'main', 'index.js')
-    const userDataDir = mkdtempSync(path.join(os.tmpdir(), 'orca-e2e-userdata-'))
+    const userDataDir = mkdtempSync(path.join(os.tmpdir(), 'serper-e2e-userdata-'))
 
     if (dismissOnboarding) {
       // Why: onboarding renders a fullscreen `fixed inset-0 z-[100]` overlay
@@ -178,28 +178,28 @@ export const test = base.extend<OrcaTestFixtures, OrcaWorkerFixtures>({
       // an empty file would make persistence treat the profile as an
       // existing-user upgrade cohort and mount the telemetry notice overlay.
       writeFileSync(
-        path.join(userDataDir, 'orca-data.json'),
+        path.join(userDataDir, 'serper-data.json'),
         `${JSON.stringify(getE2ECompletedOnboardingProfile(), null, 2)}\n`
       )
     }
     const headful = shouldLaunchHeadful(testInfo)
     // Why: strip ELECTRON_RUN_AS_NODE before spawning. Some host shells (e.g.
-    // Orca's own agent runtime) set it so Electron behaves as a plain Node
+    // Serper's own agent runtime) set it so Electron behaves as a plain Node
     // binary. Playwright's _electron.launch passes --remote-debugging-port,
     // which Node rejects with "bad option" and the process exits immediately.
     const { ELECTRON_RUN_AS_NODE: _unused, ...cleanEnv } = process.env
     void _unused
-    // Why: ORCA_E2E_SLOWMO_MS adds a pause between every Playwright action so a
-    // developer running with ORCA_E2E_FORCE_HEADFUL=1 can actually watch what
+    // Why: SERPER_E2E_SLOWMO_MS adds a pause between every Playwright action so a
+    // developer running with SERPER_E2E_FORCE_HEADFUL=1 can actually watch what
     // the test does. Defaults to 0 (no slowdown) for normal runs.
-    const slowMo = ORCA_E2E_SLOWMO_MS
-    // Why: ORCA_E2E_RECORD_VIDEO=1 captures a webm of the renderer so a
+    const slowMo = SERPER_E2E_SLOWMO_MS
+    // Why: SERPER_E2E_RECORD_VIDEO=1 captures a webm of the renderer so a
     // developer can replay the run later — Electron's Playwright trace viewer
     // does not produce DOM snapshots, so video is the only reliable replay.
     // Why: testInfo.outputDir is created lazily by Playwright; on Windows the
     // dir may not exist when the fixture initializes, and Electron silently
     // drops the recording. mkdir up-front so the recorder always has a home.
-    const recordVideoDir = process.env.ORCA_E2E_RECORD_VIDEO === '1' ? testInfo.outputDir : null
+    const recordVideoDir = process.env.SERPER_E2E_RECORD_VIDEO === '1' ? testInfo.outputDir : null
     if (recordVideoDir) {
       mkdirSync(recordVideoDir, { recursive: true })
     }
@@ -208,13 +208,13 @@ export const test = base.extend<OrcaTestFixtures, OrcaWorkerFixtures>({
       ...(slowMo > 0 ? { slowMo } : {}),
       ...(recordVideoDir ? { recordVideo: { dir: recordVideoDir } } : {}),
       // Why: keep NODE_ENV=development so window.__store is exposed and
-      // dev-only helpers activate. ORCA_E2E_USER_DATA_DIR overrides the usual
+      // dev-only helpers activate. SERPER_E2E_USER_DATA_DIR overrides the usual
       // shared dev profile so every spec gets a clean persistence root.
-      // Why: ORCA_E2E_HEADLESS suppresses mainWindow.show() so the app
+      // Why: SERPER_E2E_HEADLESS suppresses mainWindow.show() so the app
       // window stays hidden during test runs, avoiding focus stealing and
       // screen clutter. Playwright interacts via CDP regardless.
-      // Why: ORCA_E2E_HEADLESS suppresses mainWindow.show() for CI/headless
-      // runs. ORCA_E2E_HEADFUL overrides this for tests that need a visible
+      // Why: SERPER_E2E_HEADLESS suppresses mainWindow.show() for CI/headless
+      // runs. SERPER_E2E_HEADFUL overrides this for tests that need a visible
       // window (e.g. pointer-capture drag tests).
       // Why: local SSH E2E deploys the relay from the dev build output. The
       // Electron app's getAppPath() points at the compiled main bundle in E2E,
@@ -222,11 +222,11 @@ export const test = base.extend<OrcaTestFixtures, OrcaWorkerFixtures>({
       env: {
         ...cleanEnv,
         NODE_ENV: 'development',
-        ORCA_E2E_USER_DATA_DIR: userDataDir,
-        ...(process.env.ORCA_E2E_SSH_LOCALHOST === '1' && !cleanEnv.ORCA_RELAY_PATH
-          ? { ORCA_RELAY_PATH: path.join(process.cwd(), 'out', 'relay') }
+        SERPER_E2E_USER_DATA_DIR: userDataDir,
+        ...(process.env.SERPER_E2E_SSH_LOCALHOST === '1' && !cleanEnv.SERPER_RELAY_PATH
+          ? { SERPER_RELAY_PATH: path.join(process.cwd(), 'out', 'relay') }
           : {}),
-        ...(headful ? { ORCA_E2E_HEADFUL: '1' } : { ORCA_E2E_HEADLESS: '1' })
+        ...(headful ? { SERPER_E2E_HEADFUL: '1' } : { SERPER_E2E_HEADLESS: '1' })
       }
     })
     forwardElectronProcessLogs(app, testInfo)
@@ -340,7 +340,7 @@ export const test = base.extend<OrcaTestFixtures, OrcaWorkerFixtures>({
   },
 
   // Test-scoped: each test gets the shared page
-  orcaPage: async ({ sharedPage }, provideFixture) => {
+  serperPage: async ({ sharedPage }, provideFixture) => {
     await provideFixture(sharedPage)
   }
 })

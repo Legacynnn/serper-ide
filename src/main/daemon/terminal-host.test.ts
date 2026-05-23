@@ -153,7 +153,7 @@ describe('TerminalHost', () => {
       // ECHO enabled when it arrives. The flush waits for the prompt draw
       // plus a short delay so readline has switched the PTY into raw mode
       // first. Otherwise the command would be visibly double-echoed.
-      lastSubprocess._onDataCb?.('\x1b]777;orca-shell-ready\x07')
+      lastSubprocess._onDataCb?.('\x1b]777;serper-shell-ready\x07')
       expect(lastSubprocess.write).not.toHaveBeenCalled()
 
       lastSubprocess._onDataCb?.('\r\nuser@host $ ')

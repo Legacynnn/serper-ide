@@ -3,7 +3,7 @@ import { Notification, shell, systemPreferences } from 'electron'
 const ACCESSIBILITY_SETTINGS_URL =
   'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility'
 const DEFAULT_ACCESSIBILITY_INSTRUCTIONS =
-  'System Settings -> Privacy & Security -> Accessibility -> enable Orca'
+  'System Settings -> Privacy & Security -> Accessibility -> enable Serper'
 
 const activePermissionNotifications = new Set<Notification>()
 
@@ -24,7 +24,7 @@ export async function checkAccessibilityPermission(): Promise<{
   }
 }
 
-/** Surface a notification through Orca's existing notification system (do not duplicate UI). */
+/** Surface a notification through Serper's existing notification system (do not duplicate UI). */
 export function notifyPermissionRequired(instructions: string): void {
   if (!Notification.isSupported()) {
     return

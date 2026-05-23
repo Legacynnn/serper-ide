@@ -4,10 +4,10 @@ import CoreGraphics
 import Darwin
 import Foundation
 import ImageIO
-import OrcaComputerUseMacOSCore
+import SerperComputerUseMacOSCore
 import ScreenCaptureKit
 
-private let providerName = "orca-computer-use-macos"
+private let providerName = "serper-computer-use-macos"
 private let providerVersion = "1.0.0"
 private let providerProtocolVersion = 1
 
@@ -467,7 +467,7 @@ final class Provider {
     ) throws -> Snapshot {
         guard accessibilityTrusted() else {
             promptForAccessibilityOnce()
-            throw ProviderError.coded("permission_denied", "Accessibility permission is required for Orca Computer Use.")
+            throw ProviderError.coded("permission_denied", "Accessibility permission is required for Serper Computer Use.")
         }
         let appElement = AXUIElementCreateApplication(app.pid)
         enableManualAccessibilityIfNeeded(appElement, app: app)
@@ -492,7 +492,7 @@ final class Provider {
         let screenshotStatus: ScreenshotStatus = if screenshot != nil {
             .captured
         } else if includeScreenshot && !screenCaptureTrusted() {
-            .failed("Screen Recording permission is required for Orca Computer Use; grant permission or pass --no-screenshot to inspect accessibility state only.")
+            .failed("Screen Recording permission is required for Serper Computer Use; grant permission or pass --no-screenshot to inspect accessibility state only.")
         } else if includeScreenshot {
             .failed("window screenshot capture returned no image; retry with --no-screenshot if accessibility state is sufficient.")
         } else {
@@ -861,7 +861,7 @@ private func focusedWindow(appElement: AXUIElement, app: AppDescriptor, visibleW
         }
     }
     let permissionHint = visibleWindowCount > 0
-        ? " The app has visible windows, so macOS Accessibility may need Orca Computer Use toggled off and on again in System Settings."
+        ? " The app has visible windows, so macOS Accessibility may need Serper Computer Use toggled off and on again in System Settings."
         : ""
     throw ProviderError.coded("window_not_found", "app '\(app.name)' has no accessibility window; make sure the app has a visible window, then retry with --restore-window.\(permissionHint)")
 }
@@ -1678,7 +1678,7 @@ private struct WindowCapture {
     }
 
     private static func captureImage(windowId: CGWindowID, bounds: CGRect) -> CapturedImage? {
-        if ProcessInfo.processInfo.environment["ORCA_COMPUTER_USE_SCK_SCREENSHOTS"] == "1",
+        if ProcessInfo.processInfo.environment["SERPER_COMPUTER_USE_SCK_SCREENSHOTS"] == "1",
            let image = captureImageWithScreenCaptureKit(windowId: windowId, bounds: bounds) {
             return CapturedImage(image: image, engine: "screenCaptureKit")
         }
@@ -2083,7 +2083,7 @@ private final class PermissionWindowController: NSWindowController {
             backing: .buffered,
             defer: false
         )
-        window.title = "Enable Orca Computer Use"
+        window.title = "Enable Serper Computer Use"
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.backgroundColor = PermissionPalette.background
@@ -2142,9 +2142,9 @@ private enum PermissionKind {
     var dragInstruction: String {
         switch self {
         case .accessibility:
-            "Drag Orca Computer Use into the list above to allow Accessibility."
+            "Drag Serper Computer Use into the list above to allow Accessibility."
         case .screenshots:
-            "Drag Orca Computer Use into the list above to allow Screenshots."
+            "Drag Serper Computer Use into the list above to allow Screenshots."
         }
     }
 
@@ -2192,9 +2192,9 @@ private final class PermissionView: NSView {
             icon.heightAnchor.constraint(equalToConstant: 58)
         ])
 
-        let title = label("Enable Orca Computer Use", size: 22, weight: .bold)
+        let title = label("Enable Serper Computer Use", size: 22, weight: .bold)
         let subtitle = label(
-            "Grant permissions so Orca can use apps when you ask.",
+            "Grant permissions so Serper can use apps when you ask.",
             size: 12,
             weight: .regular
         )
@@ -2283,7 +2283,7 @@ private final class PermissionView: NSView {
         let target = ButtonTarget(action)
         button.target = target
         button.action = #selector(ButtonTarget.run)
-        objc_setAssociatedObject(button, "orca-action", target, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        objc_setAssociatedObject(button, "serper-action", target, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         button.translatesAutoresizingMaskIntoConstraints = false
 
         row.addSubview(iconView)
@@ -2334,7 +2334,7 @@ private final class PermissionDragAssistantController: NSWindowController {
             backing: .buffered,
             defer: false
         )
-        window.title = "Drag Orca Computer Use"
+        window.title = "Drag Serper Computer Use"
         window.backgroundColor = .clear
         window.isOpaque = false
         window.isReleasedWhenClosed = false
@@ -2620,7 +2620,7 @@ private final class PermissionDragAssistantView: NSView {
         let target = ButtonTarget(close)
         closeButton.target = target
         closeButton.action = #selector(ButtonTarget.run)
-        objc_setAssociatedObject(closeButton, "orca-action", target, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        objc_setAssociatedObject(closeButton, "serper-action", target, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
 
         let instruction = label(permission.dragInstruction, size: 12, weight: .semibold)
         instruction.textColor = PermissionPalette.primaryText
@@ -2705,7 +2705,7 @@ private final class DraggableAppTile: NSView, NSDraggingSource {
         icon.imageScaling = .scaleProportionallyUpOrDown
         icon.translatesAutoresizingMaskIntoConstraints = false
 
-        let title = NSTextField(labelWithString: "Orca Computer Use")
+        let title = NSTextField(labelWithString: "Serper Computer Use")
         title.font = NSFont.systemFont(ofSize: 15, weight: .semibold)
         title.textColor = PermissionPalette.primaryText
         title.translatesAutoresizingMaskIntoConstraints = false
@@ -2893,20 +2893,20 @@ private func isAuthorizedAgentPeer(_ pid: pid_t) -> Bool {
     else {
         return false
     }
-    if isTrustedOrcaApplication(pid) {
+    if isTrustedSerperApplication(pid) {
         return true
     }
     guard let parentPid = parentProcessId(pid) else { return false }
-    return isTrustedOrcaApplication(parentPid)
+    return isTrustedSerperApplication(parentPid)
 }
 
-private func isTrustedOrcaApplication(_ pid: pid_t) -> Bool {
+private func isTrustedSerperApplication(_ pid: pid_t) -> Bool {
     guard let app = NSRunningApplication(processIdentifier: pid),
           let bundleId = app.bundleIdentifier
     else {
         return false
     }
-    return bundleId == "com.stablyai.orca" || bundleId == "com.github.Electron"
+    return bundleId == "com.legacynnn.serper" || bundleId == "com.github.Electron"
 }
 
 private func parentProcessId(_ pid: pid_t) -> pid_t? {
@@ -2948,7 +2948,7 @@ private func runAgent(socketPath: String, token: String?) {
     let delegate = AgentRuntime(socketPath: socketPath, token: token)
     app.delegate = delegate
     // Why: SCK is reliable once this code runs as a signed app with a real TCC identity.
-    setenv("ORCA_COMPUTER_USE_SCK_SCREENSHOTS", "1", 1)
+    setenv("SERPER_COMPUTER_USE_SCK_SCREENSHOTS", "1", 1)
     app.run()
 }
 
@@ -2981,7 +2981,7 @@ private func writePermissionStatus(to path: String) {
 }
 
 private func runStdio() {
-    fputs("Orca Computer Use provider must be launched by Orca in app-agent mode.\n", stderr)
+    fputs("Serper Computer Use provider must be launched by Serper in app-agent mode.\n", stderr)
     exit(13)
 }
 
@@ -3079,7 +3079,7 @@ private func writeAll(_ data: Data, to fd: Int32) -> Bool {
 let arguments = Array(CommandLine.arguments.dropFirst())
 if arguments.first == "--agent" {
     guard arguments.count >= 2 else {
-        fputs("usage: orca-computer-use-macos --agent <socket-path> --token-file <token-path>\n", stderr)
+        fputs("usage: serper-computer-use-macos --agent <socket-path> --token-file <token-path>\n", stderr)
         exit(2)
     }
     let tokenFileIndex = arguments.firstIndex(of: "--token-file")
@@ -3092,7 +3092,7 @@ if arguments.first == "--agent" {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
     guard let token, !token.isEmpty else {
-        fputs("orca-computer-use-macos --agent requires a non-empty --token-file\n", stderr)
+        fputs("serper-computer-use-macos --agent requires a non-empty --token-file\n", stderr)
         exit(2)
     }
     runAgent(socketPath: arguments[1], token: token)
@@ -3104,7 +3104,7 @@ if arguments.first == "--agent" {
     printPermissionStatus()
 } else if arguments.first == "--permission-status-file" {
     guard arguments.count >= 2 else {
-        fputs("usage: orca-computer-use-macos --permission-status-file <path>\n", stderr)
+        fputs("usage: serper-computer-use-macos --permission-status-file <path>\n", stderr)
         exit(2)
     }
     writePermissionStatus(to: arguments[1])

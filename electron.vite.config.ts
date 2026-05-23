@@ -13,19 +13,19 @@ import tailwindcss from '@tailwindcss/vite'
 // shell export.
 //
 // CI injects real values via GitHub Actions secrets
-// (ORCA_BUILD_IDENTITY='stable' | 'rc', ORCA_POSTHOG_WRITE_KEY=phc_...);
+// (SERPER_BUILD_IDENTITY='stable' | 'rc', SERPER_POSTHOG_WRITE_KEY=phc_...);
 // every other build path resolves these env vars to undefined, which the
 // JSON.stringify below folds to the literal `null`. Ambient declarations
 // for the two constants live in `src/types/build-constants.d.ts`.
-const orcaBuildIdentity = process.env.ORCA_BUILD_IDENTITY
-const ORCA_BUILD_IDENTITY_LITERAL =
-  orcaBuildIdentity === 'stable' || orcaBuildIdentity === 'rc'
-    ? JSON.stringify(orcaBuildIdentity)
+const serperBuildIdentity = process.env.SERPER_BUILD_IDENTITY
+const SERPER_BUILD_IDENTITY_LITERAL =
+  serperBuildIdentity === 'stable' || serperBuildIdentity === 'rc'
+    ? JSON.stringify(serperBuildIdentity)
     : 'null'
-const orcaPostHogWriteKey = process.env.ORCA_POSTHOG_WRITE_KEY
-const ORCA_POSTHOG_WRITE_KEY_LITERAL =
-  typeof orcaPostHogWriteKey === 'string' && orcaPostHogWriteKey.length > 0
-    ? JSON.stringify(orcaPostHogWriteKey)
+const serperPostHogWriteKey = process.env.SERPER_POSTHOG_WRITE_KEY
+const SERPER_POSTHOG_WRITE_KEY_LITERAL =
+  typeof serperPostHogWriteKey === 'string' && serperPostHogWriteKey.length > 0
+    ? JSON.stringify(serperPostHogWriteKey)
     : 'null'
 
 export default defineConfig({
@@ -50,8 +50,8 @@ export default defineConfig({
     // Why: compile-time substitution for the telemetry gate. See the block
     // above for the full rationale.
     define: {
-      ORCA_BUILD_IDENTITY: ORCA_BUILD_IDENTITY_LITERAL,
-      ORCA_POSTHOG_WRITE_KEY: ORCA_POSTHOG_WRITE_KEY_LITERAL
+      SERPER_BUILD_IDENTITY: SERPER_BUILD_IDENTITY_LITERAL,
+      SERPER_POSTHOG_WRITE_KEY: SERPER_POSTHOG_WRITE_KEY_LITERAL
     },
     // Why: @xterm/headless declares "exports": null in package.json, which
     // prevents Vite's default resolver from finding the CJS entry. Point

@@ -8,7 +8,7 @@
  */
 
 import type { Page } from '@stablyai/playwright-test'
-import { test, expect } from './helpers/orca-app'
+import { test, expect } from './helpers/serper-app'
 import {
   ensureTerminalVisible,
   getActiveTabId,
@@ -150,39 +150,39 @@ async function sendPtyCommands(
 
 test.describe('Terminal output scheduler', () => {
   test('background tab output bursts use the shared drain while the active tab renders', async ({
-    orcaPage
+    serperPage
   }) => {
-    await waitForSessionReady(orcaPage)
-    await waitForActiveWorktree(orcaPage)
-    await ensureTerminalVisible(orcaPage)
-    await waitForActiveTerminalManager(orcaPage, 30_000)
+    await waitForSessionReady(serperPage)
+    await waitForActiveWorktree(serperPage)
+    await ensureTerminalVisible(serperPage)
+    await waitForActiveTerminalManager(serperPage, 30_000)
 
-    const firstTabId = await getActiveTabId(orcaPage)
+    const firstTabId = await getActiveTabId(serperPage)
     if (!firstTabId) {
       throw new Error('Expected an initial terminal tab')
     }
 
     const tabIds = [firstTabId]
     const ptyIdsByTabId: Record<string, string> = {
-      [firstTabId]: await waitForTabPtyId(orcaPage, firstTabId)
+      [firstTabId]: await waitForTabPtyId(serperPage, firstTabId)
     }
 
     while (tabIds.length < TAB_COUNT) {
-      const tabId = await createTerminalTab(orcaPage)
-      await waitForActiveTerminalManager(orcaPage, 30_000)
+      const tabId = await createTerminalTab(serperPage)
+      await waitForActiveTerminalManager(serperPage, 30_000)
       tabIds.push(tabId)
-      ptyIdsByTabId[tabId] = await waitForTabPtyId(orcaPage, tabId)
+      ptyIdsByTabId[tabId] = await waitForTabPtyId(serperPage, tabId)
     }
 
-    await tabLocator(orcaPage, firstTabId).click()
+    await tabLocator(serperPage, firstTabId).click()
     await expect
-      .poll(() => getDomActiveTabId(orcaPage), {
+      .poll(() => getDomActiveTabId(serperPage), {
         timeout: 5_000,
         message: 'First terminal tab did not become active before the burst repro'
       })
       .toBe(firstTabId)
 
-    await resetSchedulerDebug(orcaPage)
+    await resetSchedulerDebug(serperPage)
 
     const runId = Date.now()
     const foregroundMarker = `FG_SCHED_${runId}`
@@ -196,10 +196,10 @@ test.describe('Terminal output scheduler', () => {
     }))
 
     await sendPtyCommands(
-      orcaPage,
+      serperPage,
       backgroundCommands.map(({ ptyId, command }) => ({ ptyId, command }))
     )
-    await sendPtyCommands(orcaPage, [
+    await sendPtyCommands(serperPage, [
       {
         ptyId: ptyIdsByTabId[firstTabId],
         command: nodeConsoleCommand(`'${foregroundMarker}'`)
@@ -207,27 +207,27 @@ test.describe('Terminal output scheduler', () => {
     ])
 
     await expect
-      .poll(async () => (await getTerminalContent(orcaPage)).includes(foregroundMarker), {
+      .poll(async () => (await getTerminalContent(serperPage)).includes(foregroundMarker), {
         timeout: 5_000,
         message: 'Active terminal did not render foreground output during background bursts'
       })
       .toBe(true)
 
     await expect
-      .poll(async () => (await getSchedulerDebug(orcaPage)).backgroundEnqueueCount, {
+      .poll(async () => (await getSchedulerDebug(serperPage)).backgroundEnqueueCount, {
         timeout: 5_000,
         message: 'Background PTY output did not enter the scheduler queue'
       })
       .toBeGreaterThanOrEqual(backgroundCommands.length)
 
     await expect
-      .poll(async () => (await getSchedulerDebug(orcaPage)).backgroundWriteCount, {
+      .poll(async () => (await getSchedulerDebug(serperPage)).backgroundWriteCount, {
         timeout: 10_000,
         message: 'Queued background PTY output did not drain into xterm'
       })
       .toBeGreaterThanOrEqual(backgroundCommands.length)
 
-    const debug = await getSchedulerDebug(orcaPage)
+    const debug = await getSchedulerDebug(serperPage)
     expect(debug.foregroundWriteCount).toBeGreaterThan(0)
     if (debug.drainWrites.length > 0) {
       expect(Math.max(...debug.drainWrites)).toBeLessThanOrEqual(2)
@@ -235,15 +235,15 @@ test.describe('Terminal output scheduler', () => {
 
     const firstBackground = backgroundCommands[0]
     const firstBackgroundTabId = tabIds[1]
-    await tabLocator(orcaPage, firstBackgroundTabId).click()
+    await tabLocator(serperPage, firstBackgroundTabId).click()
     await expect
-      .poll(() => getDomActiveTabId(orcaPage), {
+      .poll(() => getDomActiveTabId(serperPage), {
         timeout: 5_000,
         message: 'Background terminal tab did not become active for content verification'
       })
       .toBe(firstBackgroundTabId)
     await expect
-      .poll(async () => (await getTerminalContent(orcaPage)).includes(firstBackground.marker), {
+      .poll(async () => (await getTerminalContent(serperPage)).includes(firstBackground.marker), {
         timeout: 5_000,
         message: 'Background terminal output was not preserved after scheduler drain'
       })

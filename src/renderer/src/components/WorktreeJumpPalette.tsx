@@ -35,7 +35,7 @@ import {
   type SearchableBrowserPage
 } from '@/lib/browser-palette-search'
 import {
-  ORCA_BROWSER_FOCUS_REQUEST_EVENT,
+  SERPER_BROWSER_FOCUS_REQUEST_EVENT,
   queueBrowserFocusRequest
 } from '@/components/browser-pane/browser-focus'
 import type { BrowserPage, BrowserWorkspace, Worktree } from '../../../shared/types'
@@ -476,7 +476,7 @@ export default function WorktreeJumpPalette(): React.JSX.Element | null {
       previousBrowserFocusTargetRef.current =
         activeTabType === 'browser' &&
         document.activeElement instanceof HTMLElement &&
-        document.activeElement.closest('[data-orca-browser-address-bar="true"]')
+        document.activeElement.closest('[data-serper-browser-address-bar="true"]')
           ? 'address-bar'
           : 'webview'
       skipRestoreFocusRef.current = false
@@ -544,7 +544,7 @@ export default function WorktreeJumpPalette(): React.JSX.Element | null {
     (detail: { pageId: string; target: 'webview' | 'address-bar' }) => {
       queueBrowserFocusRequest(detail)
       window.dispatchEvent(
-        new CustomEvent(ORCA_BROWSER_FOCUS_REQUEST_EVENT, {
+        new CustomEvent(SERPER_BROWSER_FOCUS_REQUEST_EVENT, {
           detail
         })
       )
@@ -811,7 +811,7 @@ export default function WorktreeJumpPalette(): React.JSX.Element | null {
     }
     return {
       title: 'No active worktrees or browser tabs',
-      subtitle: 'Create a worktree or open a page in Orca to get started.'
+      subtitle: 'Create a worktree or open a page in Serper to get started.'
     }
   })()
 

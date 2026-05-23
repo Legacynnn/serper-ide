@@ -29,7 +29,7 @@ const { markCodexProjectTrusted, markCopilotFolderTrusted, markCursorWorkspaceTr
   await import('./agent-trust-presets')
 
 beforeEach(() => {
-  testState.fakeHomeDir = mkdtempSync(join(tmpdir(), 'orca-trust-presets-'))
+  testState.fakeHomeDir = mkdtempSync(join(tmpdir(), 'serper-trust-presets-'))
 })
 
 afterEach(() => {
@@ -39,7 +39,7 @@ afterEach(() => {
 
 describe('markCursorWorkspaceTrusted', () => {
   it('writes ~/.cursor/projects/<slug>/.workspace-trusted with the cwd payload', () => {
-    const workspace = mkdtempSync(join(tmpdir(), 'orca-cursor-ws-'))
+    const workspace = mkdtempSync(join(tmpdir(), 'serper-cursor-ws-'))
     try {
       markCursorWorkspaceTrusted(workspace)
       const projectsDir = join(testState.fakeHomeDir, '.cursor', 'projects')
@@ -56,7 +56,7 @@ describe('markCursorWorkspaceTrusted', () => {
   })
 
   it('is idempotent — re-marking the same workspace does not overwrite trustedAt', () => {
-    const workspace = mkdtempSync(join(tmpdir(), 'orca-cursor-ws-'))
+    const workspace = mkdtempSync(join(tmpdir(), 'serper-cursor-ws-'))
     try {
       markCursorWorkspaceTrusted(workspace)
       const projectsDir = join(testState.fakeHomeDir, '.cursor', 'projects')
@@ -74,7 +74,7 @@ describe('markCursorWorkspaceTrusted', () => {
 
 describe('markCopilotFolderTrusted', () => {
   it('appends the workspace to trustedFolders in ~/.copilot/config.json', () => {
-    const workspace = mkdtempSync(join(tmpdir(), 'orca-copilot-ws-'))
+    const workspace = mkdtempSync(join(tmpdir(), 'serper-copilot-ws-'))
     try {
       markCopilotFolderTrusted(workspace)
       const configPath = join(testState.fakeHomeDir, '.copilot', 'config.json')
@@ -89,7 +89,7 @@ describe('markCopilotFolderTrusted', () => {
   })
 
   it('preserves existing config keys and dedups already-trusted folders', () => {
-    const workspace = mkdtempSync(join(tmpdir(), 'orca-copilot-ws-'))
+    const workspace = mkdtempSync(join(tmpdir(), 'serper-copilot-ws-'))
     const realpath = realpathSync(workspace)
     try {
       mkdirSync(join(testState.fakeHomeDir, '.copilot'), { recursive: true })
@@ -114,7 +114,7 @@ describe('markCopilotFolderTrusted', () => {
 
 describe('markCodexProjectTrusted', () => {
   it('writes ~/.codex/config.toml with the project marked trusted', () => {
-    const workspace = mkdtempSync(join(tmpdir(), 'orca-codex-ws-'))
+    const workspace = mkdtempSync(join(tmpdir(), 'serper-codex-ws-'))
     try {
       const realpath = realpathSync(workspace)
       markCodexProjectTrusted(workspace)
@@ -129,7 +129,7 @@ describe('markCodexProjectTrusted', () => {
   })
 
   it('preserves existing config keys and updates an existing project block', () => {
-    const workspace = mkdtempSync(join(tmpdir(), 'orca-codex-ws-'))
+    const workspace = mkdtempSync(join(tmpdir(), 'serper-codex-ws-'))
     const realpath = realpathSync(workspace)
     try {
       const codexDir = join(testState.fakeHomeDir, '.codex')

@@ -6,7 +6,7 @@ export type VirtualizedScrollAnchor = {
   key: string
   offset: number
 } | null
-export const VIRTUALIZED_SCROLL_ANCHOR_RECORD_EVENT = 'orca-record-virtualized-scroll-anchor'
+export const VIRTUALIZED_SCROLL_ANCHOR_RECORD_EVENT = 'serper-record-virtualized-scroll-anchor'
 const RECORD_ANCHOR_SCROLL_IDLE_DELAY_MS = 150
 
 export function shouldCancelVirtualizedScrollOffsetRestore(args: {

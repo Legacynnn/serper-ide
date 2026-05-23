@@ -70,6 +70,7 @@ import {
 import { getAutomationRunViewState } from './automation-run-view-state'
 import { getAutomationRunWorkspaceDisplay } from './automation-run-workspace-display'
 import CommentMarkdown from '@/components/sidebar/CommentMarkdown'
+import { TitlebarPageControlsPortal } from '@/components/titlebar-page-controls/TitlebarPageControlsPortal'
 import { AutomationDetail } from './AutomationDetail'
 import { HermesCronOutputView } from './HermesCronOutputView'
 import {
@@ -85,7 +86,7 @@ import type { FetchExternalAutomationRuns } from './ExternalAutomationRunTable'
 
 const AGENTS = AGENT_CATALOG.map((agent) => agent.id)
 const DEFAULT_TIME = '09:00'
-const AUTOMATIONS_CHANGED_EVENT = 'orca:automations-changed'
+const AUTOMATIONS_CHANGED_EVENT = 'serper:automations-changed'
 type AutomationPaneTab = 'overview' | 'runs'
 
 type ExternalAutomationListEntry =
@@ -254,7 +255,7 @@ export default function AutomationsPage(): React.JSX.Element {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
-  const [createTarget, setCreateTarget] = useState<AutomationCreateTarget>('orca')
+  const [createTarget, setCreateTarget] = useState<AutomationCreateTarget>('serper')
   const [editingAutomationId, setEditingAutomationId] = useState<string | null>(null)
   const [relativeNow, setRelativeNow] = useState(Date.now())
   const [activePaneTab, setActivePaneTab] = useState<AutomationPaneTab>('overview')
@@ -651,7 +652,7 @@ export default function AutomationsPage(): React.JSX.Element {
     const target = getDefaultTarget()
     setEditingAutomationId(null)
     setEditingExternalTarget(null)
-    setCreateTarget('orca')
+    setCreateTarget('serper')
     const baseDraft: AutomationDraft = {
       name: '',
       prompt: '',
@@ -688,7 +689,7 @@ export default function AutomationsPage(): React.JSX.Element {
   const openEditDialog = async (automation: Automation): Promise<void> => {
     const requestId = (editRequestRef.current += 1)
     setEditingExternalTarget(null)
-    setCreateTarget('orca')
+    setCreateTarget('serper')
     let latest = automation
     try {
       latest =
@@ -1213,47 +1214,52 @@ export default function AutomationsPage(): React.JSX.Element {
 
   return (
     <main className="relative flex h-full min-h-0 flex-col bg-background text-foreground">
-      <header className="flex shrink-0 items-center justify-between px-5 pb-3 pt-1.5 md:px-8">
-        <div className="flex items-center gap-2">
-          <CalendarClock className="size-4 text-muted-foreground" strokeWidth={2.25} />
-          <h1 className="text-sm font-semibold">Automations</h1>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label="Add automation"
-                onClick={() => openCreateDialog()}
-                className="border border-border/50 bg-transparent hover:bg-muted/50"
-              >
-                <Plus className="size-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" sideOffset={6}>
-              Add automation
-            </TooltipContent>
-          </Tooltip>
+      <TitlebarPageControlsPortal>
+        <div
+          className="flex h-full min-w-0 flex-1 items-center justify-between gap-2 px-3"
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+        >
+          <div className="flex min-w-0 items-center gap-2">
+            <CalendarClock className="size-3.5 shrink-0 text-muted-foreground" strokeWidth={2.25} />
+            <h1 className="truncate text-xs font-semibold">Automations</h1>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label="Add automation"
+                  onClick={() => openCreateDialog()}
+                  className="border border-border/50 bg-transparent hover:bg-muted/50"
+                >
+                  <Plus className="size-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" sideOffset={6}>
+                Add automation
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label="Refresh automations"
+                  onClick={refresh}
+                  disabled={isLoading}
+                  className="border border-border/50 bg-transparent hover:bg-muted/50"
+                >
+                  <RefreshCw className={cn('size-3.5', isLoading && 'animate-spin')} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" sideOffset={6}>
+                Refresh automations
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label="Refresh automations"
-                onClick={refresh}
-                disabled={isLoading}
-                className="border border-border/50 bg-transparent hover:bg-muted/50"
-              >
-                <RefreshCw className={cn('size-4', isLoading && 'animate-spin')} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" sideOffset={6}>
-              Refresh automations
-            </TooltipContent>
-          </Tooltip>
-        </div>
-      </header>
+      </TitlebarPageControlsPortal>
 
       <AutomationEditorDialog
         open={createOpen}
@@ -1813,7 +1819,7 @@ export default function AutomationsPage(): React.JSX.Element {
                         selectedAutomationRunPage.scheduledFor,
                         relativeNow
                       ),
-                      'Orca',
+                      'Serper',
                       selectedAutomationRunPageWorkspaceDisplay?.detailLabel ?? 'No workspace'
                     ]}
                     detail={

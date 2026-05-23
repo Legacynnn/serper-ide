@@ -89,8 +89,8 @@ export function computeBranchName(
  * must also live on the WSL filesystem. Creating them on the Windows side
  * (/mnt/c/...) would be extremely slow due to cross-filesystem I/O and
  * the terminal would open a Windows shell instead of WSL. We mirror the
- * Windows workspace layout inside ~/orca/workspaces on the WSL filesystem
- * (e.g. \\wsl.localhost\Ubuntu\home\user\orca\workspaces\repo\feature).
+ * Windows workspace layout inside ~/serper/workspaces on the WSL filesystem
+ * (e.g. \\wsl.localhost\Ubuntu\home\user\serper\workspaces\repo\feature).
  */
 export function computeWorktreePath(
   sanitizedName: string,
@@ -109,10 +109,10 @@ export function computeWorktreePath(
       // Why: WSL UNC paths are still Windows paths from Node's perspective.
       // On Linux CI, the default path helpers use POSIX semantics and would
       // treat `\\wsl.localhost\...` as a plain string, producing mixed-separator
-      // paths like `\\wsl.localhost\Ubuntu\home\jin/orca/...`. Use win32 path
+      // paths like `\\wsl.localhost\Ubuntu\home\jin/serper/...`. Use win32 path
       // operations whenever a Windows/UNC path is involved so behavior matches
       // the Windows production runtime.
-      const wslWorkspaceDir = win32.join(wslHome, 'orca', 'workspaces')
+      const wslWorkspaceDir = win32.join(wslHome, 'serper', 'workspaces')
       if (settings.nestWorkspaces) {
         const repoName = win32.basename(repoPath).replace(/\.git$/, '')
         return win32.join(wslWorkspaceDir, repoName, sanitizedName)
@@ -138,7 +138,7 @@ export function areWorktreePathsEqual(
     const right = win32.normalize(win32.resolve(rightPath))
     // Why: `git worktree list` can report the same Windows path with different
     // slash styles or drive-letter casing than the path we computed before
-    // creation. Orca must treat those as the same worktree or a successful
+    // creation. Serper must treat those as the same worktree or a successful
     // create spuriously fails until the next full reload repopulates state.
     return left.toLowerCase() === right.toLowerCase()
   }

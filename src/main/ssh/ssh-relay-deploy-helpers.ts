@@ -308,7 +308,7 @@ export async function resolveRemoteNodePath(conn: SshConnection): Promise<string
   }
 
   throw new Error(
-    'Node.js not found on remote host. Orca relay requires Node.js 18+. ' +
+    'Node.js not found on remote host. Serper relay requires Node.js 18+. ' +
       'Install Node.js on the remote and try again.'
   )
 }

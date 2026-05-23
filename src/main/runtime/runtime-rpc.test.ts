@@ -7,11 +7,11 @@ import { EventEmitter } from 'events'
 import { describe, expect, it, vi } from 'vitest'
 import Database from 'better-sqlite3'
 import WebSocket from 'ws'
-import { OrcaRuntimeService } from './orca-runtime'
+import { SerperRuntimeService } from './serper-runtime'
 import { OrchestrationDb } from './orchestration/db'
 import * as runtimeMetadataModule from './runtime-metadata'
 import { readRuntimeMetadata } from './runtime-metadata'
-import { createRuntimeTransportMetadata, OrcaRuntimeRpcServer } from './runtime-rpc'
+import { createRuntimeTransportMetadata, SerperRuntimeRpcServer } from './runtime-rpc'
 import { parsePairingCode } from '../../shared/pairing'
 import { decrypt, deriveSharedKey, encrypt, generateKeyPair } from './rpc/e2ee-crypto'
 import { DeviceRegistry } from './device-registry'
@@ -176,7 +176,7 @@ class FakeWebSocket extends EventEmitter {
   readyState = this.OPEN
 }
 
-describe('OrcaRuntimeRpcServer', () => {
+describe('SerperRuntimeRpcServer', () => {
   const makeStore = (overrides?: { isUnread?: boolean }) => ({
     getRepo: (id: string) =>
       makeStore(overrides)
@@ -230,9 +230,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('writes runtime metadata with transport details when started', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService()
-    const server = new OrcaRuntimeRpcServer({ runtime, userDataPath })
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService()
+    const server = new SerperRuntimeRpcServer({ runtime, userDataPath })
 
     await server.start()
 
@@ -249,9 +249,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('creates a pairing offer for the active WebSocket transport', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService()
-    const server = new OrcaRuntimeRpcServer({
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService()
+    const server = new SerperRuntimeRpcServer({
       runtime,
       userDataPath,
       enableWebSocket: true,
@@ -276,9 +276,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('includes a web client URL when the web bundle is served by the runtime', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService()
-    const server = new OrcaRuntimeRpcServer({
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService()
+    const server = new SerperRuntimeRpcServer({
       runtime,
       userDataPath,
       enableWebSocket: true,
@@ -306,9 +306,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('preserves proxy path prefixes in web client URLs', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService()
-    const server = new OrcaRuntimeRpcServer({
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService()
+    const server = new SerperRuntimeRpcServer({
       runtime,
       userDataPath,
       enableWebSocket: true,
@@ -320,12 +320,12 @@ describe('OrcaRuntimeRpcServer', () => {
 
     try {
       const offer = server.createPairingOffer({
-        address: 'wss://runtime.example.com/orca',
+        address: 'wss://runtime.example.com/serper',
         name: 'Proxy test'
       })
       expect(offer.available).toBe(true)
       if (offer.available) {
-        expect(offer.webClientUrl).toContain('https://runtime.example.com/orca/web-index.html')
+        expect(offer.webClientUrl).toContain('https://runtime.example.com/serper/web-index.html')
       }
     } finally {
       await server.stop()
@@ -333,9 +333,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('formats pairing-address overrides for IPv6 and host-port tunnel endpoints', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService()
-    const server = new OrcaRuntimeRpcServer({
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService()
+    const server = new SerperRuntimeRpcServer({
       runtime,
       userDataPath,
       enableWebSocket: true,
@@ -363,12 +363,12 @@ describe('OrcaRuntimeRpcServer', () => {
       }
 
       const fullUrl = server.createPairingOffer({
-        address: 'wss://runtime.example.com/orca',
+        address: 'wss://runtime.example.com/serper',
         name: 'Full URL test'
       })
       expect(fullUrl.available).toBe(true)
       if (fullUrl.available) {
-        expect(fullUrl.endpoint).toBe('wss://runtime.example.com/orca')
+        expect(fullUrl.endpoint).toBe('wss://runtime.example.com/serper')
       }
     } finally {
       await server.stop()
@@ -376,9 +376,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('creates mobile-scoped pairing offers for headless mobile pairing', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService()
-    const server = new OrcaRuntimeRpcServer({
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService()
+    const server = new SerperRuntimeRpcServer({
       runtime,
       userDataPath,
       enableWebSocket: true,
@@ -410,9 +410,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('cleans up pre-auth E2EE WebSocket state when the socket closes', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService()
-    const server = new OrcaRuntimeRpcServer({
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService()
+    const server = new SerperRuntimeRpcServer({
       runtime,
       userDataPath,
       enableWebSocket: true,
@@ -453,9 +453,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('terminates active WebSockets for a revoked mobile device', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService()
-    const server = new OrcaRuntimeRpcServer({
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService()
+    const server = new SerperRuntimeRpcServer({
       runtime,
       userDataPath,
       enableWebSocket: true,
@@ -490,9 +490,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('does not revoke runtime-scoped devices through mobile revocation', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService()
-    const server = new OrcaRuntimeRpcServer({
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService()
+    const server = new SerperRuntimeRpcServer({
       runtime,
       userDataPath,
       enableWebSocket: true,
@@ -520,9 +520,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('terminates active WebSockets for a revoked runtime access grant', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService()
-    const server = new OrcaRuntimeRpcServer({
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService()
+    const server = new SerperRuntimeRpcServer({
       runtime,
       userDataPath,
       enableWebSocket: true,
@@ -555,9 +555,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('rotates unused runtime pairing links without revoking already-used grants', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService()
-    const server = new OrcaRuntimeRpcServer({
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService()
+    const server = new SerperRuntimeRpcServer({
       runtime,
       userDataPath,
       enableWebSocket: true,
@@ -611,11 +611,11 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('caps WebSocket long-polls and aborts them when the socket closes', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService()
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService()
     const db = new OrchestrationDb(':memory:')
     runtime.setOrchestrationDb(db)
-    const server = new OrcaRuntimeRpcServer({
+    const server = new SerperRuntimeRpcServer({
       runtime,
       userDataPath,
       enableWebSocket: false,
@@ -680,9 +680,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('shares one socket close listener across concurrent WebSocket dispatches', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = { getRuntimeId: () => 'test-runtime' } as unknown as OrcaRuntimeService
-    const server = new OrcaRuntimeRpcServer({ runtime, userDataPath, enableWebSocket: false })
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = { getRuntimeId: () => 'test-runtime' } as unknown as SerperRuntimeService
+    const server = new SerperRuntimeRpcServer({ runtime, userDataPath, enableWebSocket: false })
     server['deviceRegistry'] = new DeviceRegistry(userDataPath)
     const entry = server['deviceRegistry']!.addDevice('runtime-test', 'runtime')
     const ws = new FakeWebSocket()
@@ -748,7 +748,7 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('limits mobile-scoped WebSocket tokens to the mobile RPC surface', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
     const pushRuntimeGit = vi.fn().mockResolvedValue({ ok: true })
     const selectClaudeAccount = vi.fn().mockResolvedValue({ ok: true })
     const selectCodexAccount = vi.fn().mockResolvedValue({ ok: true })
@@ -797,8 +797,8 @@ describe('OrcaRuntimeRpcServer', () => {
       browserSetViewport,
       browserDialogAccept,
       browserDialogDismiss
-    } as unknown as OrcaRuntimeService
-    const server = new OrcaRuntimeRpcServer({ runtime, userDataPath, enableWebSocket: false })
+    } as unknown as SerperRuntimeService
+    const server = new SerperRuntimeRpcServer({ runtime, userDataPath, enableWebSocket: false })
     server['deviceRegistry'] = new DeviceRegistry(userDataPath)
     const mobile = server['deviceRegistry']!.addDevice('phone', 'mobile')
     const replies: Record<string, unknown>[] = []
@@ -1042,12 +1042,12 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('rejects WebSocket requests whose request token differs from the authenticated channel token', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
     const runtime = {
       getRuntimeId: () => 'test-runtime',
       getStatus: vi.fn().mockResolvedValue({ graphStatus: 'ok' })
-    } as unknown as OrcaRuntimeService
-    const server = new OrcaRuntimeRpcServer({ runtime, userDataPath, enableWebSocket: false })
+    } as unknown as SerperRuntimeService
+    const server = new SerperRuntimeRpcServer({ runtime, userDataPath, enableWebSocket: false })
     server['deviceRegistry'] = new DeviceRegistry(userDataPath)
     const channelDevice = server['deviceRegistry']!.addDevice('phone', 'mobile')
     const requestDevice = server['deviceRegistry']!.addDevice('cli', 'runtime')
@@ -1076,13 +1076,13 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('allows runtime-scoped WebSocket tokens to use the full RPC surface', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
     const pushRuntimeGit = vi.fn().mockResolvedValue({ ok: true })
     const runtime = {
       getRuntimeId: () => 'test-runtime',
       pushRuntimeGit
-    } as unknown as OrcaRuntimeService
-    const server = new OrcaRuntimeRpcServer({ runtime, userDataPath, enableWebSocket: false })
+    } as unknown as SerperRuntimeService
+    const server = new SerperRuntimeRpcServer({ runtime, userDataPath, enableWebSocket: false })
     server['deviceRegistry'] = new DeviceRegistry(userDataPath)
     const runtimeDevice = server['deviceRegistry']!.addDevice('cli', 'runtime')
     const replies: Record<string, unknown>[] = []
@@ -1103,9 +1103,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('leaves the last published metadata in place when a runtime stops', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService()
-    const server = new OrcaRuntimeRpcServer({
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService()
+    const server = new SerperRuntimeRpcServer({
       runtime,
       userDataPath,
       pid: 1001
@@ -1123,9 +1123,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('closes the socket if metadata publication fails during startup', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService()
-    const server = new OrcaRuntimeRpcServer({ runtime, userDataPath })
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService()
+    const server = new SerperRuntimeRpcServer({ runtime, userDataPath })
     const writeMetadataSpy = vi
       .spyOn(runtimeMetadataModule, 'writeRuntimeMetadata')
       .mockImplementationOnce(() => {
@@ -1148,9 +1148,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('serves status.get for authenticated callers', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService()
-    const server = new OrcaRuntimeRpcServer({ runtime, userDataPath })
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService()
+    const server = new SerperRuntimeRpcServer({ runtime, userDataPath })
 
     await server.start()
 
@@ -1174,9 +1174,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('rejects requests with the wrong auth token', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService()
-    const server = new OrcaRuntimeRpcServer({ runtime, userDataPath })
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService()
+    const server = new SerperRuntimeRpcServer({ runtime, userDataPath })
 
     await server.start()
 
@@ -1199,9 +1199,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('rejects malformed requests before dispatch', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService()
-    const server = new OrcaRuntimeRpcServer({ runtime, userDataPath })
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService()
+    const server = new SerperRuntimeRpcServer({ runtime, userDataPath })
 
     await server.start()
 
@@ -1223,8 +1223,8 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('serves terminal.list and terminal.show for live runtime terminals', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService(makeStore() as never)
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService(makeStore() as never)
     const writes: string[] = []
     runtime.setPtyController({
       write: (_ptyId, data) => {
@@ -1234,7 +1234,7 @@ describe('OrcaRuntimeRpcServer', () => {
       kill: () => true,
       getForegroundProcess: async () => null
     })
-    const server = new OrcaRuntimeRpcServer({ runtime, userDataPath })
+    const server = new SerperRuntimeRpcServer({ runtime, userDataPath })
 
     runtime.attachWindow(1)
     runtime.syncWindowGraph(1, {
@@ -1358,9 +1358,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('serves worktree.ps from the runtime summary builder', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService(makeStore({ isUnread: true }) as never)
-    const server = new OrcaRuntimeRpcServer({ runtime, userDataPath })
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService(makeStore({ isUnread: true }) as never)
+    const server = new SerperRuntimeRpcServer({ runtime, userDataPath })
 
     runtime.attachWindow(1)
     runtime.syncWindowGraph(1, {
@@ -1422,9 +1422,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('bounds worktree.list responses with limit metadata', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService(makeStore({ isUnread: true }) as never)
-    const server = new OrcaRuntimeRpcServer({ runtime, userDataPath })
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService(makeStore({ isUnread: true }) as never)
+    const server = new SerperRuntimeRpcServer({ runtime, userDataPath })
 
     await server.start()
 
@@ -1451,9 +1451,9 @@ describe('OrcaRuntimeRpcServer', () => {
   })
 
   it('rejects oversized RPC frames instead of buffering them indefinitely', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-    const runtime = new OrcaRuntimeService()
-    const server = new OrcaRuntimeRpcServer({ runtime, userDataPath })
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+    const runtime = new SerperRuntimeService()
+    const server = new SerperRuntimeRpcServer({ runtime, userDataPath })
 
     await server.start()
 
@@ -1492,13 +1492,13 @@ describe('OrcaRuntimeRpcServer', () => {
   // that a unit-level test would miss.
   describe('long-poll transport (§3.1)', () => {
     it('emits keepalive frames while a check --wait handler blocks', async () => {
-      const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-      const runtime = new OrcaRuntimeService()
+      const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+      const runtime = new SerperRuntimeService()
       const db = new OrchestrationDb(':memory:')
       runtime.setOrchestrationDb(db)
       // Why: 50ms keepalive lets us collect ≥3 frames within a 300ms wait
       // window without slowing the suite.
-      const server = new OrcaRuntimeRpcServer({
+      const server = new SerperRuntimeRpcServer({
         runtime,
         userDataPath,
         keepaliveIntervalMs: 50
@@ -1533,9 +1533,9 @@ describe('OrcaRuntimeRpcServer', () => {
     })
 
     it('emits keepalive frames while terminal.wait blocks and returns its structured timeout', async () => {
-      const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-      const runtime = new OrcaRuntimeService()
-      const server = new OrcaRuntimeRpcServer({
+      const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+      const runtime = new SerperRuntimeService()
+      const server = new SerperRuntimeRpcServer({
         runtime,
         userDataPath,
         keepaliveIntervalMs: 30
@@ -1604,9 +1604,9 @@ describe('OrcaRuntimeRpcServer', () => {
     })
 
     it('releases terminal.wait long-poll slot when the client closes mid-wait', async () => {
-      const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-      const runtime = new OrcaRuntimeService()
-      const server = new OrcaRuntimeRpcServer({
+      const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+      const runtime = new SerperRuntimeService()
+      const server = new SerperRuntimeRpcServer({
         runtime,
         userDataPath,
         keepaliveIntervalMs: 1000,
@@ -1679,11 +1679,11 @@ describe('OrcaRuntimeRpcServer', () => {
     })
 
     it('releases long-poll slot when client closes mid-wait', async () => {
-      const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-      const runtime = new OrcaRuntimeService()
+      const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+      const runtime = new SerperRuntimeService()
       const db = new OrchestrationDb(':memory:')
       runtime.setOrchestrationDb(db)
-      const server = new OrcaRuntimeRpcServer({
+      const server = new SerperRuntimeRpcServer({
         runtime,
         userDataPath,
         keepaliveIntervalMs: 1000,
@@ -1739,11 +1739,11 @@ describe('OrcaRuntimeRpcServer', () => {
     })
 
     it('responds runtime_busy once the long-poll cap is saturated', async () => {
-      const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-      const runtime = new OrcaRuntimeService()
+      const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+      const runtime = new SerperRuntimeService()
       const db = new OrchestrationDb(':memory:')
       runtime.setOrchestrationDb(db)
-      const server = new OrcaRuntimeRpcServer({
+      const server = new SerperRuntimeRpcServer({
         runtime,
         userDataPath,
         keepaliveIntervalMs: 1000,
@@ -1796,13 +1796,13 @@ describe('OrcaRuntimeRpcServer', () => {
     })
 
     it('does not emit keepalive frames for short RPCs', async () => {
-      const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-      const runtime = new OrcaRuntimeService()
+      const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+      const runtime = new SerperRuntimeService()
       // Why: a 10ms interval means any frame in the first ~100ms of a short
       // RPC would show up; `status.get` returns in <10ms so no keepalive
       // should ever fire. Locks in the "keepalive is long-poll-only" invariant
       // so a future refactor can't silently re-broaden the timer.
-      const server = new OrcaRuntimeRpcServer({
+      const server = new SerperRuntimeRpcServer({
         runtime,
         userDataPath,
         keepaliveIntervalMs: 10
@@ -1835,9 +1835,9 @@ describe('OrcaRuntimeRpcServer', () => {
       // Without the `.catch` on handleMessage's promise, a throw would leave
       // the client hanging until the 30s idle timer and leak the dispatch's
       // AbortController in the transport's in-flight set.
-      const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
-      const runtime = new OrcaRuntimeService()
-      const server = new OrcaRuntimeRpcServer({ runtime, userDataPath })
+      const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-rpc-'))
+      const runtime = new SerperRuntimeService()
+      const server = new SerperRuntimeRpcServer({ runtime, userDataPath })
       await server.start()
 
       // Force the dispatcher to throw a non-envelope error.
@@ -1872,7 +1872,7 @@ describe('OrcaRuntimeRpcServer', () => {
       const db1 = new OrchestrationDb(':memory:')
       db1.close()
       // File path reuse is meaningless with :memory:, so use a tmp file.
-      const tmpPath = join(mkdtempSync(join(tmpdir(), 'orca-orch-mig-')), 'orch.sqlite')
+      const tmpPath = join(mkdtempSync(join(tmpdir(), 'serper-orch-mig-')), 'orch.sqlite')
       const a = new OrchestrationDb(tmpPath)
       a.close()
       // Second construction must not throw "duplicate column name".
@@ -1893,7 +1893,7 @@ describe('OrcaRuntimeRpcServer', () => {
       // To exercise the hard-fail path we need a DB that actually has work
       // to migrate — a v2-shape file without the delivered_at column — so
       // the guarded ALTER runs and the stub can fire.
-      const tmpPath = join(mkdtempSync(join(tmpdir(), 'orca-orch-mig-')), 'orch.sqlite')
+      const tmpPath = join(mkdtempSync(join(tmpdir(), 'serper-orch-mig-')), 'orch.sqlite')
       const seed = new Database(tmpPath)
       seed.exec(`
         CREATE TABLE messages (

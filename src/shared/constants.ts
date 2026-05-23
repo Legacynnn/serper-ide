@@ -31,12 +31,12 @@ export const DEFAULT_APP_FONT_FAMILY = 'Geist'
 // clamps, and UI step references all agree on the same upper bound.
 export const ONBOARDING_FINAL_STEP = 5
 
-export const ORCA_BROWSER_PARTITION = 'persist:orca-browser'
+export const SERPER_BROWSER_PARTITION = 'persist:serper-browser'
 // Why: blank browser tabs must start from an inert guest URL that does not
 // navigate the privileged main window to about:blank. Renderer and main both
 // need the exact same value so the attach policy can allow only this one safe
 // data URL while still rejecting arbitrary renderer-provided data URLs.
-export const ORCA_BROWSER_BLANK_URL = 'data:text/html,'
+export const SERPER_BROWSER_BLANK_URL = 'data:text/html,'
 
 // Why: Electron's invoke error path preserves message text, not arbitrary
 // custom Error fields. Keep this stable token shared across main/renderer.
@@ -165,7 +165,7 @@ export function getDefaultOnboardingState(): OnboardingState {
 
 export function getDefaultSettings(homedir: string): GlobalSettings {
   return {
-    workspaceDir: `${homedir}/orca/workspaces`,
+    workspaceDir: `${homedir}/serper/workspaces`,
     nestWorkspaces: true,
     refreshLocalBaseRefOnWorktreeCreate: false,
     branchPrefix: 'git-username',
@@ -379,7 +379,7 @@ export function getDefaultUIState(): PersistedUIState {
     statusBarVisible: true,
     dismissedUpdateVersion: null,
     lastUpdateCheckAt: null,
-    trustedOrcaHooks: {},
+    trustedSerperHooks: {},
     acknowledgedAgentsByPaneKey: {},
     workspaceCleanup: { dismissals: {} },
     featureTipsSeenIds: []

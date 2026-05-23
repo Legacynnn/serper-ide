@@ -126,7 +126,7 @@ function hasUnsavedEditorState(state: AppState): boolean {
 }
 
 function isPairedWebClient(): boolean {
-  return Boolean((globalThis as { __ORCA_WEB_CLIENT__?: boolean }).__ORCA_WEB_CLIENT__)
+  return Boolean((globalThis as { __SERPER_WEB_CLIENT__?: boolean }).__SERPER_WEB_CLIENT__)
 }
 
 async function closeRemoteBrowserPagesBeforeRuntimeSwitch(state: AppState): Promise<void> {

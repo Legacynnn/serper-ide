@@ -137,7 +137,7 @@ function describeClaudeUsageFailure(output: string): string {
     return 'Claude plan usage is unavailable for this Claude CLI session.'
   }
 
-  // Why: parser failures are an implementation detail of Orca's PTY fallback.
+  // Why: parser failures are an implementation detail of Serper's PTY fallback.
   // The UI should explain the user-visible outcome, not leak internal parsing
   // mechanics that the user cannot act on.
   return 'Claude usage is unavailable right now.'
@@ -189,7 +189,7 @@ export async function fetchViaPty(options?: {
         resolved = true
         // Why: node-pty's NAPI callbacks can outlive the Electron JS
         // environment if we kill the hidden PTY without disposing them first,
-        // which matches Orca's documented SIGABRT failure mode on shutdown.
+        // which matches Serper's documented SIGABRT failure mode on shutdown.
         if (claude21UsageSettleTimer) {
           clearTimeout(claude21UsageSettleTimer)
           claude21UsageSettleTimer = null

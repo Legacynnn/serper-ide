@@ -63,7 +63,7 @@ export const TERMINAL_RENDERING_SEARCH_ENTRIES: SettingsSearchEntry[] = [
 export const TERMINAL_CURSOR_SEARCH_ENTRIES: SettingsSearchEntry[] = [
   {
     title: 'Cursor Shape',
-    description: 'Default cursor appearance for Orca terminal panes.',
+    description: 'Default cursor appearance for Serper terminal panes.',
     keywords: ['terminal', 'cursor', 'bar', 'block', 'underline']
   },
   {
@@ -160,7 +160,7 @@ export const TERMINAL_LIGHT_THEME_SEARCH_ENTRIES: SettingsSearchEntry[] = [
   },
   {
     title: 'Light Theme',
-    description: 'Choose the theme used when Orca is in light mode.',
+    description: 'Choose the theme used when Serper is in light mode.',
     keywords: ['terminal', 'theme', 'light', 'preview']
   },
   {

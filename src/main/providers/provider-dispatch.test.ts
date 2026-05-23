@@ -9,7 +9,7 @@ const { handleMock, removeHandlerMock, removeAllListenersMock } = vi.hoisted(() 
 vi.mock('electron', () => ({
   app: {
     isPackaged: true,
-    getPath: vi.fn().mockReturnValue('/tmp/orca-test-userdata')
+    getPath: vi.fn().mockReturnValue('/tmp/serper-test-userdata')
   },
   ipcMain: {
     handle: handleMock,

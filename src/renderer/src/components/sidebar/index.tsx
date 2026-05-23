@@ -10,7 +10,7 @@ import WorktreeMetaDialog from './WorktreeMetaDialog'
 import NonGitFolderDialog from './NonGitFolderDialog'
 import RemoveFolderDialog from './RemoveFolderDialog'
 import AddRepoDialog from './AddRepoDialog'
-import OrcaYamlTrustDialog from './OrcaYamlTrustDialog'
+import SerperYamlTrustDialog from './SerperYamlTrustDialog'
 import type { VirtualizedScrollAnchor } from '@/hooks/useVirtualizedScrollAnchor'
 
 const MIN_WIDTH = 220
@@ -88,7 +88,7 @@ function Sidebar({
       <NonGitFolderDialog />
       <RemoveFolderDialog />
       <AddRepoDialog />
-      <OrcaYamlTrustDialog />
+      <SerperYamlTrustDialog />
     </TooltipProvider>
   )
 }

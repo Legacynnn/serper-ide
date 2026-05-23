@@ -182,19 +182,19 @@ describe('registerPtyHandlers', () => {
   }
 
   const savedOpenCodeConfigDir = process.env.OPENCODE_CONFIG_DIR
-  const savedOrcaOpenCodeConfigDir = process.env.ORCA_OPENCODE_CONFIG_DIR
-  const savedOrcaOpenCodeSourceConfigDir = process.env.ORCA_OPENCODE_SOURCE_CONFIG_DIR
+  const savedSerperOpenCodeConfigDir = process.env.SERPER_OPENCODE_CONFIG_DIR
+  const savedSerperOpenCodeSourceConfigDir = process.env.SERPER_OPENCODE_SOURCE_CONFIG_DIR
   const savedPiAgentDir = process.env.PI_CODING_AGENT_DIR
-  const savedOrcaPiAgentDir = process.env.ORCA_PI_CODING_AGENT_DIR
-  const savedOrcaPiSourceAgentDir = process.env.ORCA_PI_SOURCE_AGENT_DIR
+  const savedSerperPiAgentDir = process.env.SERPER_PI_CODING_AGENT_DIR
+  const savedSerperPiSourceAgentDir = process.env.SERPER_PI_SOURCE_AGENT_DIR
 
   beforeEach(() => {
     delete process.env.OPENCODE_CONFIG_DIR
-    delete process.env.ORCA_OPENCODE_SOURCE_CONFIG_DIR
-    delete process.env.ORCA_OPENCODE_CONFIG_DIR
+    delete process.env.SERPER_OPENCODE_SOURCE_CONFIG_DIR
+    delete process.env.SERPER_OPENCODE_CONFIG_DIR
     delete process.env.PI_CODING_AGENT_DIR
-    delete process.env.ORCA_PI_SOURCE_AGENT_DIR
-    delete process.env.ORCA_PI_CODING_AGENT_DIR
+    delete process.env.SERPER_PI_SOURCE_AGENT_DIR
+    delete process.env.SERPER_PI_CODING_AGENT_DIR
     handlers.clear()
     handleMock.mockReset()
     onMock.mockReset()
@@ -231,26 +231,26 @@ describe('registerPtyHandlers', () => {
     handleMock.mockImplementation((channel: string, handler: (...a: unknown[]) => unknown) => {
       handlers.set(channel, handler)
     })
-    getPathMock.mockReturnValue('/tmp/orca-user-data')
+    getPathMock.mockReturnValue('/tmp/serper-user-data')
     existsSyncMock.mockReturnValue(true)
     statSyncMock.mockReturnValue({ isDirectory: () => true, mode: 0o755 })
     readFileSyncMock.mockReturnValue('')
     openCodeBuildPtyEnvMock.mockImplementation((_ptyId: string, existingConfigDir?: string) => ({
-      ORCA_OPENCODE_HOOK_PORT: '4567',
-      ORCA_OPENCODE_HOOK_TOKEN: 'opencode-token',
-      ORCA_OPENCODE_PTY_ID: 'test-pty',
+      SERPER_OPENCODE_HOOK_PORT: '4567',
+      SERPER_OPENCODE_HOOK_TOKEN: 'opencode-token',
+      SERPER_OPENCODE_PTY_ID: 'test-pty',
       OPENCODE_CONFIG_DIR: existingConfigDir
-        ? '/tmp/orca-opencode-overlay'
-        : '/tmp/orca-opencode-config'
+        ? '/tmp/serper-opencode-overlay'
+        : '/tmp/serper-opencode-config'
     }))
     buildAgentHookEnvMock.mockReturnValue({
-      ORCA_AGENT_HOOK_PORT: '5678',
-      ORCA_AGENT_HOOK_TOKEN: 'agent-token'
+      SERPER_AGENT_HOOK_PORT: '5678',
+      SERPER_AGENT_HOOK_TOKEN: 'agent-token'
     })
     piBuildPtyEnvMock.mockImplementation((_ptyId: string, existingAgentDir?: string) => ({
       PI_CODING_AGENT_DIR: existingAgentDir
-        ? '/tmp/orca-pi-agent-overlay'
-        : '/tmp/orca-pi-agent-overlay'
+        ? '/tmp/serper-pi-agent-overlay'
+        : '/tmp/serper-pi-agent-overlay'
     }))
     isPwshAvailableMock.mockReturnValue(false)
     spawnMock.mockReturnValue({
@@ -272,30 +272,30 @@ describe('registerPtyHandlers', () => {
     } else {
       delete process.env.OPENCODE_CONFIG_DIR
     }
-    if (savedOrcaOpenCodeConfigDir !== undefined) {
-      process.env.ORCA_OPENCODE_CONFIG_DIR = savedOrcaOpenCodeConfigDir
+    if (savedSerperOpenCodeConfigDir !== undefined) {
+      process.env.SERPER_OPENCODE_CONFIG_DIR = savedSerperOpenCodeConfigDir
     } else {
-      delete process.env.ORCA_OPENCODE_CONFIG_DIR
+      delete process.env.SERPER_OPENCODE_CONFIG_DIR
     }
-    if (savedOrcaOpenCodeSourceConfigDir !== undefined) {
-      process.env.ORCA_OPENCODE_SOURCE_CONFIG_DIR = savedOrcaOpenCodeSourceConfigDir
+    if (savedSerperOpenCodeSourceConfigDir !== undefined) {
+      process.env.SERPER_OPENCODE_SOURCE_CONFIG_DIR = savedSerperOpenCodeSourceConfigDir
     } else {
-      delete process.env.ORCA_OPENCODE_SOURCE_CONFIG_DIR
+      delete process.env.SERPER_OPENCODE_SOURCE_CONFIG_DIR
     }
     if (savedPiAgentDir !== undefined) {
       process.env.PI_CODING_AGENT_DIR = savedPiAgentDir
     } else {
       delete process.env.PI_CODING_AGENT_DIR
     }
-    if (savedOrcaPiAgentDir !== undefined) {
-      process.env.ORCA_PI_CODING_AGENT_DIR = savedOrcaPiAgentDir
+    if (savedSerperPiAgentDir !== undefined) {
+      process.env.SERPER_PI_CODING_AGENT_DIR = savedSerperPiAgentDir
     } else {
-      delete process.env.ORCA_PI_CODING_AGENT_DIR
+      delete process.env.SERPER_PI_CODING_AGENT_DIR
     }
-    if (savedOrcaPiSourceAgentDir === undefined) {
-      delete process.env.ORCA_PI_SOURCE_AGENT_DIR
+    if (savedSerperPiSourceAgentDir === undefined) {
+      delete process.env.SERPER_PI_SOURCE_AGENT_DIR
     } else {
-      process.env.ORCA_PI_SOURCE_AGENT_DIR = savedOrcaPiSourceAgentDir
+      process.env.SERPER_PI_SOURCE_AGENT_DIR = savedSerperPiSourceAgentDir
     }
   })
 
@@ -443,61 +443,61 @@ describe('registerPtyHandlers', () => {
       const env = await spawnAndGetEnv()
       expect(env.TERM).toBe('xterm-256color')
       expect(env.COLORTERM).toBe('truecolor')
-      expect(env.TERM_PROGRAM).toBe('Orca')
+      expect(env.TERM_PROGRAM).toBe('Serper')
     })
 
     it('advertises OSC 8 hyperlink support via FORCE_HYPERLINK', async () => {
       // Why: the supports-hyperlinks npm package hard-codes a TERM_PROGRAM
       // allowlist (iTerm.app / WezTerm / vscode) and reports false for
-      // TERM_PROGRAM=Orca, so tools like Claude Code emit plain text instead
+      // TERM_PROGRAM=Serper, so tools like Claude Code emit plain text instead
       // of ESC]8;; wrappers. Setting FORCE_HYPERLINK=1 forces the detector to
       // return true; xterm.js + our linkHandler handle the sequences natively.
       const env = await spawnAndGetEnv()
       expect(env.FORCE_HYPERLINK).toBe('1')
     })
 
-    it('surfaces ORCA_APP_VERSION as TERM_PROGRAM_VERSION for TUI feature gating', async () => {
-      const env = await spawnAndGetEnv(undefined, { ORCA_APP_VERSION: '1.2.3-test' })
+    it('surfaces SERPER_APP_VERSION as TERM_PROGRAM_VERSION for TUI feature gating', async () => {
+      const env = await spawnAndGetEnv(undefined, { SERPER_APP_VERSION: '1.2.3-test' })
       expect(env.TERM_PROGRAM_VERSION).toBe('1.2.3-test')
     })
 
-    it('falls back to a placeholder version when ORCA_APP_VERSION is unset', async () => {
-      const env = await spawnAndGetEnv(undefined, { ORCA_APP_VERSION: undefined })
+    it('falls back to a placeholder version when SERPER_APP_VERSION is unset', async () => {
+      const env = await spawnAndGetEnv(undefined, { SERPER_APP_VERSION: undefined })
       expect(env.TERM_PROGRAM_VERSION).toBe('0.0.0-dev')
     })
 
-    it('injects the selected Codex home into Orca terminal PTYs', async () => {
-      const env = await spawnAndGetEnv(undefined, undefined, () => '/tmp/orca-codex-home')
-      expect(env.CODEX_HOME).toBe('/tmp/orca-codex-home')
+    it('injects the selected Codex home into Serper terminal PTYs', async () => {
+      const env = await spawnAndGetEnv(undefined, undefined, () => '/tmp/serper-codex-home')
+      expect(env.CODEX_HOME).toBe('/tmp/serper-codex-home')
     })
 
-    it('injects the OpenCode hook env into Orca terminal PTYs', async () => {
+    it('injects the OpenCode hook env into Serper terminal PTYs', async () => {
       // Why: clear any ambient OPENCODE_CONFIG_DIR so the mock's value is used
       const env = await spawnAndGetEnv(undefined, { OPENCODE_CONFIG_DIR: undefined })
       expect(openCodeBuildPtyEnvMock).toHaveBeenCalledTimes(1)
       expect(openCodeBuildPtyEnvMock.mock.calls[0]?.[0]).toEqual(expect.any(String))
-      expect(env.ORCA_OPENCODE_HOOK_PORT).toBe('4567')
-      expect(env.ORCA_OPENCODE_HOOK_TOKEN).toBe('opencode-token')
-      expect(env.ORCA_OPENCODE_PTY_ID).toBe('test-pty')
+      expect(env.SERPER_OPENCODE_HOOK_PORT).toBe('4567')
+      expect(env.SERPER_OPENCODE_HOOK_TOKEN).toBe('opencode-token')
+      expect(env.SERPER_OPENCODE_PTY_ID).toBe('test-pty')
       expect(env.OPENCODE_CONFIG_DIR).toEqual(expect.any(String))
-      expect(env.ORCA_OPENCODE_CONFIG_DIR).toBe(env.OPENCODE_CONFIG_DIR)
+      expect(env.SERPER_OPENCODE_CONFIG_DIR).toBe(env.OPENCODE_CONFIG_DIR)
     })
 
-    it('mirrors the original OpenCode source dir when launched from an Orca overlay shell', async () => {
+    it('mirrors the original OpenCode source dir when launched from an Serper overlay shell', async () => {
       const env = await spawnAndGetEnv({
-        OPENCODE_CONFIG_DIR: '/tmp/parent-orca-opencode-overlay',
-        ORCA_OPENCODE_SOURCE_CONFIG_DIR: '/tmp/user-opencode-config'
+        OPENCODE_CONFIG_DIR: '/tmp/parent-serper-opencode-overlay',
+        SERPER_OPENCODE_SOURCE_CONFIG_DIR: '/tmp/user-opencode-config'
       })
       expect(openCodeBuildPtyEnvMock).toHaveBeenCalledWith(
         expect.any(String),
         '/tmp/user-opencode-config'
       )
-      expect(env.OPENCODE_CONFIG_DIR).toBe('/tmp/orca-opencode-overlay')
-      expect(env.ORCA_OPENCODE_CONFIG_DIR).toBe('/tmp/orca-opencode-overlay')
-      expect(env.ORCA_OPENCODE_SOURCE_CONFIG_DIR).toBe('/tmp/user-opencode-config')
+      expect(env.OPENCODE_CONFIG_DIR).toBe('/tmp/serper-opencode-overlay')
+      expect(env.SERPER_OPENCODE_CONFIG_DIR).toBe('/tmp/serper-opencode-overlay')
+      expect(env.SERPER_OPENCODE_SOURCE_CONFIG_DIR).toBe('/tmp/user-opencode-config')
     })
 
-    it('reproduces issue #1534: GUI-launched Orca mirrors zshrc-only OpenCode config', async () => {
+    it('reproduces issue #1534: GUI-launched Serper mirrors zshrc-only OpenCode config', async () => {
       // Why: the reporter's app process did not inherit OPENCODE_CONFIG_DIR;
       // their interactive zsh startup later exported a company config repo.
       readFileSyncMock.mockImplementation((path: string) => {
@@ -515,36 +515,36 @@ describe('registerPtyHandlers', () => {
         HOME: '/home/pim',
         SHELL: '/bin/zsh',
         OPENCODE_CONFIG_DIR: undefined,
-        ORCA_OPENCODE_SOURCE_CONFIG_DIR: undefined
+        SERPER_OPENCODE_SOURCE_CONFIG_DIR: undefined
       })
 
       expect(openCodeBuildPtyEnvMock).toHaveBeenCalledWith(
         expect.any(String),
         '/home/pim/company/opencode-config'
       )
-      expect(env.OPENCODE_CONFIG_DIR).toBe('/tmp/orca-opencode-overlay')
-      expect(env.ORCA_OPENCODE_CONFIG_DIR).toBe('/tmp/orca-opencode-overlay')
-      expect(env.ORCA_OPENCODE_SOURCE_CONFIG_DIR).toBe('/home/pim/company/opencode-config')
-      expect(env.OPENCODE_CONFIG_DIR).not.toBe(env.ORCA_OPENCODE_SOURCE_CONFIG_DIR)
+      expect(env.OPENCODE_CONFIG_DIR).toBe('/tmp/serper-opencode-overlay')
+      expect(env.SERPER_OPENCODE_CONFIG_DIR).toBe('/tmp/serper-opencode-overlay')
+      expect(env.SERPER_OPENCODE_SOURCE_CONFIG_DIR).toBe('/home/pim/company/opencode-config')
+      expect(env.OPENCODE_CONFIG_DIR).not.toBe(env.SERPER_OPENCODE_SOURCE_CONFIG_DIR)
     })
 
-    it('injects the Pi agent overlay env into Orca terminal PTYs', async () => {
+    it('injects the Pi agent overlay env into Serper terminal PTYs', async () => {
       const env = await spawnAndGetEnv(undefined, { PI_CODING_AGENT_DIR: '/tmp/user-pi-agent' })
       expect(piBuildPtyEnvMock).toHaveBeenCalledWith(expect.any(String), '/tmp/user-pi-agent')
-      expect(env.PI_CODING_AGENT_DIR).toBe('/tmp/orca-pi-agent-overlay')
-      expect(env.ORCA_PI_CODING_AGENT_DIR).toBe('/tmp/orca-pi-agent-overlay')
-      expect(env.ORCA_PI_SOURCE_AGENT_DIR).toBe('/tmp/user-pi-agent')
+      expect(env.PI_CODING_AGENT_DIR).toBe('/tmp/serper-pi-agent-overlay')
+      expect(env.SERPER_PI_CODING_AGENT_DIR).toBe('/tmp/serper-pi-agent-overlay')
+      expect(env.SERPER_PI_SOURCE_AGENT_DIR).toBe('/tmp/user-pi-agent')
     })
 
-    it('mirrors the original Pi source dir when launched from an Orca overlay shell', async () => {
+    it('mirrors the original Pi source dir when launched from an Serper overlay shell', async () => {
       const env = await spawnAndGetEnv({
-        PI_CODING_AGENT_DIR: '/tmp/parent-orca-pi-overlay',
-        ORCA_PI_SOURCE_AGENT_DIR: '/tmp/user-pi-agent'
+        PI_CODING_AGENT_DIR: '/tmp/parent-serper-pi-overlay',
+        SERPER_PI_SOURCE_AGENT_DIR: '/tmp/user-pi-agent'
       })
       expect(piBuildPtyEnvMock).toHaveBeenCalledWith(expect.any(String), '/tmp/user-pi-agent')
-      expect(env.PI_CODING_AGENT_DIR).toBe('/tmp/orca-pi-agent-overlay')
-      expect(env.ORCA_PI_CODING_AGENT_DIR).toBe('/tmp/orca-pi-agent-overlay')
-      expect(env.ORCA_PI_SOURCE_AGENT_DIR).toBe('/tmp/user-pi-agent')
+      expect(env.PI_CODING_AGENT_DIR).toBe('/tmp/serper-pi-agent-overlay')
+      expect(env.SERPER_PI_CODING_AGENT_DIR).toBe('/tmp/serper-pi-agent-overlay')
+      expect(env.SERPER_PI_SOURCE_AGENT_DIR).toBe('/tmp/user-pi-agent')
     })
 
     it('mirrors Pi config exported only by shell startup files', async () => {
@@ -562,12 +562,12 @@ describe('registerPtyHandlers', () => {
         expect.any(String),
         '/home/tester/.config/pi-agent'
       )
-      expect(env.PI_CODING_AGENT_DIR).toBe('/tmp/orca-pi-agent-overlay')
-      expect(env.ORCA_PI_CODING_AGENT_DIR).toBe('/tmp/orca-pi-agent-overlay')
-      expect(env.ORCA_PI_SOURCE_AGENT_DIR).toBe('/home/tester/.config/pi-agent')
+      expect(env.PI_CODING_AGENT_DIR).toBe('/tmp/serper-pi-agent-overlay')
+      expect(env.SERPER_PI_CODING_AGENT_DIR).toBe('/tmp/serper-pi-agent-overlay')
+      expect(env.SERPER_PI_SOURCE_AGENT_DIR).toBe('/home/tester/.config/pi-agent')
     })
 
-    it('injects the Claude/Codex hook receiver env into Orca terminal PTYs', async () => {
+    it('injects the Claude/Codex hook receiver env into Serper terminal PTYs', async () => {
       const env = await spawnAndGetEnv()
       // Why: after the daemon-parity refactor, buildAgentHookEnv runs exactly
       // once for a local spawn — inside the shared buildPtyHostEnv helper,
@@ -575,42 +575,42 @@ describe('registerPtyHandlers', () => {
       // both route through. The handler's separate ad-hoc injection (which
       // used to cause a double-call for local spawns) is gone.
       expect(buildAgentHookEnvMock).toHaveBeenCalledTimes(1)
-      expect(env.ORCA_AGENT_HOOK_PORT).toBe('5678')
-      expect(env.ORCA_AGENT_HOOK_TOKEN).toBe('agent-token')
+      expect(env.SERPER_AGENT_HOOK_PORT).toBe('5678')
+      expect(env.SERPER_AGENT_HOOK_TOKEN).toBe('agent-token')
     })
 
     it('strips stale inherited hook receiver env before injecting this runtime', async () => {
       const env = await spawnAndGetEnv({
-        ORCA_AGENT_HOOK_PORT: '1111',
-        ORCA_AGENT_HOOK_TOKEN: 'stale-token',
-        ORCA_AGENT_HOOK_ENV: 'production',
-        ORCA_AGENT_HOOK_VERSION: 'stale-version',
-        ORCA_AGENT_HOOK_ENDPOINT: '/tmp/stale-endpoint.env'
+        SERPER_AGENT_HOOK_PORT: '1111',
+        SERPER_AGENT_HOOK_TOKEN: 'stale-token',
+        SERPER_AGENT_HOOK_ENV: 'production',
+        SERPER_AGENT_HOOK_VERSION: 'stale-version',
+        SERPER_AGENT_HOOK_ENDPOINT: '/tmp/stale-endpoint.env'
       })
 
-      expect(env.ORCA_AGENT_HOOK_PORT).toBe('5678')
-      expect(env.ORCA_AGENT_HOOK_TOKEN).toBe('agent-token')
-      expect(env.ORCA_AGENT_HOOK_ENV).toBeUndefined()
-      expect(env.ORCA_AGENT_HOOK_VERSION).toBeUndefined()
-      expect(env.ORCA_AGENT_HOOK_ENDPOINT).toBeUndefined()
+      expect(env.SERPER_AGENT_HOOK_PORT).toBe('5678')
+      expect(env.SERPER_AGENT_HOOK_TOKEN).toBe('agent-token')
+      expect(env.SERPER_AGENT_HOOK_ENV).toBeUndefined()
+      expect(env.SERPER_AGENT_HOOK_VERSION).toBeUndefined()
+      expect(env.SERPER_AGENT_HOOK_ENDPOINT).toBeUndefined()
     })
 
     it('does not leak inherited hook receiver env if the hook server is unavailable', async () => {
       buildAgentHookEnvMock.mockReturnValueOnce({})
 
       const env = await spawnAndGetEnv({
-        ORCA_AGENT_HOOK_PORT: '1111',
-        ORCA_AGENT_HOOK_TOKEN: 'stale-token',
-        ORCA_AGENT_HOOK_ENV: 'production',
-        ORCA_AGENT_HOOK_VERSION: 'stale-version',
-        ORCA_AGENT_HOOK_ENDPOINT: '/tmp/stale-endpoint.env'
+        SERPER_AGENT_HOOK_PORT: '1111',
+        SERPER_AGENT_HOOK_TOKEN: 'stale-token',
+        SERPER_AGENT_HOOK_ENV: 'production',
+        SERPER_AGENT_HOOK_VERSION: 'stale-version',
+        SERPER_AGENT_HOOK_ENDPOINT: '/tmp/stale-endpoint.env'
       })
 
-      expect(env.ORCA_AGENT_HOOK_PORT).toBeUndefined()
-      expect(env.ORCA_AGENT_HOOK_TOKEN).toBeUndefined()
-      expect(env.ORCA_AGENT_HOOK_ENV).toBeUndefined()
-      expect(env.ORCA_AGENT_HOOK_VERSION).toBeUndefined()
-      expect(env.ORCA_AGENT_HOOK_ENDPOINT).toBeUndefined()
+      expect(env.SERPER_AGENT_HOOK_PORT).toBeUndefined()
+      expect(env.SERPER_AGENT_HOOK_TOKEN).toBeUndefined()
+      expect(env.SERPER_AGENT_HOOK_ENV).toBeUndefined()
+      expect(env.SERPER_AGENT_HOOK_VERSION).toBeUndefined()
+      expect(env.SERPER_AGENT_HOOK_ENDPOINT).toBeUndefined()
     })
 
     it('prepends local git/gh attribution shims when attribution is enabled', async () => {
@@ -618,11 +618,15 @@ describe('registerPtyHandlers', () => {
         enableGitHubAttribution: true
       }))
 
-      expect(env.ORCA_ENABLE_GIT_ATTRIBUTION).toBe('1')
-      expect(env.ORCA_GIT_COMMIT_TRAILER).toBe('Co-authored-by: Orca <help@stably.ai>')
-      expect(env.ORCA_GH_PR_FOOTER).toBe('Made with [Orca](https://github.com/stablyai/orca) 🐋')
-      expect(env.ORCA_GH_ISSUE_FOOTER).toBe('Made with [Orca](https://github.com/stablyai/orca) 🐋')
-      expect(env.PATH).toContain('/tmp/orca-user-data/orca-terminal-attribution/posix')
+      expect(env.SERPER_ENABLE_GIT_ATTRIBUTION).toBe('1')
+      expect(env.SERPER_GIT_COMMIT_TRAILER).toBe('Co-authored-by: Serper <help@stably.ai>')
+      expect(env.SERPER_GH_PR_FOOTER).toBe(
+        'Made with [Serper](https://github.com/Legacynnn/serper) 🐋'
+      )
+      expect(env.SERPER_GH_ISSUE_FOOTER).toBe(
+        'Made with [Serper](https://github.com/Legacynnn/serper) 🐋'
+      )
+      expect(env.PATH).toContain('/tmp/serper-user-data/serper-terminal-attribution/posix')
     })
 
     it('skips git/gh attribution shims when attribution is disabled', async () => {
@@ -630,11 +634,13 @@ describe('registerPtyHandlers', () => {
         enableGitHubAttribution: false
       }))
 
-      expect(env.ORCA_ENABLE_GIT_ATTRIBUTION).toBeUndefined()
-      expect(env.ORCA_GIT_COMMIT_TRAILER).toBeUndefined()
-      expect(env.ORCA_GH_PR_FOOTER).toBeUndefined()
-      expect(env.ORCA_GH_ISSUE_FOOTER).toBeUndefined()
-      expect(env.PATH ?? '').not.toContain('/tmp/orca-user-data/orca-terminal-attribution/posix')
+      expect(env.SERPER_ENABLE_GIT_ATTRIBUTION).toBeUndefined()
+      expect(env.SERPER_GIT_COMMIT_TRAILER).toBeUndefined()
+      expect(env.SERPER_GH_PR_FOOTER).toBeUndefined()
+      expect(env.SERPER_GH_ISSUE_FOOTER).toBeUndefined()
+      expect(env.PATH ?? '').not.toContain(
+        '/tmp/serper-user-data/serper-terminal-attribution/posix'
+      )
     })
 
     it('prepends git/gh attribution shims for daemon-backed local PTYs', async () => {
@@ -662,8 +668,8 @@ describe('registerPtyHandlers', () => {
       })
 
       const env = daemonSpawn.mock.calls.at(-1)![0].env
-      expect(env.ORCA_ENABLE_GIT_ATTRIBUTION).toBe('1')
-      expect(env.PATH).toContain('/tmp/orca-user-data/orca-terminal-attribution/posix')
+      expect(env.SERPER_ENABLE_GIT_ATTRIBUTION).toBe('1')
+      expect(env.PATH).toContain('/tmp/serper-user-data/serper-terminal-attribution/posix')
     })
 
     it('leaves ambient CODEX_HOME untouched when system default is selected', async () => {
@@ -752,8 +758,8 @@ describe('registerPtyHandlers', () => {
           OPENCODE_CONFIG_DIR: undefined
         })
         expect(openCodeBuildPtyEnvMock).toHaveBeenCalled()
-        expect(env.OPENCODE_CONFIG_DIR).toBe('/tmp/orca-opencode-config')
-        expect(env.ORCA_OPENCODE_HOOK_PORT).toBe('4567')
+        expect(env.OPENCODE_CONFIG_DIR).toBe('/tmp/serper-opencode-config')
+        expect(env.SERPER_OPENCODE_HOOK_PORT).toBe('4567')
       })
 
       it('mirrors a user-provided OPENCODE_CONFIG_DIR into a per-PTY overlay on the daemon path', async () => {
@@ -764,23 +770,23 @@ describe('registerPtyHandlers', () => {
           expect.any(String),
           '/user/custom/opencode'
         )
-        expect(env.OPENCODE_CONFIG_DIR).toBe('/tmp/orca-opencode-overlay')
-        expect(env.ORCA_OPENCODE_CONFIG_DIR).toBe('/tmp/orca-opencode-overlay')
-        expect(env.ORCA_OPENCODE_SOURCE_CONFIG_DIR).toBe('/user/custom/opencode')
+        expect(env.OPENCODE_CONFIG_DIR).toBe('/tmp/serper-opencode-overlay')
+        expect(env.SERPER_OPENCODE_CONFIG_DIR).toBe('/tmp/serper-opencode-overlay')
+        expect(env.SERPER_OPENCODE_SOURCE_CONFIG_DIR).toBe('/user/custom/opencode')
       })
 
       it('uses source OpenCode config env instead of remirroring a parent overlay', async () => {
         const env = await daemonSpawnAndGetEnv({
-          OPENCODE_CONFIG_DIR: '/tmp/parent-orca-opencode-overlay',
-          ORCA_OPENCODE_SOURCE_CONFIG_DIR: '/user/custom/opencode'
+          OPENCODE_CONFIG_DIR: '/tmp/parent-serper-opencode-overlay',
+          SERPER_OPENCODE_SOURCE_CONFIG_DIR: '/user/custom/opencode'
         })
         expect(openCodeBuildPtyEnvMock).toHaveBeenCalledWith(
           expect.any(String),
           '/user/custom/opencode'
         )
-        expect(env.OPENCODE_CONFIG_DIR).toBe('/tmp/orca-opencode-overlay')
-        expect(env.ORCA_OPENCODE_CONFIG_DIR).toBe('/tmp/orca-opencode-overlay')
-        expect(env.ORCA_OPENCODE_SOURCE_CONFIG_DIR).toBe('/user/custom/opencode')
+        expect(env.OPENCODE_CONFIG_DIR).toBe('/tmp/serper-opencode-overlay')
+        expect(env.SERPER_OPENCODE_CONFIG_DIR).toBe('/tmp/serper-opencode-overlay')
+        expect(env.SERPER_OPENCODE_SOURCE_CONFIG_DIR).toBe('/user/custom/opencode')
       })
 
       it('injects Pi overlay env (PI_CODING_AGENT_DIR) on the daemon path', async () => {
@@ -789,31 +795,31 @@ describe('registerPtyHandlers', () => {
         // daemon-assigned sessionId minted in pty.ts, and the mock returns
         // the fixed overlay path from the shared setup.
         expect(piBuildPtyEnvMock).toHaveBeenCalledWith(expect.any(String), '/user/.pi/agent')
-        expect(env.PI_CODING_AGENT_DIR).toBe('/tmp/orca-pi-agent-overlay')
-        expect(env.ORCA_PI_CODING_AGENT_DIR).toBe('/tmp/orca-pi-agent-overlay')
-        expect(env.ORCA_PI_SOURCE_AGENT_DIR).toBe('/user/.pi/agent')
+        expect(env.PI_CODING_AGENT_DIR).toBe('/tmp/serper-pi-agent-overlay')
+        expect(env.SERPER_PI_CODING_AGENT_DIR).toBe('/tmp/serper-pi-agent-overlay')
+        expect(env.SERPER_PI_SOURCE_AGENT_DIR).toBe('/user/.pi/agent')
       })
 
       it('injects the selected Codex home on the daemon path', async () => {
-        const env = await daemonSpawnAndGetEnv({}, () => '/tmp/orca-codex-home')
-        expect(env.CODEX_HOME).toBe('/tmp/orca-codex-home')
+        const env = await daemonSpawnAndGetEnv({}, () => '/tmp/serper-codex-home')
+        expect(env.CODEX_HOME).toBe('/tmp/serper-codex-home')
       })
 
       it('injects the agent-hook receiver env on the daemon path', async () => {
         const env = await daemonSpawnAndGetEnv({})
-        expect(env.ORCA_AGENT_HOOK_PORT).toBe('5678')
-        expect(env.ORCA_AGENT_HOOK_TOKEN).toBe('agent-token')
+        expect(env.SERPER_AGENT_HOOK_PORT).toBe('5678')
+        expect(env.SERPER_AGENT_HOOK_TOKEN).toBe('agent-token')
       })
 
       it('prepends attribution shims on the daemon path', async () => {
         const env = await daemonSpawnAndGetEnv({}, undefined, () => ({
           enableGitHubAttribution: true
         }))
-        expect(env.ORCA_ENABLE_GIT_ATTRIBUTION).toBe('1')
-        expect(env.PATH).toContain('/tmp/orca-user-data/orca-terminal-attribution/posix')
+        expect(env.SERPER_ENABLE_GIT_ATTRIBUTION).toBe('1')
+        expect(env.PATH).toContain('/tmp/serper-user-data/serper-terminal-attribution/posix')
       })
 
-      it('injects dev-mode ORCA_USER_DATA_PATH + dev CLI PATH on the daemon path', async () => {
+      it('injects dev-mode SERPER_USER_DATA_PATH + dev CLI PATH on the daemon path', async () => {
         // Why: the mocked `app` (see vi.mock at the top of the file) is a
         // plain object, so we can flip isPackaged for the scope of the test.
         const { app } = await import('electron')
@@ -822,8 +828,8 @@ describe('registerPtyHandlers', () => {
         mockedApp.isPackaged = false
         try {
           const env = await daemonSpawnAndGetEnv({ PATH: '/usr/bin' })
-          expect(env.ORCA_USER_DATA_PATH).toBe('/tmp/orca-user-data')
-          expect(env.PATH).toContain(join('/tmp/orca-user-data', 'cli', 'bin'))
+          expect(env.SERPER_USER_DATA_PATH).toBe('/tmp/serper-user-data')
+          expect(env.PATH).toContain(join('/tmp/serper-user-data', 'cli', 'bin'))
         } finally {
           mockedApp.isPackaged = prev
         }
@@ -838,9 +844,9 @@ describe('registerPtyHandlers', () => {
           const env = await daemonSpawnAndGetEnv({}, undefined, undefined, {
             PATH: '/system/bin'
           })
-          expect(env.ORCA_USER_DATA_PATH).toBe('/tmp/orca-user-data')
+          expect(env.SERPER_USER_DATA_PATH).toBe('/tmp/serper-user-data')
           expect(env.PATH).toBe(
-            `${join('/tmp/orca-user-data', 'cli', 'bin')}${delimiter}/system/bin`
+            `${join('/tmp/serper-user-data', 'cli', 'bin')}${delimiter}/system/bin`
           )
         } finally {
           mockedApp.isPackaged = prev
@@ -906,22 +912,24 @@ describe('registerPtyHandlers', () => {
           PI_CODING_AGENT_DIR: '/ambient/pi/agent'
         })
         expect(piBuildPtyEnvMock).toHaveBeenCalledWith(expect.any(String), '/ambient/pi/agent')
-        expect(env.PI_CODING_AGENT_DIR).toBe('/tmp/orca-pi-agent-overlay')
-        expect(env.ORCA_PI_CODING_AGENT_DIR).toBe('/tmp/orca-pi-agent-overlay')
+        expect(env.PI_CODING_AGENT_DIR).toBe('/tmp/serper-pi-agent-overlay')
+        expect(env.SERPER_PI_CODING_AGENT_DIR).toBe('/tmp/serper-pi-agent-overlay')
       })
 
       it('skips attribution shims on the daemon path when the setting is disabled', async () => {
         const env = await daemonSpawnAndGetEnv({ PATH: '/usr/bin' }, undefined, () => ({
           enableGitHubAttribution: false
         }))
-        expect(env.ORCA_ENABLE_GIT_ATTRIBUTION).toBeUndefined()
-        expect(env.PATH ?? '').not.toContain('/tmp/orca-user-data/orca-terminal-attribution/posix')
+        expect(env.SERPER_ENABLE_GIT_ATTRIBUTION).toBeUndefined()
+        expect(env.PATH ?? '').not.toContain(
+          '/tmp/serper-user-data/serper-terminal-attribution/posix'
+        )
       })
 
       it('does not mutate the caller-provided args.env on the daemon path', async () => {
         // Why: the handler clones baseEnv before calling buildPtyHostEnv so
         // IPC-provided env stays pristine. A regression would silently leak
-        // Orca host env (hook tokens, overlay paths) back into the renderer's
+        // Serper host env (hook tokens, overlay paths) back into the renderer's
         // copy of the object, which it may reuse for unrelated IPC calls.
         const daemonSpawn = setupDaemonAdapter()
         const argsEnv: Record<string, string> = { FOO: 'bar' }
@@ -936,7 +944,7 @@ describe('registerPtyHandlers', () => {
         // Sanity: the spawn did receive the injected env, proving the test
         // isn't passing because buildPtyHostEnv never ran.
         const spawnEnv = daemonSpawn.mock.calls.at(-1)![0].env
-        expect(spawnEnv.ORCA_AGENT_HOOK_PORT).toBe('5678')
+        expect(spawnEnv.SERPER_AGENT_HOOK_PORT).toBe('5678')
         expect(spawnEnv).not.toBe(argsEnv)
       })
 
@@ -1062,7 +1070,7 @@ describe('registerPtyHandlers', () => {
         await handlers.get('pty:spawn')!(null, {
           cols: 80,
           rows: 24,
-          env: { FOO: 'bar', ORCA_PANE_KEY: makePaneKey('tab-1', leafId) },
+          env: { FOO: 'bar', SERPER_PANE_KEY: makePaneKey('tab-1', leafId) },
           connectionId: 'ssh-1',
           worktreeId: 'wt-1',
           tabId: 'tab-1',
@@ -1070,19 +1078,19 @@ describe('registerPtyHandlers', () => {
         })
         const env = sshSpawn.mock.calls.at(-1)![0].env
         // Why: every host-local var must be absent over SSH — the hook
-        // server is on the Orca host's 127.0.0.1, dev CLI / attribution /
+        // server is on the Serper host's 127.0.0.1, dev CLI / attribution /
         // overlay / plugin-dir paths only exist on the local disk, so
         // shipping any of them to a remote shell is at best useless and at
         // worst a credential leak.
-        expect(env.ORCA_AGENT_HOOK_PORT).toBeUndefined()
-        expect(env.ORCA_AGENT_HOOK_TOKEN).toBeUndefined()
-        expect(env.ORCA_ENABLE_GIT_ATTRIBUTION).toBeUndefined()
+        expect(env.SERPER_AGENT_HOOK_PORT).toBeUndefined()
+        expect(env.SERPER_AGENT_HOOK_TOKEN).toBeUndefined()
+        expect(env.SERPER_ENABLE_GIT_ATTRIBUTION).toBeUndefined()
         expect(env.OPENCODE_CONFIG_DIR).toBeUndefined()
-        expect(env.ORCA_OPENCODE_CONFIG_DIR).toBeUndefined()
-        expect(env.ORCA_OPENCODE_SOURCE_CONFIG_DIR).toBeUndefined()
+        expect(env.SERPER_OPENCODE_CONFIG_DIR).toBeUndefined()
+        expect(env.SERPER_OPENCODE_SOURCE_CONFIG_DIR).toBeUndefined()
         expect(env.PI_CODING_AGENT_DIR).toBeUndefined()
-        expect(env.ORCA_PI_CODING_AGENT_DIR).toBeUndefined()
-        expect(env.ORCA_PI_SOURCE_AGENT_DIR).toBeUndefined()
+        expect(env.SERPER_PI_CODING_AGENT_DIR).toBeUndefined()
+        expect(env.SERPER_PI_SOURCE_AGENT_DIR).toBeUndefined()
         expect(env.CODEX_HOME).toBeUndefined()
         expect(env.FOO).toBe('bar')
         expect(openCodeBuildPtyEnvMock).not.toHaveBeenCalled()
@@ -1109,14 +1117,14 @@ describe('registerPtyHandlers', () => {
         await handlers.get('pty:spawn')!(null, {
           cols: 80,
           rows: 24,
-          env: { ORCA_PANE_KEY: 'tab-1:pane:1' },
+          env: { SERPER_PANE_KEY: 'tab-1:pane:1' },
           connectionId: 'ssh-1',
           worktreeId: 'wt-1',
           tabId: 'tab-1',
           leafId: 'pane:1'
         })
         expect(store.upsertSshRemotePtyLease).toHaveBeenCalledTimes(1)
-        expect(sshSpawn.mock.calls.at(-1)?.[0].env.ORCA_PANE_KEY).toBeUndefined()
+        expect(sshSpawn.mock.calls.at(-1)?.[0].env.SERPER_PANE_KEY).toBeUndefined()
         expect(store.upsertSshRemotePtyLease.mock.calls[0]?.[0]).not.toHaveProperty('leafId')
         expect(store.persistPtyBinding).not.toHaveBeenCalled()
       })
@@ -1376,7 +1384,7 @@ describe('registerPtyHandlers', () => {
         expect(runtime.onPtyExit).toHaveBeenCalledWith('remote-pty', -1)
       })
 
-      it('strips ORCA_PANE_KEY/TAB_ID/WORKTREE_ID from SSH spawn env when remote agent hooks are disabled', async () => {
+      it('strips SERPER_PANE_KEY/TAB_ID/WORKTREE_ID from SSH spawn env when remote agent hooks are disabled', async () => {
         const sshSpawn = vi.fn(async (_opts: { env: Record<string, string> }) => ({
           id: 'ssh-pty'
         }))
@@ -1404,39 +1412,39 @@ describe('registerPtyHandlers', () => {
         } as never)
         handlers.clear()
         registerPtyHandlers(mainWindow as never)
-        const prevFlag = process.env.ORCA_FEATURE_REMOTE_AGENT_HOOKS
-        process.env.ORCA_FEATURE_REMOTE_AGENT_HOOKS = '0'
+        const prevFlag = process.env.SERPER_FEATURE_REMOTE_AGENT_HOOKS
+        process.env.SERPER_FEATURE_REMOTE_AGENT_HOOKS = '0'
         try {
           await handlers.get('pty:spawn')!(null, {
             cols: 80,
             rows: 24,
             env: {
               FOO: 'bar',
-              ORCA_PANE_KEY: 'tab-1:0',
-              ORCA_TAB_ID: 'tab-1',
-              ORCA_WORKTREE_ID: 'wt-1'
+              SERPER_PANE_KEY: 'tab-1:0',
+              SERPER_TAB_ID: 'tab-1',
+              SERPER_WORKTREE_ID: 'wt-1'
             },
             connectionId: 'ssh-1'
           })
           const env = sshSpawn.mock.calls.at(-1)![0].env
           expect(env.FOO).toBe('bar')
-          expect(env.ORCA_PANE_KEY).toBeUndefined()
-          expect(env.ORCA_TAB_ID).toBeUndefined()
-          expect(env.ORCA_WORKTREE_ID).toBeUndefined()
-          expect(env.ORCA_AGENT_HOOK_TOKEN).toBeUndefined()
+          expect(env.SERPER_PANE_KEY).toBeUndefined()
+          expect(env.SERPER_TAB_ID).toBeUndefined()
+          expect(env.SERPER_WORKTREE_ID).toBeUndefined()
+          expect(env.SERPER_AGENT_HOOK_TOKEN).toBeUndefined()
           // Why: the local hook server's userData-relative endpoint file path
           // is meaningless on the remote box; assert it does not leak.
-          expect(env.ORCA_AGENT_HOOK_ENDPOINT).toBeUndefined()
+          expect(env.SERPER_AGENT_HOOK_ENDPOINT).toBeUndefined()
         } finally {
           if (prevFlag === undefined) {
-            delete process.env.ORCA_FEATURE_REMOTE_AGENT_HOOKS
+            delete process.env.SERPER_FEATURE_REMOTE_AGENT_HOOKS
           } else {
-            process.env.ORCA_FEATURE_REMOTE_AGENT_HOOKS = prevFlag
+            process.env.SERPER_FEATURE_REMOTE_AGENT_HOOKS = prevFlag
           }
         }
       })
 
-      it('forwards ORCA_PANE_KEY/TAB_ID/WORKTREE_ID over SSH by default', async () => {
+      it('forwards SERPER_PANE_KEY/TAB_ID/WORKTREE_ID over SSH by default', async () => {
         const sshSpawn = vi.fn(async (_opts: { env: Record<string, string> }) => ({
           id: 'ssh-pty'
         }))
@@ -1464,8 +1472,8 @@ describe('registerPtyHandlers', () => {
         } as never)
         handlers.clear()
         registerPtyHandlers(mainWindow as never)
-        const prevFlag = process.env.ORCA_FEATURE_REMOTE_AGENT_HOOKS
-        delete process.env.ORCA_FEATURE_REMOTE_AGENT_HOOKS
+        const prevFlag = process.env.SERPER_FEATURE_REMOTE_AGENT_HOOKS
+        delete process.env.SERPER_FEATURE_REMOTE_AGENT_HOOKS
         try {
           const leafId = '22222222-2222-4222-8222-222222222222'
           const paneKey = makePaneKey('tab-2', leafId)
@@ -1474,28 +1482,28 @@ describe('registerPtyHandlers', () => {
             rows: 24,
             env: {
               FOO: 'bar',
-              ORCA_PANE_KEY: paneKey,
-              ORCA_TAB_ID: 'tab-2',
-              ORCA_WORKTREE_ID: 'wt-2'
+              SERPER_PANE_KEY: paneKey,
+              SERPER_TAB_ID: 'tab-2',
+              SERPER_WORKTREE_ID: 'wt-2'
             },
             connectionId: 'ssh-1',
             tabId: 'tab-2',
             leafId
           })
           const env = sshSpawn.mock.calls.at(-1)![0].env
-          expect(env.ORCA_PANE_KEY).toBe(paneKey)
-          expect(env.ORCA_TAB_ID).toBe('tab-2')
-          expect(env.ORCA_WORKTREE_ID).toBe('wt-2')
+          expect(env.SERPER_PANE_KEY).toBe(paneKey)
+          expect(env.SERPER_TAB_ID).toBe('tab-2')
+          expect(env.SERPER_WORKTREE_ID).toBe('wt-2')
           // Local hook server coords still must NOT cross the wire — the
           // relay is the source of truth for those.
-          expect(env.ORCA_AGENT_HOOK_TOKEN).toBeUndefined()
-          expect(env.ORCA_AGENT_HOOK_PORT).toBeUndefined()
-          expect(env.ORCA_AGENT_HOOK_ENDPOINT).toBeUndefined()
+          expect(env.SERPER_AGENT_HOOK_TOKEN).toBeUndefined()
+          expect(env.SERPER_AGENT_HOOK_PORT).toBeUndefined()
+          expect(env.SERPER_AGENT_HOOK_ENDPOINT).toBeUndefined()
         } finally {
           if (prevFlag === undefined) {
-            delete process.env.ORCA_FEATURE_REMOTE_AGENT_HOOKS
+            delete process.env.SERPER_FEATURE_REMOTE_AGENT_HOOKS
           } else {
-            process.env.ORCA_FEATURE_REMOTE_AGENT_HOOKS = prevFlag
+            process.env.SERPER_FEATURE_REMOTE_AGENT_HOOKS = prevFlag
           }
         }
       })
@@ -1644,7 +1652,7 @@ describe('registerPtyHandlers', () => {
     expect(store.markSshRemotePtyLease).toHaveBeenCalledWith('ssh-1', 'remote-pty', 'terminated')
   })
 
-  it('injects ORCA_TERMINAL_HANDLE for non-local PTY providers', async () => {
+  it('injects SERPER_TERMINAL_HANDLE for non-local PTY providers', async () => {
     const spawn = vi.fn(async () => ({ id: 'remote-pty' }))
     registerSshPtyProvider('ssh-1', {
       spawn,
@@ -1685,7 +1693,7 @@ describe('registerPtyHandlers', () => {
       expect.objectContaining({
         env: expect.objectContaining({
           EXISTING: '1',
-          ORCA_TERMINAL_HANDLE: 'term_remote'
+          SERPER_TERMINAL_HANDLE: 'term_remote'
         })
       })
     )
@@ -1729,7 +1737,7 @@ describe('registerPtyHandlers', () => {
 
     const spawnCall = spawnMock.mock.calls.at(-1)!
     const env = spawnCall[2].env as Record<string, string>
-    expect(env.ORCA_TERMINAL_HANDLE).toBe('term_expected')
+    expect(env.SERPER_TERMINAL_HANDLE).toBe('term_expected')
     expect(runtime.preAllocateHandleForPty).not.toHaveBeenCalled()
     expect(runtime.registerPreAllocatedHandleForPty).toHaveBeenCalledWith(
       expect.any(String),
@@ -1770,7 +1778,7 @@ describe('registerPtyHandlers', () => {
       cols: 80,
       rows: 24,
       worktreeId: 'wt-1',
-      env: { ORCA_PANE_KEY: ` ${paneKey} ` }
+      env: { SERPER_PANE_KEY: ` ${paneKey} ` }
     })
 
     expect(spawnController.hasRendererSerializer?.(result.id)).toBe(false)
@@ -1778,7 +1786,7 @@ describe('registerPtyHandlers', () => {
     expect(spawnController.hasRendererSerializer?.(result.id)).toBe(true)
   })
 
-  it('ignores renderer-provided ORCA_TERMINAL_HANDLE for local PTY spawns', async () => {
+  it('ignores renderer-provided SERPER_TERMINAL_HANDLE for local PTY spawns', async () => {
     const runtime = {
       setPtyController: vi.fn(),
       preAllocateHandleForPty: vi.fn(() => 'term_trusted'),
@@ -1791,12 +1799,12 @@ describe('registerPtyHandlers', () => {
     await handlers.get('pty:spawn')!(null, {
       cols: 80,
       rows: 24,
-      env: { ORCA_TERMINAL_HANDLE: 'term_untrusted' }
+      env: { SERPER_TERMINAL_HANDLE: 'term_untrusted' }
     })
 
     const spawnCall = spawnMock.mock.calls.at(-1)!
     const env = spawnCall[2].env as Record<string, string>
-    expect(env.ORCA_TERMINAL_HANDLE).toBe('term_trusted')
+    expect(env.SERPER_TERMINAL_HANDLE).toBe('term_trusted')
     expect(runtime.preAllocateHandleForPty).toHaveBeenCalledWith(expect.any(String))
   })
 
@@ -2137,8 +2145,8 @@ describe('registerPtyHandlers', () => {
       const [shell, args, options] = spawnAndGetCall({ cwd: '/tmp', command: 'printf "hello"' })
       expect(shell).toBe('/bin/zsh')
       expect(args).toEqual(['-l'])
-      expect(options.env.ZDOTDIR).toBe('/tmp/orca-user-data/shell-ready/zsh')
-      expect(options.env.ORCA_ORIG_ZDOTDIR).toBe(process.env.HOME)
+      expect(options.env.ZDOTDIR).toBe('/tmp/serper-user-data/shell-ready/zsh')
+      expect(options.env.SERPER_ORIG_ZDOTDIR).toBe(process.env.HOME)
     } finally {
       Object.defineProperty(process, 'platform', {
         configurable: true,
@@ -2171,10 +2179,10 @@ describe('registerPtyHandlers', () => {
       const [shell, args, options] = spawnAndGetCall({ cwd: '/tmp' })
       expect(shell).toBe('/bin/zsh')
       expect(args).toEqual(['-l'])
-      expect(options.env.OPENCODE_CONFIG_DIR).toBe('/tmp/orca-opencode-config')
-      expect(options.env.ORCA_OPENCODE_CONFIG_DIR).toBe('/tmp/orca-opencode-config')
-      expect(options.env.ZDOTDIR).toBe('/tmp/orca-user-data/shell-ready/zsh')
-      expect(options.env.ORCA_SHELL_READY_MARKER).toBe('0')
+      expect(options.env.OPENCODE_CONFIG_DIR).toBe('/tmp/serper-opencode-config')
+      expect(options.env.SERPER_OPENCODE_CONFIG_DIR).toBe('/tmp/serper-opencode-config')
+      expect(options.env.ZDOTDIR).toBe('/tmp/serper-user-data/shell-ready/zsh')
+      expect(options.env.SERPER_SHELL_READY_MARKER).toBe('0')
     } finally {
       Object.defineProperty(process, 'platform', {
         configurable: true,
@@ -2198,9 +2206,9 @@ describe('registerPtyHandlers', () => {
     })
     process.env.SHELL = '/bin/zsh'
     openCodeBuildPtyEnvMock.mockImplementationOnce(() => ({
-      ORCA_OPENCODE_HOOK_PORT: '4567',
-      ORCA_OPENCODE_HOOK_TOKEN: 'opencode-token',
-      ORCA_OPENCODE_PTY_ID: 'test-pty'
+      SERPER_OPENCODE_HOOK_PORT: '4567',
+      SERPER_OPENCODE_HOOK_TOKEN: 'opencode-token',
+      SERPER_OPENCODE_PTY_ID: 'test-pty'
     }))
 
     try {
@@ -2211,12 +2219,12 @@ describe('registerPtyHandlers', () => {
       expect(shell).toBe('/bin/zsh')
       expect(args).toEqual(['-l'])
       expect(options.env.OPENCODE_CONFIG_DIR).toBeUndefined()
-      expect(options.env.ORCA_OPENCODE_CONFIG_DIR).toBeUndefined()
-      expect(options.env.PI_CODING_AGENT_DIR).toBe('/tmp/orca-pi-agent-overlay')
-      expect(options.env.ORCA_PI_CODING_AGENT_DIR).toBe('/tmp/orca-pi-agent-overlay')
-      expect(options.env.ORCA_PI_SOURCE_AGENT_DIR).toBe('/tmp/user-pi-agent')
-      expect(options.env.ZDOTDIR).toBe('/tmp/orca-user-data/shell-ready/zsh')
-      expect(options.env.ORCA_SHELL_READY_MARKER).toBe('0')
+      expect(options.env.SERPER_OPENCODE_CONFIG_DIR).toBeUndefined()
+      expect(options.env.PI_CODING_AGENT_DIR).toBe('/tmp/serper-pi-agent-overlay')
+      expect(options.env.SERPER_PI_CODING_AGENT_DIR).toBe('/tmp/serper-pi-agent-overlay')
+      expect(options.env.SERPER_PI_SOURCE_AGENT_DIR).toBe('/tmp/user-pi-agent')
+      expect(options.env.ZDOTDIR).toBe('/tmp/serper-user-data/shell-ready/zsh')
+      expect(options.env.SERPER_SHELL_READY_MARKER).toBe('0')
     } finally {
       Object.defineProperty(process, 'platform', {
         configurable: true,
@@ -2568,9 +2576,9 @@ describe('registerPtyHandlers', () => {
         expect.objectContaining({
           cwd: '/tmp',
           env: expect.objectContaining({
-            ORCA_OPENCODE_CONFIG_DIR: '/tmp/orca-opencode-config',
-            ORCA_SHELL_READY_MARKER: '0',
-            ZDOTDIR: '/tmp/orca-user-data/shell-ready/zsh'
+            SERPER_OPENCODE_CONFIG_DIR: '/tmp/serper-opencode-config',
+            SERPER_SHELL_READY_MARKER: '0',
+            ZDOTDIR: '/tmp/serper-user-data/shell-ready/zsh'
           })
         })
       )
@@ -2597,7 +2605,7 @@ describe('registerPtyHandlers', () => {
       worktreeId: 'wt-1',
       tabId: 'tab-1',
       leafId,
-      env: { ORCA_PANE_KEY: 'tab-1:0' }
+      env: { SERPER_PANE_KEY: 'tab-1:0' }
     })
 
     expect(registerPtyMock).toHaveBeenLastCalledWith(
@@ -2619,7 +2627,7 @@ describe('registerPtyHandlers', () => {
       worktreeId: 'wt-1',
       tabId: 'tab-1',
       leafId,
-      env: { ORCA_PANE_KEY: stablePaneKey }
+      env: { SERPER_PANE_KEY: stablePaneKey }
     })
 
     expect(registerPtyMock).toHaveBeenLastCalledWith(
@@ -2635,7 +2643,7 @@ describe('registerPtyHandlers', () => {
       worktreeId: 'wt-1',
       tabId: 'tab-1',
       leafId,
-      env: { ORCA_PANE_KEY: makePaneKey('tab-2', leafId) }
+      env: { SERPER_PANE_KEY: makePaneKey('tab-2', leafId) }
     })
 
     expect(registerPtyMock).toHaveBeenLastCalledWith(
@@ -2656,7 +2664,7 @@ describe('registerPtyHandlers', () => {
       worktreeId: 'wt-1',
       tabId: 'tab-1',
       leafId,
-      env: { ORCA_PANE_KEY: stablePaneKey }
+      env: { SERPER_PANE_KEY: stablePaneKey }
     })) as { id: string }
     const second = (await handlers.get('pty:spawn')!(null, {
       cols: 80,
@@ -2664,7 +2672,7 @@ describe('registerPtyHandlers', () => {
       worktreeId: 'wt-1',
       tabId: 'tab-1',
       leafId,
-      env: { ORCA_PANE_KEY: stablePaneKey }
+      env: { SERPER_PANE_KEY: stablePaneKey }
     })) as { id: string }
 
     expect(getPtyIdForPaneKey(stablePaneKey)).toBe(second.id)
@@ -2690,7 +2698,7 @@ describe('registerPtyHandlers', () => {
       worktreeId: 'wt-1',
       tabId: 'tab-1',
       leafId,
-      env: { ORCA_PANE_KEY: stablePaneKey }
+      env: { SERPER_PANE_KEY: stablePaneKey }
     })) as { id: string }
 
     expect(getPtyIdForPaneKey(stablePaneKey)).toBe(current.id)
@@ -2731,9 +2739,9 @@ describe('registerPtyHandlers', () => {
           cwd: '/tmp',
           env: expect.objectContaining({
             SHELL: '/bin/zsh',
-            ORCA_OPENCODE_CONFIG_DIR: '/tmp/orca-opencode-config',
-            ORCA_SHELL_READY_MARKER: '0',
-            ZDOTDIR: '/tmp/orca-user-data/shell-ready/zsh'
+            SERPER_OPENCODE_CONFIG_DIR: '/tmp/serper-opencode-config',
+            SERPER_SHELL_READY_MARKER: '0',
+            ZDOTDIR: '/tmp/serper-user-data/shell-ready/zsh'
           })
         })
       )

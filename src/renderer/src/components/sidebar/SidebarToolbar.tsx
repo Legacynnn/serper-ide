@@ -34,10 +34,10 @@ import { toast } from 'sonner'
 import type { GitHubViewer } from '../../../../shared/types'
 import { showOnboardingFromRenderer } from '../onboarding/show-onboarding-event'
 
-const GITHUB_ISSUES_URL = 'https://github.com/stablyai/orca/issues/'
+const GITHUB_ISSUES_URL = 'https://github.com/Legacynnn/serper/issues/'
 const DISCORD_URL = 'https://discord.gg/fzjDKHxv8Q'
-const X_URL = 'https://x.com/orca_build'
-const DOCS_URL = 'https://www.onorca.dev/docs'
+const X_URL = 'https://x.com/serper_build'
+const DOCS_URL = 'https://www.onserper.dev/docs'
 // Why: the sidebar resize handle intentionally keeps a wide right-edge hit
 // target, but the bottom Settings action should remain clickable over it.
 const SETTINGS_ACTION_HIT_TARGET_CLASS = 'relative z-20'
@@ -153,7 +153,7 @@ function FeedbackDialog({
         <DialogHeader>
           <DialogTitle className="text-sm">Send Feedback</DialogTitle>
           <DialogDescription className="text-xs">
-            Share what&apos;s working, what&apos;s broken, or what Orca should do next.
+            Share what&apos;s working, what&apos;s broken, or what Serper should do next.
           </DialogDescription>
         </DialogHeader>
 
@@ -318,7 +318,7 @@ const SidebarToolbar = React.memo(function SidebarToolbar() {
             <DropdownMenuContent side="top" align="start" sideOffset={8} className="w-44">
               <DropdownMenuItem onSelect={openMobileSettings}>
                 <Smartphone className="size-3.5" />
-                Orca Mobile
+                Serper Mobile
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={openSkillsPage}>
                 <BookOpen className="size-3.5" />

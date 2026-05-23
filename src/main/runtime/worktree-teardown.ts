@@ -1,9 +1,9 @@
 import type { IPtyProvider } from '../providers/types'
-import type { OrcaRuntimeService } from './orca-runtime'
+import type { SerperRuntimeService } from './serper-runtime'
 import { listRegisteredPtys } from '../memory/pty-registry'
 
 export type WorktreeTeardownDeps = {
-  runtime?: OrcaRuntimeService
+  runtime?: SerperRuntimeService
   localProvider: IPtyProvider
 }
 

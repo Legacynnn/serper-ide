@@ -51,10 +51,10 @@ function createSettings(overrides: Partial<GlobalSettings> = {}): GlobalSettings
     terminalLigatures: 'auto',
     terminalCursorStyle: 'block',
     terminalCursorBlink: false,
-    terminalThemeDark: 'orca-dark',
+    terminalThemeDark: 'serper-dark',
     terminalDividerColorDark: '#000000',
     terminalUseSeparateLightTheme: false,
-    terminalThemeLight: 'orca-light',
+    terminalThemeLight: 'serper-light',
     terminalDividerColorLight: '#ffffff',
     terminalInactivePaneOpacity: 0.5,
     terminalActivePaneOpacity: 1,
@@ -139,7 +139,7 @@ function createStore(settings: GlobalSettings) {
 function createManagedAuth(rootDir: string, accountId: string, auth: string): string {
   const managedHomePath = join(rootDir, 'codex-accounts', accountId, 'home')
   mkdirSync(managedHomePath, { recursive: true })
-  writeFileSync(join(managedHomePath, '.orca-managed-home'), `${accountId}\n`, 'utf-8')
+  writeFileSync(join(managedHomePath, '.serper-managed-home'), `${accountId}\n`, 'utf-8')
   writeFileSync(join(managedHomePath, 'auth.json'), auth, 'utf-8')
   return managedHomePath
 }
@@ -181,8 +181,8 @@ describe('CodexRuntimeHomeService', () => {
   beforeEach(() => {
     vi.resetModules()
     vi.clearAllMocks()
-    testState.userDataDir = mkdtempSync(join(tmpdir(), 'orca-runtime-home-'))
-    testState.fakeHomeDir = mkdtempSync(join(tmpdir(), 'orca-codex-home-'))
+    testState.userDataDir = mkdtempSync(join(tmpdir(), 'serper-runtime-home-'))
+    testState.fakeHomeDir = mkdtempSync(join(tmpdir(), 'serper-codex-home-'))
     mkdirSync(join(testState.fakeHomeDir, '.codex'), { recursive: true })
   })
 
@@ -787,7 +787,7 @@ describe('CodexRuntimeHomeService', () => {
     const service = new CodexRuntimeHomeService(store as never)
 
     // Simulate an old live Codex PTY from another account refreshing the
-    // shared runtime auth after Orca has already selected account-1.
+    // shared runtime auth after Serper has already selected account-1.
     writeFileSync(runtimeAuthPath, staleLivePtyAuth, 'utf-8')
     service.syncForCurrentSelection()
 
@@ -842,7 +842,7 @@ describe('CodexRuntimeHomeService', () => {
     const service = new CodexRuntimeHomeService(store as never)
 
     // An older account-1 Codex process refreshed the shared runtime file after
-    // Orca selected account-2. Persist the refresh to account-1, then restore
+    // Serper selected account-2. Persist the refresh to account-1, then restore
     // the selected account in ~/.codex.
     writeFileSync(runtimeAuthPath, account1RefreshedAuth, 'utf-8')
     service.syncForCurrentSelection()
@@ -1358,7 +1358,7 @@ describe('CodexRuntimeHomeService', () => {
     settings.activeCodexManagedAccountId = 'account-1'
     service.syncForCurrentSelection()
 
-    // A stale or external process overwrites runtime with auth Orca cannot
+    // A stale or external process overwrites runtime with auth Serper cannot
     // verify against the outgoing managed account.
     writeFileSync(runtimeAuthPath, '{"account":"external-login"}\n', 'utf-8')
 
@@ -1633,7 +1633,7 @@ describe('CodexRuntimeHomeService', () => {
 
     expect(readFileSync(join(runtimeSessionsDir, 'session.json'), 'utf-8')).toBe('{"turns":[1]}')
     expect(
-      readFileSync(join(runtimeSessionsDir, 'session.orca-legacy-account-1.json'), 'utf-8')
+      readFileSync(join(runtimeSessionsDir, 'session.serper-legacy-account-1.json'), 'utf-8')
     ).toBe('{"turns":[1,2]}')
     expect(
       readFileSync(

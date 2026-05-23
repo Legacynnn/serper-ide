@@ -31,7 +31,7 @@ export function openComputerUsePermissions(
 
   const helperAppPath = resolveMacOSComputerUseAppPath()
   if (!helperAppPath) {
-    throw new RuntimeClientError('accessibility_error', 'Orca Computer Use.app was not found')
+    throw new RuntimeClientError('accessibility_error', 'Serper Computer Use.app was not found')
   }
   const status = getComputerUsePermissionStatus()
   if (status.helperUnavailableReason) {
@@ -71,10 +71,10 @@ export function openComputerUsePermissions(
 }
 
 function closeExistingPermissionHelpers(): void {
-  spawnSync('/usr/bin/pkill', ['-f', 'orca-computer-use-macos --permission'], {
+  spawnSync('/usr/bin/pkill', ['-f', 'serper-computer-use-macos --permission'], {
     stdio: 'ignore'
   })
-  spawnSync('/usr/bin/pkill', ['-f', 'orca-computer-use-macos --permissions'], {
+  spawnSync('/usr/bin/pkill', ['-f', 'serper-computer-use-macos --permissions'], {
     stdio: 'ignore'
   })
 }
@@ -94,13 +94,13 @@ export function getComputerUsePermissionStatus(): ComputerUsePermissionStatusRes
 
   const helperAppPath = resolveMacOSComputerUseAppPath()
   if (!helperAppPath) {
-    return createUnavailablePermissionStatus('Orca Computer Use.app was not found', null)
+    return createUnavailablePermissionStatus('Serper Computer Use.app was not found', null)
   }
 
   const executablePath = resolveMacOSComputerUseExecutablePath()
   if (!executablePath) {
     return createUnavailablePermissionStatus(
-      `${helperAppPath}/Contents/MacOS/orca-computer-use-macos was not found`,
+      `${helperAppPath}/Contents/MacOS/serper-computer-use-macos was not found`,
       helperAppPath
     )
   }
@@ -137,7 +137,7 @@ function readPermissionStatusFromHelperExecutable(
   executablePath: string
 ): Partial<Record<ComputerUsePermissionId, ComputerUsePermissionStatus>> {
   // Why: launching the nested helper via LaunchServices can make TCC evaluate
-  // Orca.app as responsible; the signed helper executable owns this grant.
+  // Serper.app as responsible; the signed helper executable owns this grant.
   const output = execFileSync(executablePath, ['--permission-status'], {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'ignore']
@@ -152,5 +152,5 @@ function nextPermissionStep(
   if (!missing) {
     return null
   }
-  return `Grant ${missing.id === 'accessibility' ? 'Accessibility' : 'Screen Recording'} to Orca Computer Use, then retry get-app-state.`
+  return `Grant ${missing.id === 'accessibility' ? 'Accessibility' : 'Screen Recording'} to Serper Computer Use, then retry get-app-state.`
 }

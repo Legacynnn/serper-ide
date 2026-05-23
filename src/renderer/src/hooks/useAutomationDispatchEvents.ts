@@ -8,7 +8,7 @@ import {
   selectAutomationRunOutputSnapshot
 } from '@/components/automations/automation-run-output-snapshot'
 
-const AUTOMATIONS_CHANGED_EVENT = 'orca:automations-changed'
+const AUTOMATIONS_CHANGED_EVENT = 'serper:automations-changed'
 
 function buildAutomationWorkspaceName(runTitle: string, scheduledFor: number): string {
   const slug = runTitle

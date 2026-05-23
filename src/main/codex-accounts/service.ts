@@ -84,7 +84,7 @@ export class CodexAccountService {
       await this.runCodexLogin(managedHomePath)
       const identity = this.readIdentityFromHome(managedHomePath)
       if (!identity.email) {
-        throw new Error('Codex login completed, but Orca could not resolve the account email.')
+        throw new Error('Codex login completed, but Serper could not resolve the account email.')
       }
 
       const now = Date.now()
@@ -127,7 +127,7 @@ export class CodexAccountService {
     await this.runCodexLogin(managedHomePath)
     const identity = this.readIdentityFromHome(managedHomePath)
     if (!identity.email) {
-      throw new Error('Codex login completed, but Orca could not resolve the account email.')
+      throw new Error('Codex login completed, but Serper could not resolve the account email.')
     }
 
     const settings = this.store.getSettings()
@@ -255,8 +255,8 @@ export class CodexAccountService {
     mkdirSync(managedHomePath, { recursive: true })
     // Why: Codex expects CODEX_HOME to be a concrete directory it can own. We
     // pre-create the directory and leave a marker so future cleanup code can
-    // prove the path belongs to Orca before deleting anything.
-    writeFileSync(join(managedHomePath, '.orca-managed-home'), `${accountId}\n`, 'utf-8')
+    // prove the path belongs to Serper before deleting anything.
+    writeFileSync(join(managedHomePath, '.serper-managed-home'), `${accountId}\n`, 'utf-8')
     return this.assertManagedHomePath(managedHomePath)
   }
 
@@ -301,7 +301,7 @@ export class CodexAccountService {
     }
 
     const trustedManagedHomePath = this.assertManagedHomePath(managedHomePath)
-    // Why: Orca account switching is meant to swap Codex credentials and quota
+    // Why: Serper account switching is meant to swap Codex credentials and quota
     // identity, not silently fork the user's sandbox/config defaults. Syncing
     // one canonical config into every managed home keeps auth isolated per
     // account while preserving consistent Codex behavior.
@@ -351,7 +351,7 @@ export class CodexAccountService {
     // macOS, userData sits under /var/folders/... which realpath resolves to
     // /private/var/folders/...; comparing a canonical candidate against a
     // non-canonical root would spuriously reject every managed home. In dev
-    // mode (orca-dev/ vs orca/) this check also filters out production-rooted
+    // mode (serper-dev/ vs serper/) this check also filters out production-rooted
     // paths before downstream sync runs.
     if (
       canonicalCandidate !== canonicalRoot &&
@@ -366,11 +366,11 @@ export class CodexAccountService {
       relativePath === '' || relativePath.startsWith('..') || relativePath.includes(`..${sep}`)
 
     if (escaped) {
-      throw new Error('Managed Codex home escaped Orca account storage.')
+      throw new Error('Managed Codex home escaped Serper account storage.')
     }
 
-    if (!existsSync(join(canonicalCandidate, '.orca-managed-home'))) {
-      throw new Error('Managed Codex home is missing Orca ownership marker.')
+    if (!existsSync(join(canonicalCandidate, '.serper-managed-home'))) {
+      throw new Error('Managed Codex home is missing Serper ownership marker.')
     }
 
     return canonicalCandidate

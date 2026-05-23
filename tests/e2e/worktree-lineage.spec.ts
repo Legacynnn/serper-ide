@@ -1,5 +1,5 @@
 import type { Page } from '@stablyai/playwright-test'
-import { test, expect } from './helpers/orca-app'
+import { test, expect } from './helpers/serper-app'
 import { waitForActiveWorktree, waitForSessionReady } from './helpers/store'
 
 type LineageScenario = {
@@ -170,15 +170,15 @@ async function markWorkspaceTerminalSlept(
 test.describe('Worktree Lineage', () => {
   test.describe.configure({ mode: 'serial' })
 
-  test.beforeEach(async ({ orcaPage }) => {
-    await waitForSessionReady(orcaPage)
-    await waitForActiveWorktree(orcaPage)
+  test.beforeEach(async ({ serperPage }) => {
+    await waitForSessionReady(serperPage)
+    await waitForActiveWorktree(serperPage)
   })
 
-  test('renders existing child lineage in the sidebar', async ({ orcaPage }) => {
-    const { parentId, childId } = await seedLineageScenario(orcaPage)
-    const parentRow = worktreeOption(orcaPage, parentId)
-    const childRow = worktreeOption(orcaPage, childId)
+  test('renders existing child lineage in the sidebar', async ({ serperPage }) => {
+    const { parentId, childId } = await seedLineageScenario(serperPage)
+    const parentRow = worktreeOption(serperPage, parentId)
+    const childRow = worktreeOption(serperPage, childId)
 
     await expect(parentRow).toContainText('E2E lineage parent')
     await parentRow.click()
@@ -189,7 +189,7 @@ test.describe('Worktree Lineage', () => {
     await expect(childToggle).toBeVisible({ timeout: 10_000 })
     await expect(childRow).toBeVisible()
 
-    const positions = await orcaPage.evaluate(
+    const positions = await serperPage.evaluate(
       ({ parentId, childId }) => {
         const parent = document.getElementById(
           `worktree-list-option-${encodeURIComponent(parentId)}`
@@ -213,7 +213,7 @@ test.describe('Worktree Lineage', () => {
     await expect(childRow).toBeHidden()
 
     await parentRow.getByRole('button', { name: 'Show 1 child workspace' }).click()
-    await orcaPage.evaluate((childId) => {
+    await serperPage.evaluate((childId) => {
       const store = window.__store
       if (!store) {
         throw new Error('window.__store is not available')
@@ -228,52 +228,52 @@ test.describe('Worktree Lineage', () => {
 
     await parentRow.click({ button: 'right' })
     await expect(
-      orcaPage.getByRole('menuitem', { name: 'Group under Active Workspace' })
+      serperPage.getByRole('menuitem', { name: 'Group under Active Workspace' })
     ).toHaveCount(0)
   })
 
   test('updates nested child preview status when the child terminal sleeps', async ({
-    orcaPage
+    serperPage
   }) => {
-    const { parentId, childId } = await seedLineageScenario(orcaPage)
-    const parentRow = worktreeOption(orcaPage, parentId)
-    const childRow = worktreeOption(orcaPage, childId)
+    const { parentId, childId } = await seedLineageScenario(serperPage)
+    const parentRow = worktreeOption(serperPage, parentId)
+    const childRow = worktreeOption(serperPage, childId)
 
     await expect(parentRow).toContainText('E2E lineage parent')
     await expect(childRow).toBeVisible()
 
-    const childTabId = await seedWorkspaceLiveTerminal(orcaPage, childId)
+    const childTabId = await seedWorkspaceLiveTerminal(serperPage, childId)
     await expect(childRow).toContainText('Active')
     await childRow.click({ button: 'right' })
-    await expect(orcaPage.getByRole('menuitem', { name: 'Sleep' })).not.toHaveAttribute(
+    await expect(serperPage.getByRole('menuitem', { name: 'Sleep' })).not.toHaveAttribute(
       'data-disabled',
       ''
     )
-    await orcaPage.keyboard.press('Escape')
+    await serperPage.keyboard.press('Escape')
 
-    await markWorkspaceTerminalSlept(orcaPage, { worktreeId: childId, tabId: childTabId })
+    await markWorkspaceTerminalSlept(serperPage, { worktreeId: childId, tabId: childTabId })
     await expect(childRow).toContainText('Inactive')
     await childRow.click({ button: 'right' })
-    await expect(orcaPage.getByRole('menuitem', { name: 'Sleep' })).toHaveAttribute(
+    await expect(serperPage.getByRole('menuitem', { name: 'Sleep' })).toHaveAttribute(
       'data-disabled',
       ''
     )
-    await orcaPage.keyboard.press('Escape')
+    await serperPage.keyboard.press('Escape')
   })
 
   test('shows parent and child agent rows while the parent workspace is active', async ({
-    orcaPage
+    serperPage
   }) => {
-    const { parentId, childId } = await seedLineageScenario(orcaPage)
-    const parentRow = worktreeOption(orcaPage, parentId)
-    const childRow = worktreeOption(orcaPage, childId)
+    const { parentId, childId } = await seedLineageScenario(serperPage)
+    const parentRow = worktreeOption(serperPage, parentId)
+    const childRow = worktreeOption(serperPage, childId)
 
     await parentRow.click()
     await expect(parentRow).toHaveAttribute('aria-current', 'page')
     await expect(childRow).toBeVisible()
 
-    const parentAgentPrompt = await seedWorkspaceAgentStatus(orcaPage, parentId, 'PARENT')
-    const childAgentPrompt = await seedWorkspaceAgentStatus(orcaPage, childId, 'CHILD')
+    const parentAgentPrompt = await seedWorkspaceAgentStatus(serperPage, parentId, 'PARENT')
+    const childAgentPrompt = await seedWorkspaceAgentStatus(serperPage, childId, 'CHILD')
 
     await expect(parentRow.locator(`span[title="${parentAgentPrompt}"]`)).toBeVisible()
     await expect(childRow.locator(`span[title="${childAgentPrompt}"]`)).toBeVisible()

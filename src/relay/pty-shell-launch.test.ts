@@ -20,39 +20,39 @@ describe('getRelayShellLaunchConfig', () => {
     () => {
       const config = getRelayShellLaunchConfig('/bin/zsh', {
         HOME: homeDir,
-        ORCA_OPENCODE_CONFIG_DIR: '/tmp/orca-opencode-overlay'
+        SERPER_OPENCODE_CONFIG_DIR: '/tmp/serper-opencode-overlay'
       })
-      const zshRoot = join(homeDir, '.orca-relay', 'shell-ready', 'zsh')
+      const zshRoot = join(homeDir, '.serper-relay', 'shell-ready', 'zsh')
 
       expect(config.args).toEqual(['-l'])
       expect(config.env.ZDOTDIR).toBe(zshRoot)
       expect(readFileSync(join(zshRoot, '.zshenv'), 'utf8')).toContain(
-        'export ORCA_USER_ZDOTDIR="${ZDOTDIR:-${ORCA_ORIG_ZDOTDIR:-$HOME}}"'
+        'export SERPER_USER_ZDOTDIR="${ZDOTDIR:-${SERPER_ORIG_ZDOTDIR:-$HOME}}"'
       )
       expect(readFileSync(join(zshRoot, '.zprofile'), 'utf8')).toContain(
-        '_orca_home="${ORCA_USER_ZDOTDIR:-${ORCA_ORIG_ZDOTDIR:-$HOME}}"'
+        '_serper_home="${SERPER_USER_ZDOTDIR:-${SERPER_ORIG_ZDOTDIR:-$HOME}}"'
       )
       expect(readFileSync(join(zshRoot, '.zshrc'), 'utf8')).toContain(
-        '_orca_home="${ORCA_USER_ZDOTDIR:-${ORCA_ORIG_ZDOTDIR:-$HOME}}"'
+        '_serper_home="${SERPER_USER_ZDOTDIR:-${SERPER_ORIG_ZDOTDIR:-$HOME}}"'
       )
       expect(readFileSync(join(zshRoot, '.zlogin'), 'utf8')).toContain(
-        '_orca_home="${ORCA_USER_ZDOTDIR:-${ORCA_ORIG_ZDOTDIR:-$HOME}}"'
+        '_serper_home="${SERPER_USER_ZDOTDIR:-${SERPER_ORIG_ZDOTDIR:-$HOME}}"'
       )
     }
   )
 
   it.skipIf(process.platform === 'win32')('rewrites stale persistent wrapper files', () => {
-    const zshRoot = join(homeDir, '.orca-relay', 'shell-ready', 'zsh')
+    const zshRoot = join(homeDir, '.serper-relay', 'shell-ready', 'zsh')
     mkdirSync(zshRoot, { recursive: true })
     writeFileSync(join(zshRoot, '.zshenv'), '# stale relay wrapper\n')
 
     getRelayShellLaunchConfig('/bin/zsh', {
       HOME: homeDir,
-      ORCA_OPENCODE_CONFIG_DIR: '/tmp/orca-opencode-overlay'
+      SERPER_OPENCODE_CONFIG_DIR: '/tmp/serper-opencode-overlay'
     })
 
     expect(readFileSync(join(zshRoot, '.zshenv'), 'utf8')).toContain(
-      'export ORCA_USER_ZDOTDIR="${ZDOTDIR:-${ORCA_ORIG_ZDOTDIR:-$HOME}}"'
+      'export SERPER_USER_ZDOTDIR="${ZDOTDIR:-${SERPER_ORIG_ZDOTDIR:-$HOME}}"'
     )
   })
 })

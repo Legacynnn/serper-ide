@@ -163,7 +163,7 @@ export function SshTargetForm({
             <span className="space-y-1">
               <span className="block font-medium">Sync remote workspace</span>
               <span className="block text-[11px] text-muted-foreground">
-                Store terminal tabs and split layouts on the SSH host so another Orca client can
+                Store terminal tabs and split layouts on the SSH host so another Serper client can
                 restore the same remote workspace.
               </span>
             </span>

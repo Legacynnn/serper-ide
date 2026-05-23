@@ -1,9 +1,9 @@
 import type { AppState } from '@/store/types'
-import type { OrcaHooks } from '../../../shared/types'
-import { hashOrcaHookScript, type OrcaHookScriptKind } from './orca-hook-trust'
+import type { SerperHooks } from '../../../shared/types'
+import { hashSerperHookScript, type SerperHookScriptKind } from './serper-hook-trust'
 import { checkRuntimeHooks, readRuntimeIssueCommand } from '@/runtime/runtime-hooks-client'
 
-export type HookScriptKind = OrcaHookScriptKind
+export type HookScriptKind = SerperHookScriptKind
 
 // Serialize the singleton modal callback so overlapping worktree actions cannot replace it.
 let trustPromptChain: Promise<unknown> = Promise.resolve()
@@ -24,14 +24,14 @@ export async function ensureHooksConfirmed(
   scriptKind: HookScriptKind
 ): Promise<'run' | 'skip'> {
   return enqueueTrustPrompt(async () => {
-    if (state.trustedOrcaHooks[repoId]?.all) {
+    if (state.trustedSerperHooks[repoId]?.all) {
       return 'run'
     }
 
     let scriptContent = ''
     try {
       if (scriptKind === 'issueCommand') {
-        // Local overrides are user-owned; only shared orca.yaml commands need repo trust.
+        // Local overrides are user-owned; only shared serper.yaml commands need repo trust.
         const result = await readRuntimeIssueCommand(state.settings, repoId)
         if (result.source !== 'shared') {
           return 'run'
@@ -43,7 +43,7 @@ export async function ensureHooksConfirmed(
           return 'run'
         }
         const result = await checkRuntimeHooks(state.settings, repoId)
-        const yamlHooks = (result.hooks as OrcaHooks | null) ?? null
+        const yamlHooks = (result.hooks as SerperHooks | null) ?? null
         scriptContent = (yamlHooks?.scripts?.[scriptKind] ?? '').trim()
       }
     } catch {
@@ -55,8 +55,8 @@ export async function ensureHooksConfirmed(
       return 'run'
     }
 
-    const contentHash = await hashOrcaHookScript(scriptContent)
-    const existingHash = state.trustedOrcaHooks[repoId]?.[scriptKind]?.contentHash
+    const contentHash = await hashSerperHookScript(scriptContent)
+    const existingHash = state.trustedSerperHooks[repoId]?.[scriptKind]?.contentHash
     if (existingHash === contentHash) {
       return 'run'
     }
@@ -64,11 +64,11 @@ export async function ensureHooksConfirmed(
     const repo = state.repos.find((r) => r.id === repoId)
     const repoName = repo?.displayName ?? 'this repository'
     // A non-empty existingHash that didn't match means the user approved a previous
-    // version of this script; the prompt is reappearing because orca.yaml changed.
+    // version of this script; the prompt is reappearing because serper.yaml changed.
     const previouslyApproved = Boolean(existingHash)
 
     return new Promise<'run' | 'skip'>((resolve) => {
-      state.openModal('confirm-orca-yaml-hooks', {
+      state.openModal('confirm-serper-yaml-hooks', {
         repoId,
         repoName,
         scriptKind,

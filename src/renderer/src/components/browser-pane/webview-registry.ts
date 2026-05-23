@@ -12,7 +12,7 @@ export const parkedAtByTabId = new Map<string, number>()
 export const MAX_PARKED_WEBVIEWS = 6
 
 let hiddenContainer: HTMLDivElement | null = null
-const DRAG_LISTENER_KEY = '__orcaBrowserPaneDragListeners'
+const DRAG_LISTENER_KEY = '__serperBrowserPaneDragListeners'
 let dragListenersAttached = false
 
 type DragListenerRegistry = {
@@ -112,7 +112,7 @@ export function destroyPersistentWebview(browserTabId: string): void {
   // Why: if this webview currently owns focus, removing it lets macOS hand
   // activation back to the previously-active app (Slack, etc.) because the
   // focused webContents is gone with no replacement. Move focus back into the
-  // main renderer first so Electron keeps focus inside the Orca window.
+  // main renderer first so Electron keeps focus inside the Serper window.
   if (webview === document.activeElement || webview.contains(document.activeElement)) {
     ;(document.activeElement as HTMLElement | null)?.blur?.()
     window.focus()

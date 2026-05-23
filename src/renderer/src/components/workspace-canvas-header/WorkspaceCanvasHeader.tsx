@@ -40,7 +40,7 @@ const BUILTIN_EDITOR_CHOICES: EditorChoice[] = [
 ]
 const DEFAULT_EDITOR_ID = 'vscode'
 
-const DEFAULT_EDITOR_STORAGE_KEY = 'orca:workspace-canvas-header:defaultEditorId'
+const DEFAULT_EDITOR_STORAGE_KEY = 'serper:workspace-canvas-header:defaultEditorId'
 
 type EditorChoice = {
   id: string

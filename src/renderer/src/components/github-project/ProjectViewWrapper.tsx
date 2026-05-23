@@ -51,7 +51,7 @@ import { filterProjectTableRowsByOpenRepos } from './project-row-filtering'
 
 type Props = Record<string, never>
 
-const ORCA_FEATURE_REQUEST_URL = 'https://github.com/stablyai/orca/issues/new'
+const SERPER_FEATURE_REQUEST_URL = 'https://github.com/Legacynnn/serper/issues/new'
 
 function listProjectViewsForRuntime(
   settings: Parameters<typeof getActiveRuntimeTarget>[0],
@@ -349,8 +349,8 @@ export default function ProjectViewWrapper(_props: Props = {} as Props): React.J
   // ── Row action state ────────────────────────────────────────────────
   // Why: when a row matches a registered repo, we open the full
   // `GitHubItemDialog` in repo-backed mode; when it doesn't, we open the
-  // simplified slug-mode dialog. `repoNotInOrca` drives the fallback modal
-  // from the design doc's `repo-not-in-orca` interaction state.
+  // simplified slug-mode dialog. `repoNotInSerper` drives the fallback modal
+  // from the design doc's `repo-not-in-serper` interaction state.
   const [dialogRepoItem, setDialogRepoItem] = useState<{
     workItem: GitHubWorkItem
     repoPath: string
@@ -358,13 +358,13 @@ export default function ProjectViewWrapper(_props: Props = {} as Props): React.J
     origin: GitHubItemDialogProjectOrigin
   } | null>(null)
   // Why: the slug dialog is only opened for rows whose repo isn't registered
-  // in Orca (matched repos go through the full GitHubItemDialog above), so
-  // there's no `matchedRepo` to track here. The repo-not-in-orca modal —
+  // in Serper (matched repos go through the full GitHubItemDialog above), so
+  // there's no `matchedRepo` to track here. The repo-not-in-serper modal —
   // owned by this parent, not the slug dialog — handles "Start work".
   const [slugDialog, setSlugDialog] = useState<{
     origin: GitHubItemDialogProjectOrigin
   } | null>(null)
-  const [repoNotInOrca, setRepoNotInOrca] = useState<{
+  const [repoNotInSerper, setRepoNotInSerper] = useState<{
     owner: string
     repo: string
     url: string | null
@@ -387,10 +387,13 @@ export default function ProjectViewWrapper(_props: Props = {} as Props): React.J
     ) {
       setSlugDialog(null)
     }
-    if (repoNotInOrca && lookupSlug(`${repoNotInOrca.owner}/${repoNotInOrca.repo}`).length > 0) {
-      setRepoNotInOrca(null)
+    if (
+      repoNotInSerper &&
+      lookupSlug(`${repoNotInSerper.owner}/${repoNotInSerper.repo}`).length > 0
+    ) {
+      setRepoNotInSerper(null)
     }
-  }, [slugIndexReady, lookupSlug, slugDialog, repoNotInOrca])
+  }, [slugIndexReady, lookupSlug, slugDialog, repoNotInSerper])
 
   const buildWorkItem = useCallback(
     (row: GitHubProjectRow, repoId: string): GitHubWorkItem | null => {
@@ -492,7 +495,7 @@ export default function ProjectViewWrapper(_props: Props = {} as Props): React.J
       const matches = lookupSlug(`${origin.owner}/${origin.repo}`)
       const matched = matches.length === 1 ? matches[0] : null
       if (!matched) {
-        setRepoNotInOrca({
+        setRepoNotInSerper({
           owner: origin.owner,
           repo: origin.repo,
           url: row.content.url ?? null
@@ -785,9 +788,9 @@ export default function ProjectViewWrapper(_props: Props = {} as Props): React.J
         onClose={() => setDialogRepoItem(null)}
       />
 
-      {/* Slug-only simplified dialog for rows whose repo isn't added to Orca.
+      {/* Slug-only simplified dialog for rows whose repo isn't added to Serper.
           Why: no Start-work affordance lives inside the slug dialog — the
-          parent's `handleStartWork`/`repoNotInOrca` modal owns that flow, so
+          parent's `handleStartWork`/`repoNotInSerper` modal owns that flow, so
           having a duplicate (always-disabled or always-routing-to-fallback)
           button here would only confuse the user. */}
       <ProjectItemSlugDialog
@@ -795,32 +798,32 @@ export default function ProjectViewWrapper(_props: Props = {} as Props): React.J
         onClose={() => setSlugDialog(null)}
       />
 
-      {/* repo-not-in-orca prompt: see design doc Interaction States. */}
+      {/* repo-not-in-serper prompt: see design doc Interaction States. */}
       <Dialog
-        open={repoNotInOrca !== null}
-        onOpenChange={(open) => !open && setRepoNotInOrca(null)}
+        open={repoNotInSerper !== null}
+        onOpenChange={(open) => !open && setRepoNotInSerper(null)}
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Repository not in Orca</DialogTitle>
+            <DialogTitle>Repository not in Serper</DialogTitle>
             <DialogDescription>
-              {repoNotInOrca
-                ? `${repoNotInOrca.owner}/${repoNotInOrca.repo} isn't added to Orca. Add it to start work, or open in GitHub.`
+              {repoNotInSerper
+                ? `${repoNotInSerper.owner}/${repoNotInSerper.repo} isn't added to Serper. Add it to start work, or open in GitHub.`
                 : null}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:justify-end">
-            <Button variant="ghost" onClick={() => setRepoNotInOrca(null)}>
+            <Button variant="ghost" onClick={() => setRepoNotInSerper(null)}>
               Cancel
             </Button>
-            {repoNotInOrca?.url ? (
+            {repoNotInSerper?.url ? (
               <Button
                 variant="outline"
                 onClick={() => {
-                  if (repoNotInOrca.url) {
-                    void window.api.shell.openUrl(repoNotInOrca.url)
+                  if (repoNotInSerper.url) {
+                    void window.api.shell.openUrl(repoNotInSerper.url)
                   }
-                  setRepoNotInOrca(null)
+                  setRepoNotInSerper(null)
                 }}
               >
                 Open in GitHub
@@ -833,7 +836,7 @@ export default function ProjectViewWrapper(_props: Props = {} as Props): React.J
                 // from a row click is out of v1 scope (design doc §Row
                 // actions). Close the modal regardless so the user isn't
                 // trapped if they cancel the picker.
-                setRepoNotInOrca(null)
+                setRepoNotInSerper(null)
                 await addRepoFromStore()
               }}
             >
@@ -997,7 +1000,7 @@ function ViewTabStrip({
             title={
               supported
                 ? v.name
-                : `${v.name} — Orca doesn't support ${layoutLabel} project views yet. File a feature request at ${ORCA_FEATURE_REQUEST_URL}.`
+                : `${v.name} — Serper doesn't support ${layoutLabel} project views yet. File a feature request at ${SERPER_FEATURE_REQUEST_URL}.`
             }
             className={cn(
               'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-t-md border-x border-t px-3 py-1.5 text-xs',
@@ -1015,13 +1018,13 @@ function ViewTabStrip({
         if (supported) {
           return tab
         }
-        const unsupportedMessage = `Orca doesn't support ${layoutLabel} project views yet.`
+        const unsupportedMessage = `Serper doesn't support ${layoutLabel} project views yet.`
         return (
           <HoverCard key={v.id} openDelay={200} closeDelay={100}>
             <HoverCardTrigger asChild>
               <span
                 tabIndex={0}
-                aria-label={`${v.name}. ${unsupportedMessage} File a feature request at ${ORCA_FEATURE_REQUEST_URL}.`}
+                aria-label={`${v.name}. ${unsupportedMessage} File a feature request at ${SERPER_FEATURE_REQUEST_URL}.`}
                 className="inline-flex shrink-0 cursor-not-allowed rounded-t-md outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
                 {tab}
@@ -1030,13 +1033,13 @@ function ViewTabStrip({
             <HoverCardContent side="bottom" align="start" sideOffset={8} className="w-72 p-3">
               <div className="space-y-2">
                 <p className="text-xs leading-5 text-muted-foreground">
-                  {unsupportedMessage} Switch to a Table view to work with this project in Orca.
+                  {unsupportedMessage} Switch to a Table view to work with this project in Serper.
                 </p>
                 <Button
                   type="button"
                   size="xs"
                   variant="outline"
-                  onClick={() => void window.api.shell.openUrl(ORCA_FEATURE_REQUEST_URL)}
+                  onClick={() => void window.api.shell.openUrl(SERPER_FEATURE_REQUEST_URL)}
                 >
                   File feature request
                   <ExternalLink className="size-3" />
@@ -1076,9 +1079,9 @@ function ErrorState({
   }
   const copy =
     error.type === 'too_large'
-      ? `This view has ${totalCount ?? 'many'} items — too large to render in Orca. Narrow the view's filter on GitHub.`
+      ? `This view has ${totalCount ?? 'many'} items — too large to render in Serper. Narrow the view's filter on GitHub.`
       : error.type === 'unsupported_layout'
-        ? 'Orca only renders table views yet. This is a Board or Roadmap view.'
+        ? 'Serper only renders table views yet. This is a Board or Roadmap view.'
         : error.type === 'not_found'
           ? 'Could not find this project or view.'
           : error.type === 'schema_drift'

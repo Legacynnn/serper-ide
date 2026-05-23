@@ -327,7 +327,7 @@ function scheduleAutomaticUpdateCheck(delayMs: number): void {
     clearTimeout(autoUpdateCheckTimer)
   }
   autoUpdateCheckTimer = setTimeout(() => {
-    // Why: Orca is often left running for days. A one-shot startup check means
+    // Why: Serper is often left running for days. A one-shot startup check means
     // users can miss fresh releases entirely, so we always keep the next
     // background attempt scheduled in the main process instead of tying checks
     // to relaunches or renderer lifetime.
@@ -467,7 +467,7 @@ async function pinDefaultReleaseFeed(): Promise<void> {
     autoUpdater.setFeedURL({ provider: 'generic', url })
   } else {
     clearPrereleaseFallbackContext()
-    const url = 'https://github.com/stablyai/orca/releases/latest/download'
+    const url = 'https://github.com/Legacynnn/serper/releases/latest/download'
     console.info(
       `[updater] release feed fallback: current=${currentVersion} includePrerelease=${includePrerelease} → ${url}`
     )
@@ -767,7 +767,7 @@ export function setupAutoUpdater(
   // moving /latest redirect changing between check and download.
   autoUpdater.setFeedURL({
     provider: 'generic',
-    url: 'https://github.com/stablyai/orca/releases/latest/download'
+    url: 'https://github.com/Legacynnn/serper/releases/latest/download'
   })
 
   if (autoUpdaterInitialized) {

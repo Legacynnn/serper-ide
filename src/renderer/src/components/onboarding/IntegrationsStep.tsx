@@ -235,7 +235,7 @@ function LinearRow(): React.JSX.Element {
           <DialogHeader className="gap-3">
             <DialogTitle className="leading-tight">Connect Linear workspace</DialogTitle>
             <DialogDescription>
-              Paste a Personal API key to add a Linear workspace to Orca.
+              Paste a Personal API key to add a Linear workspace to Serper.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
@@ -299,9 +299,9 @@ function LinearRow(): React.JSX.Element {
 
 const CAPABILITIES = [
   'Start a workspace from any issue, PR, or Linear ticket, prefilled with its title and context',
-  'Browse your assigned tasks in the Tasks view without leaving Orca',
+  'Browse your assigned tasks in the Tasks view without leaving Serper',
   'See issue state, PR review status, and CI checks on every worktree',
-  'Read, comment on, and merge pull requests without leaving Orca'
+  'Read, comment on, and merge pull requests without leaving Serper'
 ] as const
 
 export function IntegrationsStep(): React.JSX.Element {

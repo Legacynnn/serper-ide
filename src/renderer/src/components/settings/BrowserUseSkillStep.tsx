@@ -26,7 +26,7 @@ export function BrowserUseSkillStep({
           <p className="text-sm font-medium">Install Browser Use Skill</p>
           <p className="text-xs text-muted-foreground">
             Run this once on your computer so Claude Code, Codex, and other agents learn to drive
-            Orca&apos;s browser.
+            Serper&apos;s browser.
           </p>
         </div>
         <div className="flex max-w-full items-center gap-2 rounded-lg border border-border/60 bg-background/60 px-3 py-2">

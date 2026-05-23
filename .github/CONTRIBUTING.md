@@ -1,11 +1,11 @@
-# Contributing to Orca
+# Contributing to Serper
 
-Thanks for contributing to Orca.
+Thanks for contributing to Serper.
 
 ## Before You Start
 
 - Keep changes scoped to a clear user-facing improvement, bug fix, or refactor.
-- Orca targets macOS, Linux, and Windows. Avoid platform-specific assumptions in shortcuts, labels, and file paths.
+- Serper targets macOS, Linux, and Windows. Avoid platform-specific assumptions in shortcuts, labels, and file paths.
 - For keyboard shortcuts, use runtime platform checks in renderer code and `CmdOrCtrl` in Electron menu accelerators.
 - For shortcut labels, show `⌘` and `⇧` on macOS, and `Ctrl+` and `Shift+` on Linux and Windows.
 - For file paths, use Node or Electron path utilities such as `path.join`.
@@ -60,7 +60,7 @@ Each pull request should:
 - include high-quality tests when behavior changes or bug fixes warrant them
 - include a brief code review summary from your AI coding agent that explicitly checks cross-platform compatibility, plus a basic security audit summary
 - mention any platform-specific behavior or testing notes
-- **Include your X (Twitter) handle!** We love giving shoutouts to our contributors when we merge features on [@orca_build](https://x.com/orca_build).
+- **Include your X (Twitter) handle!** We love giving shoutouts to our contributors when we merge features on [@serper_build](https://x.com/serper_build).
 
 If there is no visual change, say that explicitly in the PR description.
 

@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Why: these tests cover the §3.3 Lifecycle rules on
-// `OrcaRuntimeService.fetchRemoteWithCache` — in particular that a rejected
+// `SerperRuntimeService.fetchRemoteWithCache` — in particular that a rejected
 // fetch evicts its Map entry AND does not advance the freshness timestamp,
 // and that two concurrent callers serialize on a single underlying fetch.
 // They live in a dedicated file so we can mock `gitExecFileAsync` cleanly
-// without disturbing the large orca-runtime.test.ts mock surface.
+// without disturbing the large serper-runtime.test.ts mock surface.
 
 const gitExecFileAsyncMock = vi.hoisted(() => vi.fn())
 
@@ -17,10 +17,10 @@ vi.mock('../git/runner', async (importOriginal) => {
   }
 })
 
-// Why: orca-runtime.ts imports heavy modules (hooks, ipc/*, etc.) at top
+// Why: serper-runtime.ts imports heavy modules (hooks, ipc/*, etc.) at top
 // level. We only exercise the fetch cache, so we let those imports load
 // normally — none of them trigger IO until a runtime method is called.
-import { OrcaRuntimeService } from './orca-runtime'
+import { SerperRuntimeService } from './serper-runtime'
 
 function fetchCallCount(): number {
   return gitExecFileAsyncMock.mock.calls.filter(
@@ -39,7 +39,7 @@ function mockFetchResults(results: (Promise<unknown> | unknown)[]): void {
   })
 }
 
-describe('OrcaRuntimeService.fetchRemoteWithCache', () => {
+describe('SerperRuntimeService.fetchRemoteWithCache', () => {
   beforeEach(() => {
     gitExecFileAsyncMock.mockReset()
   })
@@ -55,7 +55,7 @@ describe('OrcaRuntimeService.fetchRemoteWithCache', () => {
     // described in §3.3.
     mockFetchResults([Promise.reject(new Error('network down')), { stdout: '', stderr: '' }])
 
-    const runtime = new OrcaRuntimeService(null)
+    const runtime = new SerperRuntimeService(null)
 
     await runtime.fetchRemoteWithCache('/repo/a', 'origin')
     await runtime.fetchRemoteWithCache('/repo/a', 'origin')
@@ -69,7 +69,7 @@ describe('OrcaRuntimeService.fetchRemoteWithCache', () => {
     // last real sync is unknown. §3.3 mandates success-only writes.
     mockFetchResults([Promise.reject(new Error('boom')), { stdout: '', stderr: '' }])
 
-    const runtime = new OrcaRuntimeService(null)
+    const runtime = new SerperRuntimeService(null)
 
     await runtime.fetchRemoteWithCache('/repo/b', 'origin')
     // Immediately call again — if the freshness window were armed we would
@@ -90,7 +90,7 @@ describe('OrcaRuntimeService.fetchRemoteWithCache', () => {
     })
     mockFetchResults([pending])
 
-    const runtime = new OrcaRuntimeService(null)
+    const runtime = new SerperRuntimeService(null)
 
     const first = runtime.fetchRemoteWithCache('/repo/c', 'origin')
     const second = runtime.fetchRemoteWithCache('/repo/c', 'origin')
@@ -109,7 +109,7 @@ describe('OrcaRuntimeService.fetchRemoteWithCache', () => {
   it('skips the fetch inside the 30s freshness window after a successful fetch', async () => {
     mockFetchResults([{ stdout: '', stderr: '' }])
 
-    const runtime = new OrcaRuntimeService(null)
+    const runtime = new SerperRuntimeService(null)
 
     await runtime.fetchRemoteWithCache('/repo/d', 'origin')
     await runtime.fetchRemoteWithCache('/repo/d', 'origin')
@@ -120,7 +120,7 @@ describe('OrcaRuntimeService.fetchRemoteWithCache', () => {
 
   it('resolves remote-tracking bases with longest configured remote matching', async () => {
     gitExecFileAsyncMock.mockResolvedValue({ stdout: 'foo\nfoo/bar\norigin\n', stderr: '' })
-    const runtime = new OrcaRuntimeService(null)
+    const runtime = new SerperRuntimeService(null)
 
     await expect(runtime.resolveRemoteTrackingBase('/repo/e', 'foo/bar/main')).resolves.toEqual({
       remote: 'foo/bar',
@@ -132,7 +132,7 @@ describe('OrcaRuntimeService.fetchRemoteWithCache', () => {
 
   it('refreshes a remote-tracking base with an exact no-tags refspec', async () => {
     mockFetchResults([{ stdout: '', stderr: '' }])
-    const runtime = new OrcaRuntimeService(null)
+    const runtime = new SerperRuntimeService(null)
 
     await runtime.getOrStartRemoteTrackingBaseRefresh('/repo/f', {
       remote: 'origin',
@@ -153,7 +153,7 @@ describe('OrcaRuntimeService.fetchRemoteWithCache', () => {
       resolveFetch = () => resolve({ stdout: '', stderr: '' })
     })
     mockFetchResults([pending, { stdout: '', stderr: '' }])
-    const runtime = new OrcaRuntimeService(null)
+    const runtime = new SerperRuntimeService(null)
     const base = {
       remote: 'origin',
       branch: 'main',
@@ -183,7 +183,7 @@ describe('OrcaRuntimeService.fetchRemoteWithCache', () => {
       resolveFullFetch = () => resolve({ stdout: '', stderr: '' })
     })
     mockFetchResults([pendingBaseFetch, pendingFullFetch])
-    const runtime = new OrcaRuntimeService(null)
+    const runtime = new SerperRuntimeService(null)
     const base = {
       remote: 'origin',
       branch: 'main',
@@ -229,7 +229,7 @@ describe('OrcaRuntimeService.fetchRemoteWithCache', () => {
       resolveBaseFetch = () => resolve({ stdout: '', stderr: '' })
     })
     mockFetchResults([pendingFullFetch, pendingBaseFetch])
-    const runtime = new OrcaRuntimeService(null)
+    const runtime = new SerperRuntimeService(null)
     const base = {
       remote: 'origin',
       branch: 'main',

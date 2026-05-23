@@ -18,23 +18,23 @@ const stepCopy = {
   agent: {
     title: 'Pick your default agent',
     subtitle:
-      "Orca works with every CLI agent. Choose the one you'll reach for most. Switch any time."
+      "Serper works with every CLI agent. Choose the one you'll reach for most. Switch any time."
   },
   theme: {
     title: 'Make it feel like home',
     subtitle: 'Pick the look you want to stare at for hours.'
   },
   notifications: {
-    title: 'Set up Orca for agents',
+    title: 'Set up Serper for agents',
     subtitle:
-      'Get notifications when agents need you, and choose the capabilities Orca should enable on this computer.'
+      'Get notifications when agents need you, and choose the capabilities Serper should enable on this computer.'
   },
   integrations: {
     title: 'Connect your task sources',
     subtitle: 'Connect GitHub or Linear to:'
   },
   repo: {
-    title: 'Point Orca at some code',
+    title: 'Point Serper at some code',
     subtitle: 'Open a folder or clone a repo to finish setup.'
   }
 } as const
@@ -113,9 +113,9 @@ export default function OnboardingFlow({
             className="flex size-7 items-center justify-center rounded-md"
             style={{ backgroundColor: '#12181e' }}
           >
-            <img src={logo} alt="Orca logo" className="size-5" />
+            <img src={logo} alt="Serper logo" className="size-5" />
           </div>
-          <span>Orca</span>
+          <span>Serper</span>
         </div>
 
         <div className="mt-12 flex items-center gap-2">
@@ -158,7 +158,7 @@ export default function OnboardingFlow({
         <div className="mt-8">
           {stepIndex === 0 && (
             <div className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-              Welcome to Orca
+              Welcome to Serper
             </div>
           )}
           <h1 className="text-[34px] font-semibold leading-[1.15] tracking-tight text-foreground">

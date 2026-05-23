@@ -1,4 +1,4 @@
-import { test, expect } from './helpers/orca-app'
+import { test, expect } from './helpers/serper-app'
 import { getStoreState, waitForSessionReady } from './helpers/store'
 import type { ElectronApplication, Page } from '@stablyai/playwright-test'
 
@@ -33,38 +33,40 @@ async function loadedFeatureWallImageCount(page: Page): Promise<number> {
 }
 
 test.describe('Feature tour modal', () => {
-  test.beforeEach(async ({ orcaPage }) => {
-    await waitForSessionReady(orcaPage)
+  test.beforeEach(async ({ serperPage }) => {
+    await waitForSessionReady(serperPage)
   })
 
   test('opens from the Help menu, renders bundled media, and closes cleanly', async ({
     electronApp,
-    orcaPage
+    serperPage
   }) => {
     await openFeatureTourFromMenu(electronApp)
 
     await expect(
-      orcaPage.getByRole('dialog', { name: "Explore some of Orca's features" })
+      serperPage.getByRole('dialog', { name: "Explore some of Serper's features" })
     ).toBeVisible({
       timeout: 10_000
     })
     await expect(
-      orcaPage.getByText('Tasks, terminal, agents, browser, SSH, review, and more.')
+      serperPage.getByText('Tasks, terminal, agents, browser, SSH, review, and more.')
     ).toBeVisible()
-    await expect(orcaPage.getByText('Reopen this any time from Help > Feature tour.')).toBeVisible()
-    await expect(orcaPage.getByRole('listitem')).toHaveCount(12)
     await expect(
-      orcaPage.getByRole('listitem', { name: /Remote worktrees over SSH/i })
+      serperPage.getByText('Reopen this any time from Help > Feature tour.')
+    ).toBeVisible()
+    await expect(serperPage.getByRole('listitem')).toHaveCount(12)
+    await expect(
+      serperPage.getByRole('listitem', { name: /Remote worktrees over SSH/i })
     ).toBeVisible()
 
     await expect
-      .poll(async () => loadedFeatureWallImageCount(orcaPage), {
+      .poll(async () => loadedFeatureWallImageCount(serperPage), {
         timeout: 10_000,
         message: 'feature-wall media did not load'
       })
       .toBeGreaterThanOrEqual(12)
 
-    const assetSources = await orcaPage
+    const assetSources = await serperPage
       .locator('[data-feature-wall-tile-id] img')
       .evaluateAll((images) => images.map((image) => (image as HTMLImageElement).src))
     expect(assetSources.length).toBeGreaterThanOrEqual(12)
@@ -83,7 +85,7 @@ test.describe('Feature tour modal', () => {
       }) as typeof shell.openExternal
     })
     try {
-      await orcaPage.locator('[data-feature-wall-tile-id="tile-02"]').click()
+      await serperPage.locator('[data-feature-wall-tile-id="tile-02"]').click()
       await expect
         .poll(() =>
           electronApp.evaluate(
@@ -95,7 +97,7 @@ test.describe('Feature tour modal', () => {
               ).__featureWallOpenedDocsUrl
           )
         )
-        .toBe('https://www.onorca.dev/docs/terminal')
+        .toBe('https://www.onserper.dev/docs/terminal')
     } finally {
       await electronApp.evaluate(({ shell }) => {
         const originalOpenExternal = (
@@ -109,25 +111,25 @@ test.describe('Feature tour modal', () => {
       })
     }
 
-    await orcaPage.locator('[data-feature-wall-tile-id="tile-01"]').focus()
-    await orcaPage.keyboard.press('ArrowRight')
+    await serperPage.locator('[data-feature-wall-tile-id="tile-01"]').focus()
+    await serperPage.keyboard.press('ArrowRight')
     await expect
       .poll(() =>
-        orcaPage.evaluate(
+        serperPage.evaluate(
           () => (document.activeElement as HTMLElement | null)?.dataset.featureWallTileId
         )
       )
       .toBe('tile-02')
 
-    await orcaPage.getByRole('button', { name: 'Close' }).click()
+    await serperPage.getByRole('button', { name: 'Close' }).click()
     await expect(
-      orcaPage.getByRole('dialog', { name: "Explore some of Orca's features" })
+      serperPage.getByRole('dialog', { name: "Explore some of Serper's features" })
     ).toHaveCount(0)
-    await expect.poll(async () => getStoreState<string>(orcaPage, 'activeModal')).toBe('none')
+    await expect.poll(async () => getStoreState<string>(serperPage, 'activeModal')).toBe('none')
   })
 
-  test('shows the bottom-right nudge and opens the full tour', async ({ orcaPage }) => {
-    await orcaPage.evaluate(() => {
+  test('shows the bottom-right nudge and opens the full tour', async ({ serperPage }) => {
+    await serperPage.evaluate(() => {
       const store = window.__store
       if (!store) {
         throw new Error('window.__store is not available')
@@ -135,8 +137,8 @@ test.describe('Feature tour modal', () => {
       store.getState().showFeatureTourNudge()
     })
 
-    const nudge = orcaPage.getByRole('complementary', {
-      name: "Explore some of Orca's features"
+    const nudge = serperPage.getByRole('complementary', {
+      name: "Explore some of Serper's features"
     })
     await expect(nudge).toBeVisible()
     await expect(nudge.getByText('GitHub & Linear, native')).toBeVisible()
@@ -161,10 +163,10 @@ test.describe('Feature tour modal', () => {
 
     await nudge.getByRole('button', { name: /^Open tour$/ }).click()
     await expect(
-      orcaPage.getByRole('dialog', { name: "Explore some of Orca's features" })
+      serperPage.getByRole('dialog', { name: "Explore some of Serper's features" })
     ).toBeVisible()
     await expect
-      .poll(async () => getStoreState<boolean>(orcaPage, 'featureTourNudgeVisible'))
+      .poll(async () => getStoreState<boolean>(serperPage, 'featureTourNudgeVisible'))
       .toBe(false)
   })
 })

@@ -7,7 +7,7 @@ import type {
 import {
   buildAgentFeatureSkillInstallCommand,
   COMPUTER_USE_SKILL_NAME,
-  ORCA_CLI_SKILL_NAME,
+  SERPER_CLI_SKILL_NAME,
   ORCHESTRATION_SKILL_NAME
 } from '@/lib/agent-feature-install-commands'
 import { BROWSER_USE_ENABLED_STORAGE_KEY } from '@/lib/browser-use-setup-state'
@@ -27,7 +27,7 @@ import {
 } from './onboarding-feature-setup'
 
 const ALL_SKILL_INSTALL_COMMAND = buildAgentFeatureSkillInstallCommand([
-  ORCA_CLI_SKILL_NAME,
+  SERPER_CLI_SKILL_NAME,
   COMPUTER_USE_SKILL_NAME,
   ORCHESTRATION_SKILL_NAME
 ])
@@ -37,22 +37,22 @@ const ORCHESTRATION_ONLY_SKILL_INSTALL_COMMAND = buildAgentFeatureSkillInstallCo
 
 const INSTALLED_CLI_STATUS: CliInstallStatus = {
   platform: 'darwin',
-  commandName: 'orca',
-  commandPath: '/usr/local/bin/orca',
+  commandName: 'serper',
+  commandPath: '/usr/local/bin/serper',
   pathDirectory: '/usr/local/bin',
   pathConfigured: true,
-  launcherPath: '/Applications/Orca.app/Contents/MacOS/Orca',
+  launcherPath: '/Applications/Serper.app/Contents/MacOS/Serper',
   installMethod: 'symlink',
   supported: true,
   state: 'installed',
-  currentTarget: '/Applications/Orca.app/Contents/MacOS/Orca',
+  currentTarget: '/Applications/Serper.app/Contents/MacOS/Serper',
   unsupportedReason: null,
   detail: null
 }
 
 const GRANTED_COMPUTER_USE_STATUS: ComputerUsePermissionStatusResult = {
   platform: 'darwin',
-  helperAppPath: '/Applications/Orca Computer Use.app',
+  helperAppPath: '/Applications/Serper Computer Use.app',
   helperUnavailableReason: null,
   permissions: [
     { id: 'accessibility', status: 'granted' },
@@ -62,7 +62,7 @@ const GRANTED_COMPUTER_USE_STATUS: ComputerUsePermissionStatusResult = {
 
 const OPENED_COMPUTER_USE_SETUP: ComputerUsePermissionSetupResult = {
   platform: 'darwin',
-  helperAppPath: '/Applications/Orca.app',
+  helperAppPath: '/Applications/Serper.app',
   openedSettings: true,
   launchedHelper: true
 }
@@ -114,7 +114,7 @@ describe('onboarding feature setup runner', () => {
 
     expect(text).toBe(ALL_SKILL_INSTALL_COMMAND)
     expect(text).toBe(
-      'npx skills add https://github.com/stablyai/orca --skill orca-cli computer-use orchestration --global'
+      'npx skills add https://github.com/Legacynnn/serper --skill serper-cli computer-use orchestration --global'
     )
   })
 
@@ -159,7 +159,7 @@ describe('onboarding feature setup runner', () => {
       getComputerUsePermissionStatus: vi.fn(
         async (): Promise<ComputerUsePermissionStatusResult> => ({
           platform: 'darwin',
-          helperAppPath: '/Applications/Orca Computer Use.app',
+          helperAppPath: '/Applications/Serper Computer Use.app',
           helperUnavailableReason: null,
           permissions: [
             { id: 'accessibility', status: 'not-granted' },

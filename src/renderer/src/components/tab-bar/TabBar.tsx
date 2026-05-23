@@ -348,7 +348,7 @@ function TabBarInner({
     <div
       className="flex items-stretch h-full overflow-hidden flex-1 min-w-0"
       // Why: only drops aimed at the top tab/session strip should open files in
-      // Orca's editor. Terminal-pane drops need to keep inserting file paths
+      // Serper's editor. Terminal-pane drops need to keep inserting file paths
       // into the active coding CLI, so preload routes native OS drops based on
       // this explicit surface marker instead of treating the whole app as an
       // editor drop zone.

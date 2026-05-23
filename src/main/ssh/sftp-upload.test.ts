@@ -25,17 +25,17 @@ describe('sftp-upload', () => {
   it('can create the first binary upload chunk without clobbering an existing temp file', async () => {
     const sftp = createSftpMock()
 
-    await uploadBuffer(sftp, Buffer.from('png'), '/remote/.logo.orca-upload', {
+    await uploadBuffer(sftp, Buffer.from('png'), '/remote/.logo.serper-upload', {
       exclusive: true
     })
 
-    expect(sftp.createWriteStream).toHaveBeenCalledWith('/remote/.logo.orca-upload', {
+    expect(sftp.createWriteStream).toHaveBeenCalledWith('/remote/.logo.serper-upload', {
       flags: 'wx'
     })
   })
 
   it('uses no-clobber writes for nested files during exclusive directory upload', async () => {
-    const localDir = await mkdtemp(join(tmpdir(), 'orca-sftp-upload-'))
+    const localDir = await mkdtemp(join(tmpdir(), 'serper-sftp-upload-'))
     await mkdir(join(localDir, 'nested'))
     await writeFile(join(localDir, 'nested', 'asset.txt'), 'asset')
     const sftp = createSftpMock()
@@ -51,7 +51,7 @@ describe('sftp-upload', () => {
   })
 
   it('does not create the remote file when the local source is a symlink', async () => {
-    const localDir = await mkdtemp(join(tmpdir(), 'orca-sftp-upload-'))
+    const localDir = await mkdtemp(join(tmpdir(), 'serper-sftp-upload-'))
     await writeFile(join(localDir, 'target.txt'), 'secret')
     await symlink(join(localDir, 'target.txt'), join(localDir, 'link.txt'))
     const sftp = createSftpMock()

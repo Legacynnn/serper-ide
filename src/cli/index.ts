@@ -42,7 +42,7 @@ export async function main(argv = process.argv.slice(2), cwd = process.cwd()): P
 
   try {
     // Why: CLI syntax and flag errors should be reported before any runtime
-    // lookup so users do not get misleading "Orca is not running" failures for
+    // lookup so users do not get misleading "Serper is not running" failures for
     // simple command typos or unsupported flags.
     validateCommandAndFlags(COMMAND_SPECS, parsed)
     const ignoreRemoteSelection = shouldIgnoreRemoteSelection(parsed.commandPath)
@@ -50,7 +50,7 @@ export async function main(argv = process.argv.slice(2), cwd = process.cwd()): P
     const environmentSelector = ignoreRemoteSelection ? null : parsed.flags.get('environment')
     // Why: pass `null` (not `undefined`) when remote selection is suppressed
     // so the RuntimeClient default parameter does not re-activate the
-    // ORCA_PAIRING_CODE / ORCA_ENVIRONMENT env-var fallback for commands
+    // SERPER_PAIRING_CODE / SERPER_ENVIRONMENT env-var fallback for commands
     // that must run locally (environment / serve).
     const client = new RuntimeClient(
       undefined,

@@ -63,24 +63,24 @@ let legacyViewerLoadedFromDisk = false
 let cachedWorkspaceFile: LinearWorkspaceFile | null = null
 let workspaceFileLoadedFromDisk = false
 
-function getOrcaDir(): string {
-  return join(homedir(), '.orca')
+function getSerperDir(): string {
+  return join(homedir(), '.serper')
 }
 
 function getLegacyTokenPath(): string {
-  return join(getOrcaDir(), 'linear-token.enc')
+  return join(getSerperDir(), 'linear-token.enc')
 }
 
 function getLegacyViewerPath(): string {
-  return join(getOrcaDir(), 'linear-viewer.json')
+  return join(getSerperDir(), 'linear-viewer.json')
 }
 
 function getWorkspaceFilePath(): string {
-  return join(getOrcaDir(), 'linear-workspaces.json')
+  return join(getSerperDir(), 'linear-workspaces.json')
 }
 
 function getWorkspaceTokenDir(): string {
-  return join(getOrcaDir(), 'linear-tokens')
+  return join(getSerperDir(), 'linear-tokens')
 }
 
 function getWorkspaceTokenPath(workspaceId: string): string {
@@ -90,8 +90,8 @@ function getWorkspaceTokenPath(workspaceId: string): string {
   return join(getWorkspaceTokenDir(), `${Buffer.from(workspaceId).toString('base64url')}.enc`)
 }
 
-function ensureOrcaDir(): void {
-  const dir = getOrcaDir()
+function ensureSerperDir(): void {
+  const dir = getSerperDir()
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true })
   }
@@ -219,7 +219,7 @@ function getWorkspaceFile(): LinearWorkspaceFile {
 }
 
 function writeWorkspaceFile(file: LinearWorkspaceFile): void {
-  ensureOrcaDir()
+  ensureSerperDir()
   const persistedWorkspaces = file.workspaces.filter(
     (workspace) => workspace.id !== LEGACY_WORKSPACE_ID
   )
@@ -316,7 +316,7 @@ function writeEncryptedToken(path: string, apiKey: string): void {
 }
 
 function saveWorkspaceToken(workspaceId: string, apiKey: string): void {
-  ensureOrcaDir()
+  ensureSerperDir()
   if (workspaceId !== LEGACY_WORKSPACE_ID) {
     ensureWorkspaceTokenDir()
   }

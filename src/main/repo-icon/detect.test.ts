@@ -9,7 +9,7 @@ describe('detectWorkspaceIcon', () => {
   let repoPath: string
 
   beforeEach(() => {
-    repoPath = mkdtempSync(join(tmpdir(), 'orca-icon-detect-'))
+    repoPath = mkdtempSync(join(tmpdir(), 'serper-icon-detect-'))
   })
 
   afterEach(() => {

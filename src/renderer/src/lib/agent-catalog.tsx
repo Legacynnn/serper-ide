@@ -92,7 +92,7 @@ export const AGENT_CATALOG: AgentCatalogEntry[] = [
     label: 'Kiro',
     // Why: the Kiro installer (https://cli.kiro.dev/install) ships a binary
     // named `kiro-cli`, not `kiro`. Match TUI_AGENT_CONFIG.kiro.detectCmd so
-    // the settings pane's "default command" hint aligns with what Orca
+    // the settings pane's "default command" hint aligns with what Serper
     // actually looks for on PATH.
     cmd: 'kiro-cli',
     faviconDomain: 'kiro.dev',

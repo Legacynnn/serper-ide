@@ -146,7 +146,7 @@ export function ComputerUsePane(): React.JSX.Element {
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <ShieldCheck className="size-4" />
-                Allow Orca to use local apps when you ask.
+                Allow Serper to use local apps when you ask.
               </div>
               <p className="text-xs text-muted-foreground">
                 Computer Use needs macOS privacy permissions before agents can inspect and operate
@@ -213,7 +213,8 @@ export function ComputerUsePane(): React.JSX.Element {
         <div className="space-y-1">
           <p className="text-sm font-medium">Install Computer Use Skill</p>
           <p className="text-xs text-muted-foreground">
-            Run this once on your computer so agents know how to use Orca&apos;s computer controls.
+            Run this once on your computer so agents know how to use Serper&apos;s computer
+            controls.
           </p>
         </div>
         <div className="flex max-w-full items-center gap-2 rounded-lg border border-border/60 bg-background/60 px-3 py-2">

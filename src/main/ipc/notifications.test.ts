@@ -70,7 +70,7 @@ describe('registerNotificationHandlers', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-03-28T16:00:00Z'))
-    tempDir = mkdtempSync(join(tmpdir(), 'orca-notification-test-'))
+    tempDir = mkdtempSync(join(tmpdir(), 'serper-notification-test-'))
     removeHandlerMock.mockReset()
     handleMock.mockReset()
     notificationCtorMock.mockClear()
@@ -149,7 +149,7 @@ describe('registerNotificationHandlers', () => {
     expect(notificationCtorMock).not.toHaveBeenCalled()
   })
 
-  it('suppresses active-worktree notifications while Orca is focused', () => {
+  it('suppresses active-worktree notifications while Serper is focused', () => {
     getAllWindowsMock.mockReturnValue([
       {
         isDestroyed: () => false,
@@ -190,11 +190,14 @@ describe('registerNotificationHandlers', () => {
 
     const handler = getDispatchHandler()
     expect(
-      handler({}, { source: 'agent-task-complete', repoLabel: 'orca', worktreeLabel: 'feat/notis' })
+      handler(
+        {},
+        { source: 'agent-task-complete', repoLabel: 'serper', worktreeLabel: 'feat/notis' }
+      )
     ).toEqual({ delivered: true })
     expect(notificationCtorMock).toHaveBeenCalledWith({
       title: 'Task complete in feat/notis',
-      body: 'orca'
+      body: 'serper'
     })
     expect(notificationShowMock).toHaveBeenCalledTimes(1)
   })
@@ -219,7 +222,7 @@ describe('registerNotificationHandlers', () => {
           source: 'agent-task-complete',
           worktreeId: 'repo::wt1',
           worktreeLabel: 'feat/notis',
-          repoLabel: 'orca',
+          repoLabel: 'serper',
           terminalTitle: '* Claude done',
           agentType: 'codex',
           agentState: 'done',
@@ -255,7 +258,7 @@ describe('registerNotificationHandlers', () => {
           source: 'agent-task-complete',
           worktreeId: 'repo::wt1',
           worktreeLabel: 'feat/notis',
-          repoLabel: 'orca',
+          repoLabel: 'serper',
           hasMultipleActiveRepos: true,
           agentType: 'codex',
           agentState: 'done',
@@ -265,7 +268,7 @@ describe('registerNotificationHandlers', () => {
     ).toEqual({ delivered: true })
 
     expect(notificationCtorMock).toHaveBeenCalledWith({
-      title: 'orca / feat/notis - Codex finished',
+      title: 'serper / feat/notis - Codex finished',
       body: 'Updated the notification body.'
     })
   })
@@ -491,8 +494,8 @@ describe('registerNotificationHandlers', () => {
     const handler = getDispatchHandler()
     expect(handler({}, { source: 'test' })).toEqual({ delivered: true })
     expect(notificationCtorMock).toHaveBeenCalledWith({
-      title: 'Orca notifications are on',
-      body: 'This is a test notification from Orca.',
+      title: 'Serper notifications are on',
+      body: 'This is a test notification from Serper.',
       silent: true
     })
   })
@@ -678,8 +681,8 @@ describe('triggerStartupNotificationRegistration', () => {
 
     expect(store.updateUI).toHaveBeenCalledWith({ notificationPermissionRequested: true })
     expect(notificationCtorMock).toHaveBeenCalledWith({
-      title: 'Orca is ready to notify you',
-      body: 'Allow notifications so Orca can alert you when agents finish or terminals need attention.'
+      title: 'Serper is ready to notify you',
+      body: 'Allow notifications so Serper can alert you when agents finish or terminals need attention.'
     })
     expect(notificationShowMock).toHaveBeenCalledTimes(1)
   })

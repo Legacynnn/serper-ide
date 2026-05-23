@@ -111,7 +111,7 @@ export function DiffCommentPopover({
   return (
     <div
       ref={popoverRef}
-      className="orca-diff-comment-popover"
+      className="serper-diff-comment-popover"
       style={{ top: `${top}px`, ...(left == null ? {} : { left: `${left}px` }) }}
       role="dialog"
       aria-modal="true"
@@ -119,7 +119,7 @@ export function DiffCommentPopover({
       onMouseDown={(ev) => ev.stopPropagation()}
       onClick={(ev) => ev.stopPropagation()}
     >
-      <div id={labelId} className="orca-diff-comment-popover-label">
+      <div id={labelId} className="serper-diff-comment-popover-label">
         {title ??
           (startLine && startLine !== lineNumber
             ? `Lines ${startLine}-${lineNumber}`
@@ -127,7 +127,7 @@ export function DiffCommentPopover({
       </div>
       <textarea
         ref={textareaRef}
-        className="orca-diff-comment-popover-textarea"
+        className="serper-diff-comment-popover-textarea"
         placeholder={placeholder}
         value={body}
         onChange={(e) => {
@@ -160,7 +160,7 @@ export function DiffCommentPopover({
         }}
         rows={3}
       />
-      <div className="orca-diff-comment-popover-footer">
+      <div className="serper-diff-comment-popover-footer">
         <Button variant="ghost" size="sm" onClick={onCancel}>
           Cancel
         </Button>

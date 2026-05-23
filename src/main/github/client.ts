@@ -67,16 +67,16 @@ import {
 import { mapGraphQLReactionGroups, type GitHubGraphQLReactionGroup } from './comment-reactions'
 import { noteRateLimitSpend, rateLimitGuard } from './rate-limit'
 
-const ORCA_REPO = 'stablyai/orca'
+const SERPER_REPO = 'Legacynnn/serper'
 
 /**
- * Check if the authenticated user has starred the Orca repo.
+ * Check if the authenticated user has starred the Serper repo.
  * Returns true if starred, false if not, null if unable to determine (gh unavailable).
  */
-export async function checkOrcaStarred(): Promise<boolean | null> {
+export async function checkSerperStarred(): Promise<boolean | null> {
   await acquire()
   try {
-    await execFileAsync('gh', ['api', `user/starred/${ORCA_REPO}`], { encoding: 'utf-8' })
+    await execFileAsync('gh', ['api', `user/starred/${SERPER_REPO}`], { encoding: 'utf-8' })
     return true
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
@@ -200,12 +200,12 @@ export async function getPullRequestPushTarget(
 }
 
 /**
- * Star the Orca repo for the authenticated user.
+ * Star the Serper repo for the authenticated user.
  */
-export async function starOrca(): Promise<boolean> {
+export async function starSerper(): Promise<boolean> {
   await acquire()
   try {
-    await execFileAsync('gh', ['api', '-X', 'PUT', `user/starred/${ORCA_REPO}`], {
+    await execFileAsync('gh', ['api', '-X', 'PUT', `user/starred/${SERPER_REPO}`], {
       encoding: 'utf-8'
     })
     return true
@@ -1025,7 +1025,7 @@ async function countWorkItemsForQuery(
 
 function sameOwnerRepo(left: OwnerRepo | null, right: OwnerRepo | null): boolean {
   // Why: GitHub treats owner and repo names as case-insensitive, so remotes
-  // with different casing (StablyAI/Orca vs stablyai/orca) point at the same
+  // with different casing (Legacynnn/Serper vs Legacynnn/serper) point at the same
   // repo and should not split into two search queries.
   return (
     left?.owner.toLowerCase() === right?.owner.toLowerCase() &&
@@ -1280,7 +1280,7 @@ export async function createGitHubPullRequest(
     }
   }
 
-  const tempDir = await mkdtemp(join(tmpdir(), 'orca-pr-body-'))
+  const tempDir = await mkdtemp(join(tmpdir(), 'serper-pr-body-'))
   await acquire()
   const bodyPath = join(tempDir, 'body.md')
   try {

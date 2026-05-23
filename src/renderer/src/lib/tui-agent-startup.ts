@@ -16,7 +16,7 @@ export type AgentStartupPlan = {
    * or type-and-leave-pending (draft). */
   draftPrompt?: string | null
   /** Why: env vars to apply at PTY spawn time. Currently used to deliver
-   * pi's `ORCA_PI_PREFILL` so the overlay's `orca-prefill` extension
+   * pi's `SERPER_PI_PREFILL` so the overlay's `serper-prefill` extension
    * picks it up on session_start. Plumbed into `startup.env` by the
    * activation site, NOT into the shell command, so the value isn't
    * visibly prefixed onto the terminal. */
@@ -99,7 +99,7 @@ export function buildAgentStartupPlan(args: {
     expectedProcess: config.expectedProcess,
     // Why: several agent TUIs either lack a documented "start interactive
     // session with this prompt" flag or vary too much across versions. For
-    // those agents Orca launches the TUI first, then types the composed prompt
+    // those agents Serper launches the TUI first, then types the composed prompt
     // into the live session once the agent owns the terminal.
     followupPrompt: trimmedPrompt
   }
@@ -110,7 +110,7 @@ export type AgentDraftLaunchPlan = {
   launchCommand: string
   expectedProcess: string
   /** Why: env-var-based prefill (currently pi via the overlay-installed
-   * `orca-prefill` extension) ships the draft text in the PTY-spawn
+   * `serper-prefill` extension) ships the draft text in the PTY-spawn
    * environment instead of via a CLI flag. Callers MUST plumb this into
    * the queued `startup.env` so it reaches the shell that launches the
    * agent. Empty/undefined when the agent uses a CLI flag (Claude). */

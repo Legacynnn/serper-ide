@@ -26,8 +26,8 @@ import { validateGitPushTarget } from '../git/push-target-validation'
 import { assertGitPushTargetShape } from '../../shared/git-push-target-validation'
 import { gitExecFileAsync } from '../git/runner'
 import { parseGitHubOwnerRepo } from '../github/gh-utils'
-import type { OrcaRuntimeService } from '../runtime/orca-runtime'
-import type { RemoteFetchResult, RemoteTrackingBase } from '../runtime/orca-runtime'
+import type { SerperRuntimeService } from '../runtime/serper-runtime'
+import type { RemoteFetchResult, RemoteTrackingBase } from '../runtime/serper-runtime'
 import { isWslPath, parseWslPath, getWslHome } from '../wsl'
 import { createSetupRunnerScript, getEffectiveHooks, shouldRunSetupForCreate } from '../hooks'
 import { requireSshGitProvider } from '../providers/ssh-git-dispatch'
@@ -560,7 +560,7 @@ export async function createLocalWorktree(
   repo: Repo,
   store: Store,
   mainWindow: BrowserWindow,
-  runtime?: OrcaRuntimeService
+  runtime?: SerperRuntimeService
 ): Promise<CreateWorktreeResult> {
   const settings = store.getSettings()
 
@@ -624,13 +624,13 @@ export async function createLocalWorktree(
       .catch(() => undefined)
     emitCreateWorktreeProgress(mainWindow, 'fetching')
   }
-  // Why: WSL worktrees live under ~/orca/workspaces inside the WSL
+  // Why: WSL worktrees live under ~/serper/workspaces inside the WSL
   // filesystem. Validate against that root, not the Windows workspace dir.
   // If WSL home lookup fails, keep using the configured workspace root so
   // the path traversal guard still runs on the fallback path.
   const wslInfo = isWslPath(repo.path) ? parseWslPath(repo.path) : null
   const wslHome = wslInfo ? getWslHome(wslInfo.distro) : null
-  const workspaceRoot = wslHome ? join(wslHome, 'orca', 'workspaces') : settings.workspaceDir
+  const workspaceRoot = wslHome ? join(wslHome, 'serper', 'workspaces') : settings.workspaceDir
 
   // Why: this validation does not depend on remote refs, so it can overlap a
   // required remote-tracking base refresh.
@@ -871,7 +871,7 @@ export async function createLocalWorktree(
     await createWorktreeSymlinks(repo.path, created.path, repo.symlinkPaths)
   }
 
-  // Why: the worktree's own `orca.yaml` (at the tip of the base branch) is
+  // Why: the worktree's own `serper.yaml` (at the tip of the base branch) is
   // authoritative for what runs post-creation. The repo-level trust already
   // granted by the user in the pre-create flow covers execution of that
   // script; we intentionally do not re-gate on content equality with the

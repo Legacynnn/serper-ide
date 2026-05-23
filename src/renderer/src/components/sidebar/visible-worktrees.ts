@@ -116,7 +116,7 @@ export function computeVisibleWorktreeIds(
       )
       const hasHostMirroredTerminal = tabs.some((tab) => isWebTerminalSurfaceTabId(tab.id))
       const hasBrowserTabs = (opts.browserTabsByWorktree?.[w.id] ?? []).length > 0
-      // Why: "Active only" should reflect the surfaces Orca can actually
+      // Why: "Active only" should reflect the surfaces Serper can actually
       // restore into, not just PTY-backed terminals. A browser-tab worktree is
       // still active from the user's point of view even if it has no live PTY,
       // and the currently selected worktree should never vanish from the list.

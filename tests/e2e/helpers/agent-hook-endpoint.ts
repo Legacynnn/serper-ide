@@ -62,7 +62,7 @@ export async function emitCodexHookStatus(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Orca-Agent-Hook-Token': endpoint.token
+      'X-Serper-Agent-Hook-Token': endpoint.token
     },
     body: JSON.stringify({
       paneKey: status.paneKey,

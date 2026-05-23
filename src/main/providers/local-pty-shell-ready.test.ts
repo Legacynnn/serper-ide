@@ -131,37 +131,37 @@ const describePosix = process.platform === 'win32' ? describe.skip : describe
 
 describePosix('local PTY shell-ready launch config', () => {
   let userDataPath: string
-  let previousOrcaOrigZdotdir: string | undefined
+  let previousSerperOrigZdotdir: string | undefined
 
   beforeEach(() => {
-    previousOrcaOrigZdotdir = process.env.ORCA_ORIG_ZDOTDIR
-    delete process.env.ORCA_ORIG_ZDOTDIR
+    previousSerperOrigZdotdir = process.env.SERPER_ORIG_ZDOTDIR
+    delete process.env.SERPER_ORIG_ZDOTDIR
     userDataPath = mkdtempSync(join(tmpdir(), 'local-pty-shell-ready-test-'))
     getUserDataPathMock.mockReturnValue(userDataPath)
   })
 
   afterEach(() => {
-    if (previousOrcaOrigZdotdir === undefined) {
-      delete process.env.ORCA_ORIG_ZDOTDIR
+    if (previousSerperOrigZdotdir === undefined) {
+      delete process.env.SERPER_ORIG_ZDOTDIR
     } else {
-      process.env.ORCA_ORIG_ZDOTDIR = previousOrcaOrigZdotdir
+      process.env.SERPER_ORIG_ZDOTDIR = previousSerperOrigZdotdir
     }
     rmSync(userDataPath, { recursive: true, force: true })
     vi.restoreAllMocks()
   })
 
-  it('falls back to HOME for ORCA_ORIG_ZDOTDIR when inherited ZDOTDIR points at a wrapper dir', async () => {
+  it('falls back to HOME for SERPER_ORIG_ZDOTDIR when inherited ZDOTDIR points at a wrapper dir', async () => {
     // Why: mirrors the daemon path — guards the same zsh recursion loop for
-    // PTYs spawned by the renderer/local provider when Orca is launched from
-    // inside an Orca terminal (e.g. `pn dev`).
+    // PTYs spawned by the renderer/local provider when Serper is launched from
+    // inside an Serper terminal (e.g. `pn dev`).
     const previousZdotdir = process.env.ZDOTDIR
     const previousHome = process.env.HOME
-    process.env.ZDOTDIR = '/some/other/orca/shell-ready/zsh'
+    process.env.ZDOTDIR = '/some/other/serper/shell-ready/zsh'
     process.env.HOME = '/Users/alice'
     try {
       const { getShellReadyLaunchConfig } = await importFreshLocalPtyShellReady()
       const config = getShellReadyLaunchConfig('/bin/zsh')
-      expect(config.env.ORCA_ORIG_ZDOTDIR).toBe('/Users/alice')
+      expect(config.env.SERPER_ORIG_ZDOTDIR).toBe('/Users/alice')
     } finally {
       if (previousZdotdir === undefined) {
         delete process.env.ZDOTDIR
@@ -176,17 +176,17 @@ describePosix('local PTY shell-ready launch config', () => {
     }
   })
 
-  it('uses inherited ORCA_ORIG_ZDOTDIR when ZDOTDIR is an Orca wrapper dir', async () => {
+  it('uses inherited SERPER_ORIG_ZDOTDIR when ZDOTDIR is an Serper wrapper dir', async () => {
     const previousZdotdir = process.env.ZDOTDIR
-    const previousOrigZdotdir = process.env.ORCA_ORIG_ZDOTDIR
+    const previousOrigZdotdir = process.env.SERPER_ORIG_ZDOTDIR
     const previousHome = process.env.HOME
-    process.env.ZDOTDIR = '/some/other/orca/shell-ready/zsh'
-    process.env.ORCA_ORIG_ZDOTDIR = '/Users/alice/.config/zsh'
+    process.env.ZDOTDIR = '/some/other/serper/shell-ready/zsh'
+    process.env.SERPER_ORIG_ZDOTDIR = '/Users/alice/.config/zsh'
     process.env.HOME = '/Users/alice'
     try {
       const { getShellReadyLaunchConfig } = await importFreshLocalPtyShellReady()
       const config = getShellReadyLaunchConfig('/bin/zsh')
-      expect(config.env.ORCA_ORIG_ZDOTDIR).toBe('/Users/alice/.config/zsh')
+      expect(config.env.SERPER_ORIG_ZDOTDIR).toBe('/Users/alice/.config/zsh')
     } finally {
       if (previousZdotdir === undefined) {
         delete process.env.ZDOTDIR
@@ -194,9 +194,9 @@ describePosix('local PTY shell-ready launch config', () => {
         process.env.ZDOTDIR = previousZdotdir
       }
       if (previousOrigZdotdir === undefined) {
-        delete process.env.ORCA_ORIG_ZDOTDIR
+        delete process.env.SERPER_ORIG_ZDOTDIR
       } else {
-        process.env.ORCA_ORIG_ZDOTDIR = previousOrigZdotdir
+        process.env.SERPER_ORIG_ZDOTDIR = previousOrigZdotdir
       }
       if (previousHome === undefined) {
         delete process.env.HOME
@@ -206,17 +206,17 @@ describePosix('local PTY shell-ready launch config', () => {
     }
   })
 
-  it('falls back to HOME when inherited ORCA_ORIG_ZDOTDIR points at a wrapper dir', async () => {
+  it('falls back to HOME when inherited SERPER_ORIG_ZDOTDIR points at a wrapper dir', async () => {
     const previousZdotdir = process.env.ZDOTDIR
-    const previousOrigZdotdir = process.env.ORCA_ORIG_ZDOTDIR
+    const previousOrigZdotdir = process.env.SERPER_ORIG_ZDOTDIR
     const previousHome = process.env.HOME
     delete process.env.ZDOTDIR
-    process.env.ORCA_ORIG_ZDOTDIR = '/some/other/orca/shell-ready/zsh'
+    process.env.SERPER_ORIG_ZDOTDIR = '/some/other/serper/shell-ready/zsh'
     process.env.HOME = '/Users/alice'
     try {
       const { getShellReadyLaunchConfig } = await importFreshLocalPtyShellReady()
       const config = getShellReadyLaunchConfig('/bin/zsh')
-      expect(config.env.ORCA_ORIG_ZDOTDIR).toBe('/Users/alice')
+      expect(config.env.SERPER_ORIG_ZDOTDIR).toBe('/Users/alice')
     } finally {
       if (previousZdotdir === undefined) {
         delete process.env.ZDOTDIR
@@ -224,9 +224,9 @@ describePosix('local PTY shell-ready launch config', () => {
         process.env.ZDOTDIR = previousZdotdir
       }
       if (previousOrigZdotdir === undefined) {
-        delete process.env.ORCA_ORIG_ZDOTDIR
+        delete process.env.SERPER_ORIG_ZDOTDIR
       } else {
-        process.env.ORCA_ORIG_ZDOTDIR = previousOrigZdotdir
+        process.env.SERPER_ORIG_ZDOTDIR = previousOrigZdotdir
       }
       if (previousHome === undefined) {
         delete process.env.HOME
@@ -236,15 +236,15 @@ describePosix('local PTY shell-ready launch config', () => {
     }
   })
 
-  it('writes zsh wrappers that guard against ORCA_ORIG_ZDOTDIR self-loops', async () => {
+  it('writes zsh wrappers that guard against SERPER_ORIG_ZDOTDIR self-loops', async () => {
     const { getShellReadyLaunchConfig } = await importFreshLocalPtyShellReady()
 
     getShellReadyLaunchConfig('/bin/zsh')
 
     const zshenv = readFileSync(join(userDataPath, 'shell-ready', 'zsh', '.zshenv'), 'utf8')
-    expect(zshenv).toContain('local _orca_user_zdotdir="${_orca_spawn_orig_zdotdir:-$HOME}"')
-    expect(zshenv).toContain('[[ -f "$_orca_user_zdotdir/.zshenv" ]]')
-    expect(zshenv).toContain('*/shell-ready/zsh) export ORCA_ORIG_ZDOTDIR="$HOME" ;;')
+    expect(zshenv).toContain('local _serper_user_zdotdir="${_serper_spawn_orig_zdotdir:-$HOME}"')
+    expect(zshenv).toContain('[[ -f "$_serper_user_zdotdir/.zshenv" ]]')
+    expect(zshenv).toContain('*/shell-ready/zsh) export SERPER_ORIG_ZDOTDIR="$HOME" ;;')
   })
 
   it('writes wrappers that restore OpenCode and Pi config after user startup files', async () => {
@@ -257,9 +257,9 @@ describePosix('local PTY shell-ready launch config', () => {
     const zlogin = readFileSync(join(userDataPath, 'shell-ready', 'zsh', '.zlogin'), 'utf8')
     const bashRc = getBashShellReadyRcfileContent()
     const restoreLine =
-      '[[ -n "${ORCA_OPENCODE_CONFIG_DIR:-}" ]] && export OPENCODE_CONFIG_DIR="${ORCA_OPENCODE_CONFIG_DIR}"'
+      '[[ -n "${SERPER_OPENCODE_CONFIG_DIR:-}" ]] && export OPENCODE_CONFIG_DIR="${SERPER_OPENCODE_CONFIG_DIR}"'
     const piRestoreLine =
-      '[[ -n "${ORCA_PI_CODING_AGENT_DIR:-}" ]] && export PI_CODING_AGENT_DIR="${ORCA_PI_CODING_AGENT_DIR}"'
+      '[[ -n "${SERPER_PI_CODING_AGENT_DIR:-}" ]] && export PI_CODING_AGENT_DIR="${SERPER_PI_CODING_AGENT_DIR}"'
     expect(zshrc).toContain(restoreLine)
     expect(zlogin).toContain(restoreLine)
     expect(bashRc).toContain(restoreLine)
@@ -268,13 +268,13 @@ describePosix('local PTY shell-ready launch config', () => {
     expect(bashRc).toContain(piRestoreLine)
   })
 
-  it('preserves a real inherited ZDOTDIR as ORCA_ORIG_ZDOTDIR', async () => {
+  it('preserves a real inherited ZDOTDIR as SERPER_ORIG_ZDOTDIR', async () => {
     const previousZdotdir = process.env.ZDOTDIR
     process.env.ZDOTDIR = '/Users/alice/.config/zsh'
     try {
       const { getShellReadyLaunchConfig } = await importFreshLocalPtyShellReady()
       const config = getShellReadyLaunchConfig('/bin/zsh')
-      expect(config.env.ORCA_ORIG_ZDOTDIR).toBe('/Users/alice/.config/zsh')
+      expect(config.env.SERPER_ORIG_ZDOTDIR).toBe('/Users/alice/.config/zsh')
     } finally {
       if (previousZdotdir === undefined) {
         delete process.env.ZDOTDIR
@@ -287,12 +287,12 @@ describePosix('local PTY shell-ready launch config', () => {
   it('rejects inherited ZDOTDIR ending in /shell-ready/zsh even with a trailing slash', async () => {
     const previousZdotdir = process.env.ZDOTDIR
     const previousHome = process.env.HOME
-    process.env.ZDOTDIR = '/some/other/orca/shell-ready/zsh/'
+    process.env.ZDOTDIR = '/some/other/serper/shell-ready/zsh/'
     process.env.HOME = '/Users/alice'
     try {
       const { getShellReadyLaunchConfig } = await importFreshLocalPtyShellReady()
       const config = getShellReadyLaunchConfig('/bin/zsh')
-      expect(config.env.ORCA_ORIG_ZDOTDIR).toBe('/Users/alice')
+      expect(config.env.SERPER_ORIG_ZDOTDIR).toBe('/Users/alice')
     } finally {
       if (previousZdotdir === undefined) {
         delete process.env.ZDOTDIR
@@ -315,7 +315,7 @@ describePosix('local PTY shell-ready launch config', () => {
     try {
       const { getShellReadyLaunchConfig } = await importFreshLocalPtyShellReady()
       const config = getShellReadyLaunchConfig('/bin/zsh')
-      expect(config.env.ORCA_ORIG_ZDOTDIR).toBe('/Users/alice')
+      expect(config.env.SERPER_ORIG_ZDOTDIR).toBe('/Users/alice')
     } finally {
       if (previousZdotdir === undefined) {
         delete process.env.ZDOTDIR
@@ -336,7 +336,7 @@ describePosix('local PTY shell-ready launch config', () => {
     try {
       const { getShellReadyLaunchConfig } = await importFreshLocalPtyShellReady()
       const config = getShellReadyLaunchConfig('/bin/zsh')
-      expect(config.env.ORCA_ORIG_ZDOTDIR).toBe('/Users/alice/shell-ready/zsh-custom')
+      expect(config.env.SERPER_ORIG_ZDOTDIR).toBe('/Users/alice/shell-ready/zsh-custom')
     } finally {
       if (previousZdotdir === undefined) {
         delete process.env.ZDOTDIR

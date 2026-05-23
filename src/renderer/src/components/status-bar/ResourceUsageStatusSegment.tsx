@@ -231,7 +231,7 @@ function AppSection({
           type="button"
           onClick={onToggle}
           className="pl-2 py-2 pr-0.5 transition-colors hover:bg-muted/50"
-          aria-label={isCollapsed ? 'Expand Orca' : 'Collapse Orca'}
+          aria-label={isCollapsed ? 'Expand Serper' : 'Collapse Serper'}
           aria-expanded={!isCollapsed}
         >
           {isCollapsed ? (
@@ -242,7 +242,7 @@ function AppSection({
         </button>
         <div className="flex-1 min-w-0 py-2 pr-3 flex items-center justify-between">
           <span className="text-[11px] font-semibold uppercase tracking-wide truncate text-muted-foreground">
-            Orca
+            Serper
           </span>
           <div className="flex items-center gap-2 shrink-0">
             <Sparkline samples={app.history} />
@@ -994,7 +994,7 @@ export function ResourceUsageStatusSegment({
 
   const handleKillSession = useCallback(
     (session: UnifiedSessionRow): void => {
-      // Why: orphan sessions have no tab in this Orca instance, so there's
+      // Why: orphan sessions have no tab in this Serper instance, so there's
       // no "unsaved work in that pane" the user could lose by killing them.
       // Skip the confirm dialog for orphans and fire the kill straight away
       // (with optimistic removal) — same UX as a one-off kill from the
@@ -1251,7 +1251,7 @@ export function ResourceUsageStatusSegment({
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="top" sideOffset={6} className="z-[70] max-w-xs">
-                  Resident memory held by Orca plus the processes under each worktree&apos;s
+                  Resident memory held by Serper plus the processes under each worktree&apos;s
                   terminals.
                 </TooltipContent>
               </Tooltip>
@@ -1266,7 +1266,7 @@ export function ResourceUsageStatusSegment({
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="top" sideOffset={6} className="z-[70] max-w-xs">
-                  How much of this machine&apos;s physical RAM the Orca-tracked processes are
+                  How much of this machine&apos;s physical RAM the Serper-tracked processes are
                   sitting on.
                 </TooltipContent>
               </Tooltip>

@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto'
 import { existsSync, readFileSync } from 'fs'
 import path from 'path'
 import type { ElectronApplication, Page } from '@stablyai/playwright-test'
-import { test, expect } from './helpers/orca-app'
+import { test, expect } from './helpers/serper-app'
 import { waitForSessionReady } from './helpers/store'
 import type { GlobalSettings } from '../../src/shared/types'
 
@@ -56,22 +56,22 @@ async function dismissTransientAnnouncement(page: Page): Promise<void> {
 async function installPowerSaveBlockerProbe(electronApp: ElectronApplication): Promise<void> {
   await electronApp.evaluate(({ powerSaveBlocker }) => {
     const root = globalThis as typeof globalThis & {
-      __orcaAwakePowerProbe?: {
+      __serperAwakePowerProbe?: {
         starts: { type: string; id: number }[]
         stops: { id: number }[]
         originalStart: typeof powerSaveBlocker.start
         originalStop: typeof powerSaveBlocker.stop
       }
     }
-    if (root.__orcaAwakePowerProbe) {
-      root.__orcaAwakePowerProbe.starts = []
-      root.__orcaAwakePowerProbe.stops = []
+    if (root.__serperAwakePowerProbe) {
+      root.__serperAwakePowerProbe.starts = []
+      root.__serperAwakePowerProbe.stops = []
       return
     }
 
     const originalStart = powerSaveBlocker.start.bind(powerSaveBlocker)
     const originalStop = powerSaveBlocker.stop.bind(powerSaveBlocker)
-    root.__orcaAwakePowerProbe = {
+    root.__serperAwakePowerProbe = {
       starts: [],
       stops: [],
       originalStart,
@@ -80,12 +80,12 @@ async function installPowerSaveBlockerProbe(electronApp: ElectronApplication): P
 
     powerSaveBlocker.start = ((type) => {
       const id = originalStart(type)
-      root.__orcaAwakePowerProbe?.starts.push({ type, id })
+      root.__serperAwakePowerProbe?.starts.push({ type, id })
       return id
     }) as typeof powerSaveBlocker.start
 
     powerSaveBlocker.stop = ((id) => {
-      root.__orcaAwakePowerProbe?.stops.push({ id })
+      root.__serperAwakePowerProbe?.stops.push({ id })
       originalStop(id)
     }) as typeof powerSaveBlocker.stop
   })
@@ -97,12 +97,12 @@ async function readPowerSaveBlockerProbe(
   return electronApp.evaluate(({ powerSaveBlocker }) => {
     const probe = (
       globalThis as typeof globalThis & {
-        __orcaAwakePowerProbe?: {
+        __serperAwakePowerProbe?: {
           starts: { type: string; id: number }[]
           stops: { id: number }[]
         }
       }
-    ).__orcaAwakePowerProbe
+    ).__serperAwakePowerProbe
     const starts = probe?.starts ?? []
     return {
       starts: starts.map((start) => ({ ...start })),
@@ -123,10 +123,10 @@ function parseEndpointFile(contents: string): HookEndpoint {
     values[normalized.slice(0, separatorIndex)] = normalized.slice(separatorIndex + 1)
   }
   return {
-    port: values.ORCA_AGENT_HOOK_PORT ?? '',
-    token: values.ORCA_AGENT_HOOK_TOKEN ?? '',
-    env: values.ORCA_AGENT_HOOK_ENV ?? '',
-    version: values.ORCA_AGENT_HOOK_VERSION ?? ''
+    port: values.SERPER_AGENT_HOOK_PORT ?? '',
+    token: values.SERPER_AGENT_HOOK_TOKEN ?? '',
+    env: values.SERPER_AGENT_HOOK_ENV ?? '',
+    version: values.SERPER_AGENT_HOOK_VERSION ?? ''
   }
 }
 
@@ -166,7 +166,7 @@ async function postCodexHookEvent(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Orca-Agent-Hook-Token': endpoint.token
+      'X-Serper-Agent-Hook-Token': endpoint.token
     },
     body: JSON.stringify({
       paneKey: options.paneKey,
@@ -184,20 +184,20 @@ async function postCodexHookEvent(
 }
 
 test.describe('Agent awake setting', () => {
-  test.beforeEach(async ({ orcaPage }) => {
-    await waitForSessionReady(orcaPage)
+  test.beforeEach(async ({ serperPage }) => {
+    await waitForSessionReady(serperPage)
   })
 
-  test('can be toggled from Agents settings and persists through IPC', async ({ orcaPage }) => {
-    await openSettings(orcaPage)
-    await dismissTransientAnnouncement(orcaPage)
-    await orcaPage.getByPlaceholder('Search settings').fill('awake')
+  test('can be toggled from Agents settings and persists through IPC', async ({ serperPage }) => {
+    await openSettings(serperPage)
+    await dismissTransientAnnouncement(serperPage)
+    await serperPage.getByPlaceholder('Search settings').fill('awake')
 
     await expect(
-      orcaPage.getByText('Keep computer awake while agents are working').first()
+      serperPage.getByText('Keep computer awake while agents are working').first()
     ).toBeVisible()
 
-    const keepAwakeSwitch = orcaPage.getByRole('switch', {
+    const keepAwakeSwitch = serperPage.getByRole('switch', {
       name: 'Keep computer awake while agents are working'
     })
 
@@ -205,7 +205,7 @@ test.describe('Agent awake setting', () => {
     await keepAwakeSwitch.click()
     await expect(keepAwakeSwitch).toHaveAttribute('aria-checked', 'true')
     await expect
-      .poll(async () => (await getSettings(orcaPage)).keepComputerAwakeWhileAgentsRun, {
+      .poll(async () => (await getSettings(serperPage)).keepComputerAwakeWhileAgentsRun, {
         timeout: 5_000,
         message: 'keep-awake setting did not persist after enabling'
       })
@@ -214,7 +214,7 @@ test.describe('Agent awake setting', () => {
     await keepAwakeSwitch.click()
     await expect(keepAwakeSwitch).toHaveAttribute('aria-checked', 'false')
     await expect
-      .poll(async () => (await getSettings(orcaPage)).keepComputerAwakeWhileAgentsRun, {
+      .poll(async () => (await getSettings(serperPage)).keepComputerAwakeWhileAgentsRun, {
         timeout: 5_000,
         message: 'keep-awake setting did not persist after disabling'
       })
@@ -223,10 +223,10 @@ test.describe('Agent awake setting', () => {
 
   test('keeps the OS awake only while a hook-reported agent is working', async ({
     electronApp,
-    orcaPage
+    serperPage
   }) => {
     await installPowerSaveBlockerProbe(electronApp)
-    await setKeepAwake(orcaPage, true)
+    await setKeepAwake(serperPage, true)
 
     const tabId = 'e2e-awake-tab'
     const paneKey = `${tabId}:${randomUUID()}`

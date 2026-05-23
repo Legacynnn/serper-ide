@@ -279,17 +279,17 @@ describe('registerWorktreeHandlers', () => {
     getEffectiveHooksMock.mockReturnValue(null)
     shouldRunSetupForCreateMock.mockReturnValue(false)
     createSetupRunnerScriptMock.mockReturnValue({
-      runnerScriptPath: '/workspace/repo/.git/orca/setup-runner.sh',
+      runnerScriptPath: '/workspace/repo/.git/serper/setup-runner.sh',
       envVars: {
-        ORCA_ROOT_PATH: '/workspace/repo',
-        ORCA_WORKTREE_PATH: '/workspace/improve-dashboard'
+        SERPER_ROOT_PATH: '/workspace/repo',
+        SERPER_WORKTREE_PATH: '/workspace/improve-dashboard'
       }
     })
     createIssueCommandRunnerScriptMock.mockReturnValue({
-      runnerScriptPath: '/workspace/repo/.git/orca/issue-command-runner.sh',
+      runnerScriptPath: '/workspace/repo/.git/serper/issue-command-runner.sh',
       envVars: {
-        ORCA_ROOT_PATH: '/workspace/repo',
-        ORCA_WORKTREE_PATH: '/workspace/improve-dashboard'
+        SERPER_ROOT_PATH: '/workspace/repo',
+        SERPER_WORKTREE_PATH: '/workspace/improve-dashboard'
       }
     })
     computeWorktreePathMock.mockImplementation(
@@ -591,21 +591,21 @@ describe('registerWorktreeHandlers', () => {
       repoId: 'repo-1',
       name: 'improve-dashboard',
       pushTarget: {
-        remoteName: 'pr-prateek-orca',
+        remoteName: 'pr-prateek-serper',
         branchName: 'prateek/fix-sidebar-agents-toggle',
-        remoteUrl: 'git@github.com:prateek/orca.git'
+        remoteUrl: 'git@github.com:prateek/serper.git'
       }
     })
 
     expect(gitExecFileAsyncMock).toHaveBeenCalledWith(
-      ['remote', 'add', 'pr-prateek-orca', 'git@github.com:prateek/orca.git'],
+      ['remote', 'add', 'pr-prateek-serper', 'git@github.com:prateek/serper.git'],
       { cwd: '/workspace/repo' }
     )
     expect(gitExecFileAsyncMock).toHaveBeenCalledWith(
       [
         'fetch',
-        'pr-prateek-orca',
-        '+refs/heads/prateek/fix-sidebar-agents-toggle:refs/remotes/pr-prateek-orca/prateek/fix-sidebar-agents-toggle'
+        'pr-prateek-serper',
+        '+refs/heads/prateek/fix-sidebar-agents-toggle:refs/remotes/pr-prateek-serper/prateek/fix-sidebar-agents-toggle'
       ],
       { cwd: '/workspace/repo' }
     )
@@ -613,7 +613,7 @@ describe('registerWorktreeHandlers', () => {
       [
         'branch',
         '--set-upstream-to',
-        'pr-prateek-orca/prateek/fix-sidebar-agents-toggle',
+        'pr-prateek-serper/prateek/fix-sidebar-agents-toggle',
         'improve-dashboard'
       ],
       { cwd: '/workspace/improve-dashboard' }
@@ -622,9 +622,9 @@ describe('registerWorktreeHandlers', () => {
       'repo-1::/workspace/improve-dashboard',
       expect.objectContaining({
         pushTarget: {
-          remoteName: 'pr-prateek-orca',
+          remoteName: 'pr-prateek-serper',
           branchName: 'prateek/fix-sidebar-agents-toggle',
-          remoteUrl: 'git@github.com:prateek/orca.git'
+          remoteUrl: 'git@github.com:prateek/serper.git'
         }
       })
     )
@@ -632,9 +632,9 @@ describe('registerWorktreeHandlers', () => {
 
   it('returns the PR head push target when resolving a fork PR base', async () => {
     getPullRequestPushTargetMock.mockResolvedValue({
-      remoteName: 'pr-prateek-orca',
+      remoteName: 'pr-prateek-serper',
       branchName: 'prateek/fix-sidebar-agents-toggle',
-      remoteUrl: 'git@github.com:prateek/orca.git'
+      remoteUrl: 'git@github.com:prateek/serper.git'
     })
     gitExecFileAsyncMock.mockImplementation(async (args: string[]) => {
       if (args[0] === 'rev-parse') {
@@ -656,9 +656,9 @@ describe('registerWorktreeHandlers', () => {
     expect(result).toEqual({
       baseBranch: 'abc123',
       pushTarget: {
-        remoteName: 'pr-prateek-orca',
+        remoteName: 'pr-prateek-serper',
         branchName: 'prateek/fix-sidebar-agents-toggle',
-        remoteUrl: 'git@github.com:prateek/orca.git'
+        remoteUrl: 'git@github.com:prateek/serper.git'
       }
     })
   })
@@ -1110,10 +1110,10 @@ describe('registerWorktreeHandlers', () => {
       'codex exec "long command"'
     )
     expect(result).toEqual({
-      runnerScriptPath: '/workspace/repo/.git/orca/issue-command-runner.sh',
+      runnerScriptPath: '/workspace/repo/.git/serper/issue-command-runner.sh',
       envVars: {
-        ORCA_ROOT_PATH: '/workspace/repo',
-        ORCA_WORKTREE_PATH: '/workspace/improve-dashboard'
+        SERPER_ROOT_PATH: '/workspace/repo',
+        SERPER_WORKTREE_PATH: '/workspace/improve-dashboard'
       }
     })
   })
@@ -1716,10 +1716,10 @@ describe('registerWorktreeHandlers', () => {
         branch: 'improve-dashboard'
       }),
       setup: {
-        runnerScriptPath: '/workspace/repo/.git/orca/setup-runner.sh',
+        runnerScriptPath: '/workspace/repo/.git/serper/setup-runner.sh',
         envVars: {
-          ORCA_ROOT_PATH: '/workspace/repo',
-          ORCA_WORKTREE_PATH: '/workspace/improve-dashboard'
+          SERPER_ROOT_PATH: '/workspace/repo',
+          SERPER_WORKTREE_PATH: '/workspace/improve-dashboard'
         }
       }
     })
@@ -1732,7 +1732,7 @@ describe('registerWorktreeHandlers', () => {
     )
   })
 
-  it('launches setup even when primary and worktree orca.yaml scripts diverge', async () => {
+  it('launches setup even when primary and worktree serper.yaml scripts diverge', async () => {
     // Why: regression for a silent skip introduced by the #1280 content-equality
     // gate. Benign divergence (whitespace, comments, or any setup edit that
     // landed on the base branch but not yet in the primary checkout) must not
@@ -1759,7 +1759,7 @@ describe('registerWorktreeHandlers', () => {
     expect(result).toEqual(
       expect.objectContaining({
         setup: expect.objectContaining({
-          runnerScriptPath: '/workspace/repo/.git/orca/setup-runner.sh'
+          runnerScriptPath: '/workspace/repo/.git/serper/setup-runner.sh'
         })
       })
     )

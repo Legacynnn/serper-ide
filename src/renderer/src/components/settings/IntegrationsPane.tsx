@@ -463,9 +463,9 @@ export function IntegrationsPane(): React.JSX.Element {
             {bitbucketStatus === 'not-configured' ? (
               <>
                 <p className="text-xs text-muted-foreground">
-                  Set <span className="font-mono text-[11px]">ORCA_BITBUCKET_EMAIL</span> and{' '}
-                  <span className="font-mono text-[11px]">ORCA_BITBUCKET_API_TOKEN</span>, or set{' '}
-                  <span className="font-mono text-[11px]">ORCA_BITBUCKET_ACCESS_TOKEN</span>.
+                  Set <span className="font-mono text-[11px]">SERPER_BITBUCKET_EMAIL</span> and{' '}
+                  <span className="font-mono text-[11px]">SERPER_BITBUCKET_API_TOKEN</span>, or set{' '}
+                  <span className="font-mono text-[11px]">SERPER_BITBUCKET_ACCESS_TOKEN</span>.
                 </p>
                 <div className="flex items-center gap-2">
                   <Button
@@ -489,7 +489,7 @@ export function IntegrationsPane(): React.JSX.Element {
               <>
                 <p className="text-xs text-muted-foreground">
                   Bitbucket credentials are configured but could not authenticate. Check the token
-                  and repository permissions, then restart Orca if environment variables changed.
+                  and repository permissions, then restart Serper if environment variables changed.
                 </p>
                 <div className="flex items-center gap-2">
                   <Button
@@ -548,10 +548,12 @@ export function IntegrationsPane(): React.JSX.Element {
             {azureDevOpsStatus === 'not-configured' ? (
               <>
                 <p className="text-xs text-muted-foreground">
-                  Set <span className="font-mono text-[11px]">ORCA_AZURE_DEVOPS_TOKEN</span>, or set{' '}
-                  <span className="font-mono text-[11px]">ORCA_AZURE_DEVOPS_ACCESS_TOKEN</span>. Set{' '}
-                  <span className="font-mono text-[11px]">ORCA_AZURE_DEVOPS_API_BASE_URL</span> only
-                  when Orca cannot derive the API base URL from the git remote.
+                  Set <span className="font-mono text-[11px]">SERPER_AZURE_DEVOPS_TOKEN</span>, or
+                  set{' '}
+                  <span className="font-mono text-[11px]">SERPER_AZURE_DEVOPS_ACCESS_TOKEN</span>.
+                  Set{' '}
+                  <span className="font-mono text-[11px]">SERPER_AZURE_DEVOPS_API_BASE_URL</span>{' '}
+                  only when Serper cannot derive the API base URL from the git remote.
                 </p>
                 <div className="flex items-center gap-2">
                   <Button
@@ -575,8 +577,8 @@ export function IntegrationsPane(): React.JSX.Element {
               <>
                 <p className="text-xs text-muted-foreground">
                   Azure DevOps credentials are configured but could not authenticate. Check the
-                  token, API base URL, and repository permissions, then restart Orca if environment
-                  variables changed.
+                  token, API base URL, and repository permissions, then restart Serper if
+                  environment variables changed.
                 </p>
                 <div className="flex items-center gap-2">
                   <Button
@@ -636,10 +638,10 @@ export function IntegrationsPane(): React.JSX.Element {
               <>
                 <p className="text-xs text-muted-foreground">
                   Public repositories are detected from their git remote. Set{' '}
-                  <span className="font-mono text-[11px]">ORCA_GITEA_TOKEN</span> for private
+                  <span className="font-mono text-[11px]">SERPER_GITEA_TOKEN</span> for private
                   repositories, and set{' '}
-                  <span className="font-mono text-[11px]">ORCA_GITEA_API_BASE_URL</span> only when
-                  Orca cannot derive the API URL from the remote.
+                  <span className="font-mono text-[11px]">SERPER_GITEA_API_BASE_URL</span> only when
+                  Serper cannot derive the API URL from the remote.
                 </p>
                 <div className="flex items-center gap-2">
                   <Button
@@ -661,7 +663,7 @@ export function IntegrationsPane(): React.JSX.Element {
               <>
                 <p className="text-xs text-muted-foreground">
                   Gitea credentials are configured but could not authenticate. Check the token, API
-                  base URL, and repository permissions, then restart Orca if environment variables
+                  base URL, and repository permissions, then restart Serper if environment variables
                   changed.
                 </p>
                 <div className="flex items-center gap-2">
@@ -805,7 +807,7 @@ export function IntegrationsPane(): React.JSX.Element {
             <DialogTitle className="leading-tight">Connect Linear workspace</DialogTitle>
             <DialogDescription>
               Paste a <strong className="font-semibold text-foreground">Personal API key</strong> to
-              add a workspace to Orca.
+              add a workspace to Serper.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-3">

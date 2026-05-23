@@ -1,6 +1,6 @@
 import type { MarkdownDocument } from '../../../../shared/types'
 
-export const MARKDOWN_DOC_LINK_PREFIX = '#orca-doc-link='
+export const MARKDOWN_DOC_LINK_PREFIX = '#serper-doc-link='
 
 type MarkdownTextNode = {
   type: 'text'

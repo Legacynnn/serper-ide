@@ -17,23 +17,23 @@
  * store list is empty and the DOM zone is gone.
  */
 
-import { test, expect } from './helpers/orca-app'
+import { test, expect } from './helpers/serper-app'
 import { waitForSessionReady, waitForActiveWorktree } from './helpers/store'
 
 test.describe('Diff note delete', () => {
-  test.beforeEach(async ({ orcaPage }) => {
-    await waitForSessionReady(orcaPage)
-    await waitForActiveWorktree(orcaPage)
+  test.beforeEach(async ({ serperPage }) => {
+    await waitForSessionReady(serperPage)
+    await waitForActiveWorktree(serperPage)
   })
 
-  test('clicking the trash button removes the saved note', async ({ orcaPage }) => {
-    const worktreeId = await waitForActiveWorktree(orcaPage)
+  test('clicking the trash button removes the saved note', async ({ serperPage }) => {
+    const worktreeId = await waitForActiveWorktree(serperPage)
 
     // Why: modify a tracked file so opening a diff shows real added/removed
     // content rather than an empty "no changes" state. `src/index.ts` is
     // seeded by global-setup with a single line, so rewriting it produces a
     // diff the modified Monaco editor will render against.
-    const { relativePath } = await orcaPage.evaluate(async (wId) => {
+    const { relativePath } = await serperPage.evaluate(async (wId) => {
       const store = window.__store
       if (!store) {
         throw new Error('window.__store is not available — is the app in dev mode?')
@@ -58,7 +58,7 @@ test.describe('Diff note delete', () => {
     // Seed a diff comment directly through the store. This avoids depending
     // on the hover-to-"+" interaction (a separate code path) so this spec
     // stays focused on the delete affordance.
-    const addResult = await orcaPage.evaluate(
+    const addResult = await serperPage.evaluate(
       async ({ wId, rel }) => {
         const store = window.__store
         if (!store) {
@@ -80,7 +80,7 @@ test.describe('Diff note delete', () => {
 
     // Open the diff tab for this file so the decorator mounts a view zone
     // for the seeded note.
-    await orcaPage.evaluate(
+    await serperPage.evaluate(
       ({ wId, rel }) => {
         const store = window.__store
         if (!store) {
@@ -102,7 +102,7 @@ test.describe('Diff note delete', () => {
     // The note card is rendered into a Monaco view zone. Wait for the
     // trash button itself rather than any parent container so we know the
     // React root inside the zone has actually mounted.
-    const deleteButton = orcaPage.locator('.orca-diff-comment-delete').first()
+    const deleteButton = serperPage.locator('.serper-diff-comment-delete').first()
     await expect(deleteButton).toBeVisible({ timeout: 15_000 })
 
     await deleteButton.click()
@@ -111,7 +111,7 @@ test.describe('Diff note delete', () => {
     await expect
       .poll(
         async () =>
-          orcaPage.evaluate((id: string) => {
+          serperPage.evaluate((id: string) => {
             const store = window.__store
             if (!store) {
               return null
@@ -131,7 +131,7 @@ test.describe('Diff note delete', () => {
     // …and the view zone must be unmounted, proving the click actually
     // reached the React handler (not just some other listener that
     // happened to mutate the store).
-    await expect(orcaPage.locator('.orca-diff-comment-delete')).toHaveCount(0, {
+    await expect(serperPage.locator('.serper-diff-comment-delete')).toHaveCount(0, {
       timeout: 5_000
     })
   })

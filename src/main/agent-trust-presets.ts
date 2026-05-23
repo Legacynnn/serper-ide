@@ -9,7 +9,7 @@ import { upsertProjectTrustLevel } from './codex/config-toml-trust'
  * Codex so the agent's "Do you trust this folder?" menu does not fire on
  * first launch.
  *
- * Why: Orca's "drop URL into agent input as a draft" flow injects the URL
+ * Why: Serper's "drop URL into agent input as a draft" flow injects the URL
  * via bracketed-paste once the TUI is up. If the trust menu intercepts the
  * keystrokes (each menu reads a single character or numbered option), the
  * paste either selects an arbitrary option or quits the session. Pre-writing
@@ -115,7 +115,7 @@ function canonicalize(p: string): string {
   // Why: macOS reports `/tmp/x` and `/private/tmp/x` as the same inode, but
   // both Cursor and Copilot's trust comparators run realpath() before the
   // string compare. Mirror that so a worktree under a symlinked parent
-  // (orca caches realpath()'d worktree paths) matches the agent's lookup.
+  // (serper caches realpath()'d worktree paths) matches the agent's lookup.
   try {
     if (existsSync(p)) {
       return realpathSync(p)

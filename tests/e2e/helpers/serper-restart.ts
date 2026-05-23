@@ -1,7 +1,7 @@
 /**
  * Two-launch Electron helper for restart-persistence tests.
  *
- * Why: the default `orcaPage` fixture creates a fresh `userDataDir` per test
+ * Why: the default `serperPage` fixture creates a fresh `userDataDir` per test
  * and deletes it on close, which is incompatible with a test that needs to
  * quit the app and relaunch against the *same* on-disk state. This helper
  * owns the shared userDataDir and gives each caller an `app`+`page` pair
@@ -22,14 +22,14 @@ import path from 'path'
 import { getE2ECompletedOnboardingProfile } from './e2e-completed-onboarding-profile'
 import { cleanupE2EDaemons, closeElectronAppForE2E } from './electron-process-shutdown'
 
-type LaunchedOrca = {
+type LaunchedSerper = {
   app: ElectronApplication
   page: Page
 }
 
 type RestartSession = {
   userDataDir: string
-  launch: () => Promise<LaunchedOrca>
+  launch: () => Promise<LaunchedSerper>
   /** Gracefully close a launch, letting beforeunload flush session state. */
   close: (app: ElectronApplication) => Promise<void>
   /** Remove the shared userDataDir after the test is done. */
@@ -37,7 +37,7 @@ type RestartSession = {
 }
 
 function shouldLaunchHeadful(testInfo: TestInfo): boolean {
-  return testInfo.project.metadata.orcaHeadful === true
+  return testInfo.project.metadata.serperHeadful === true
 }
 
 function launchEnv(userDataDir: string, headful: boolean): NodeJS.ProcessEnv {
@@ -46,8 +46,8 @@ function launchEnv(userDataDir: string, headful: boolean): NodeJS.ProcessEnv {
   return {
     ...cleanEnv,
     NODE_ENV: 'development',
-    ORCA_E2E_USER_DATA_DIR: userDataDir,
-    ...(headful ? { ORCA_E2E_HEADFUL: '1' } : { ORCA_E2E_HEADLESS: '1' })
+    SERPER_E2E_USER_DATA_DIR: userDataDir,
+    ...(headful ? { SERPER_E2E_HEADFUL: '1' } : { SERPER_E2E_HEADLESS: '1' })
   }
 }
 
@@ -60,18 +60,18 @@ function launchEnv(userDataDir: string, headful: boolean): NodeJS.ProcessEnv {
  */
 export function createRestartSession(testInfo: TestInfo): RestartSession {
   const mainPath = path.join(process.cwd(), 'out', 'main', 'index.js')
-  const userDataDir = mkdtempSync(path.join(os.tmpdir(), 'orca-e2e-restart-'))
+  const userDataDir = mkdtempSync(path.join(os.tmpdir(), 'serper-e2e-restart-'))
   const headful = shouldLaunchHeadful(testInfo)
 
   // Why: this helper bypasses the shared `electronApp` fixture, so it must
   // seed the same completed onboarding profile or first-run overlays cover
   // both launches and obscure restart failures.
   writeFileSync(
-    path.join(userDataDir, 'orca-data.json'),
+    path.join(userDataDir, 'serper-data.json'),
     `${JSON.stringify(getE2ECompletedOnboardingProfile(), null, 2)}\n`
   )
 
-  const launch = async (): Promise<LaunchedOrca> => {
+  const launch = async (): Promise<LaunchedSerper> => {
     const app = await electron.launch({
       args: [mainPath],
       env: launchEnv(userDataDir, headful)

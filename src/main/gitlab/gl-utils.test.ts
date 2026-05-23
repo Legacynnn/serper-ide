@@ -30,9 +30,9 @@ describe('gitlab project ref parsing', () => {
       host: 'gitlab.com',
       path: 'acme/widgets'
     })
-    expect(parseGitLabProjectRef('git@gitlab.com:stablyai/orca.git')).toEqual({
+    expect(parseGitLabProjectRef('git@gitlab.com:Legacynnn/serper.git')).toEqual({
       host: 'gitlab.com',
-      path: 'stablyai/orca'
+      path: 'Legacynnn/serper'
     })
   })
 
@@ -48,7 +48,7 @@ describe('gitlab project ref parsing', () => {
   })
 
   it('returns null for non-GitLab hosts when host not in knownHosts', () => {
-    expect(parseGitLabProjectRef('git@github.com:stablyai/orca.git')).toBeNull()
+    expect(parseGitLabProjectRef('git@github.com:Legacynnn/serper.git')).toBeNull()
     expect(parseGitLabProjectRef('git@example.com:foo/bar.git')).toBeNull()
   })
 
@@ -104,12 +104,12 @@ describe('gitlab project ref resolution', () => {
 
   it('keeps getProjectRef origin-based', async () => {
     gitExecFileAsyncMock.mockResolvedValueOnce({
-      stdout: 'git@gitlab.com:fork/orca.git\n'
+      stdout: 'git@gitlab.com:fork/serper.git\n'
     })
 
     await expect(getProjectRef('/repo')).resolves.toEqual({
       host: 'gitlab.com',
-      path: 'fork/orca'
+      path: 'fork/serper'
     })
     expect(gitExecFileAsyncMock).toHaveBeenCalledWith(['remote', 'get-url', 'origin'], {
       cwd: '/repo'
@@ -118,12 +118,12 @@ describe('gitlab project ref resolution', () => {
 
   it('prefers upstream for issue project ref resolution', async () => {
     gitExecFileAsyncMock.mockResolvedValueOnce({
-      stdout: 'git@gitlab.com:stablyai/orca.git\n'
+      stdout: 'git@gitlab.com:Legacynnn/serper.git\n'
     })
 
     await expect(getIssueProjectRef('/repo')).resolves.toEqual({
       host: 'gitlab.com',
-      path: 'stablyai/orca'
+      path: 'Legacynnn/serper'
     })
     expect(gitExecFileAsyncMock).toHaveBeenCalledWith(['remote', 'get-url', 'upstream'], {
       cwd: '/repo'
@@ -132,27 +132,27 @@ describe('gitlab project ref resolution', () => {
 
   it('falls back to origin when upstream is missing or non-GitLab', async () => {
     gitExecFileAsyncMock
-      .mockResolvedValueOnce({ stdout: 'git@example.com:stablyai/orca.git\n' })
-      .mockResolvedValueOnce({ stdout: 'git@gitlab.com:fork/orca.git\n' })
+      .mockResolvedValueOnce({ stdout: 'git@example.com:Legacynnn/serper.git\n' })
+      .mockResolvedValueOnce({ stdout: 'git@gitlab.com:fork/serper.git\n' })
 
     await expect(getIssueProjectRef('/repo')).resolves.toEqual({
       host: 'gitlab.com',
-      path: 'fork/orca'
+      path: 'fork/serper'
     })
   })
 
   it('does not mix origin and upstream cache entries for the same repo path', async () => {
     gitExecFileAsyncMock
-      .mockResolvedValueOnce({ stdout: 'git@gitlab.com:fork/orca.git\n' })
-      .mockResolvedValueOnce({ stdout: 'git@gitlab.com:stablyai/orca.git\n' })
+      .mockResolvedValueOnce({ stdout: 'git@gitlab.com:fork/serper.git\n' })
+      .mockResolvedValueOnce({ stdout: 'git@gitlab.com:Legacynnn/serper.git\n' })
 
     await expect(getProjectRef('/repo')).resolves.toEqual({
       host: 'gitlab.com',
-      path: 'fork/orca'
+      path: 'fork/serper'
     })
     await expect(getIssueProjectRef('/repo')).resolves.toEqual({
       host: 'gitlab.com',
-      path: 'stablyai/orca'
+      path: 'Legacynnn/serper'
     })
   })
 })
@@ -165,22 +165,22 @@ describe('resolveIssueSource', () => {
 
   it("'auto' + upstream exists → upstream, fellBack=false", async () => {
     gitExecFileAsyncMock.mockResolvedValueOnce({
-      stdout: 'git@gitlab.com:stablyai/orca.git\n'
+      stdout: 'git@gitlab.com:Legacynnn/serper.git\n'
     })
 
     await expect(resolveIssueSource('/repo', 'auto')).resolves.toEqual({
-      source: { host: 'gitlab.com', path: 'stablyai/orca' },
+      source: { host: 'gitlab.com', path: 'Legacynnn/serper' },
       fellBack: false
     })
   })
 
   it("'auto' + no upstream → origin, fellBack=false", async () => {
     gitExecFileAsyncMock
-      .mockResolvedValueOnce({ stdout: 'git@example.com:stablyai/orca.git\n' })
-      .mockResolvedValueOnce({ stdout: 'git@gitlab.com:solo/orca.git\n' })
+      .mockResolvedValueOnce({ stdout: 'git@example.com:Legacynnn/serper.git\n' })
+      .mockResolvedValueOnce({ stdout: 'git@gitlab.com:solo/serper.git\n' })
 
     await expect(resolveIssueSource('/repo', 'auto')).resolves.toEqual({
-      source: { host: 'gitlab.com', path: 'solo/orca' },
+      source: { host: 'gitlab.com', path: 'solo/serper' },
       fellBack: false
     })
   })
@@ -188,21 +188,21 @@ describe('resolveIssueSource', () => {
   it("'upstream' + no upstream remote → origin, fellBack=true", async () => {
     gitExecFileAsyncMock
       .mockRejectedValueOnce(new Error('fatal: No such remote'))
-      .mockResolvedValueOnce({ stdout: 'git@gitlab.com:solo/orca.git\n' })
+      .mockResolvedValueOnce({ stdout: 'git@gitlab.com:solo/serper.git\n' })
 
     await expect(resolveIssueSource('/repo', 'upstream')).resolves.toEqual({
-      source: { host: 'gitlab.com', path: 'solo/orca' },
+      source: { host: 'gitlab.com', path: 'solo/serper' },
       fellBack: true
     })
   })
 
   it("'origin' + upstream exists → origin (ignores upstream), fellBack=false", async () => {
     gitExecFileAsyncMock.mockResolvedValueOnce({
-      stdout: 'git@gitlab.com:fork/orca.git\n'
+      stdout: 'git@gitlab.com:fork/serper.git\n'
     })
 
     await expect(resolveIssueSource('/repo', 'origin')).resolves.toEqual({
-      source: { host: 'gitlab.com', path: 'fork/orca' },
+      source: { host: 'gitlab.com', path: 'fork/serper' },
       fellBack: false
     })
     expect(gitExecFileAsyncMock).toHaveBeenCalledTimes(1)
@@ -213,11 +213,11 @@ describe('resolveIssueSource', () => {
 
   it('undefined preference is treated identically to auto', async () => {
     gitExecFileAsyncMock.mockResolvedValueOnce({
-      stdout: 'git@gitlab.com:stablyai/orca.git\n'
+      stdout: 'git@gitlab.com:Legacynnn/serper.git\n'
     })
 
     await expect(resolveIssueSource('/repo', undefined)).resolves.toEqual({
-      source: { host: 'gitlab.com', path: 'stablyai/orca' },
+      source: { host: 'gitlab.com', path: 'Legacynnn/serper' },
       fellBack: false
     })
   })

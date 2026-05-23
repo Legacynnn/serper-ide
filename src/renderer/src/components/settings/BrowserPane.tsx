@@ -8,7 +8,7 @@ import { Label } from '../ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
 import { useAppStore } from '../../store'
-import { ORCA_BROWSER_BLANK_URL } from '../../../../shared/constants'
+import { SERPER_BROWSER_BLANK_URL } from '../../../../shared/constants'
 import {
   normalizeBrowserNavigationUrl,
   SEARCH_ENGINE_LABELS,
@@ -122,7 +122,7 @@ export function BrowserPane({
                 return
               }
               const normalized = normalizeBrowserNavigationUrl(trimmed)
-              if (normalized && normalized !== ORCA_BROWSER_BLANK_URL) {
+              if (normalized && normalized !== SERPER_BROWSER_BLANK_URL) {
                 setBrowserDefaultUrl(normalized)
                 setHomePageDraft(normalized)
                 toast.success('Home page saved.')
@@ -197,7 +197,7 @@ export function BrowserPane({
       {showLinkRouting ? (
         <SearchableSetting
           title="Link Routing"
-          description="Open http(s) links in Orca's built-in browser — from the terminal, markdown, and the editor. Shift+Cmd/Ctrl+click always uses your system browser."
+          description="Open http(s) links in Serper's built-in browser — from the terminal, markdown, and the editor. Shift+Cmd/Ctrl+click always uses your system browser."
           keywords={[
             'browser',
             'preview',
@@ -213,8 +213,8 @@ export function BrowserPane({
           <div className="space-y-0.5">
             <Label>Link Routing</Label>
             <p className="text-xs text-muted-foreground">
-              Open http(s) links in Orca&apos;s built-in browser — from the terminal, markdown, and
-              the editor. Shift+Cmd/Ctrl+click always uses your system browser.
+              Open http(s) links in Serper&apos;s built-in browser — from the terminal, markdown,
+              and the editor. Shift+Cmd/Ctrl+click always uses your system browser.
             </p>
           </div>
           <button

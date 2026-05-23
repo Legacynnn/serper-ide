@@ -14,14 +14,14 @@ import {
   createSetupRunnerScript,
   getEffectiveHooks,
   hasHooksFile,
-  parseOrcaYaml,
+  parseSerperYaml,
   runHook,
   shouldRunSetupForCreate
 } from '../hooks'
 import { getBranchConflictKind, getDefaultBaseRef } from '../git/repo'
 import type { OrchestrationDb } from './orchestration/db'
 import type { MessagePriority, MessageRow, MessageType } from './orchestration/types'
-import { OrcaRuntimeService } from './orca-runtime'
+import { SerperRuntimeService } from './serper-runtime'
 import {
   registerSshFilesystemProvider,
   unregisterSshFilesystemProvider
@@ -116,7 +116,7 @@ vi.mock('../hooks', () => ({
     .mockImplementation((_repo: never, decision: string) => decision === 'run'),
   getEffectiveSetupRunPolicy: vi.fn().mockReturnValue('auto'),
   hasHooksFile: vi.fn().mockReturnValue(false),
-  parseOrcaYaml: vi.fn().mockReturnValue(null)
+  parseSerperYaml: vi.fn().mockReturnValue(null)
 }))
 
 vi.mock('../ipc/worktree-logic', async (importOriginal) => {
@@ -180,13 +180,13 @@ afterEach(() => {
   vi.mocked(createSetupRunnerScript).mockReset()
   vi.mocked(getEffectiveHooks).mockReset()
   vi.mocked(hasHooksFile).mockReset()
-  vi.mocked(parseOrcaYaml).mockReset()
+  vi.mocked(parseSerperYaml).mockReset()
   vi.mocked(runHook).mockReset()
   vi.mocked(shouldRunSetupForCreate).mockReset()
   vi.mocked(shouldRunSetupForCreate).mockImplementation((_repo, decision) => decision === 'run')
   vi.mocked(getEffectiveHooks).mockReturnValue(null)
   vi.mocked(hasHooksFile).mockReturnValue(false)
-  vi.mocked(parseOrcaYaml).mockReturnValue(null)
+  vi.mocked(parseSerperYaml).mockReturnValue(null)
   computeWorktreePathMock.mockReset()
   ensurePathWithinWorkspaceMock.mockReset()
   invalidateAuthorizedRootsCacheMock.mockReset()
@@ -211,7 +211,7 @@ afterEach(() => {
   })
 })
 
-function syncSinglePty(runtime: OrcaRuntimeService, ptyId: string | null = 'pty-1'): void {
+function syncSinglePty(runtime: SerperRuntimeService, ptyId: string | null = 'pty-1'): void {
   runtime.attachWindow(1)
   runtime.syncWindowGraph(1, {
     tabs: [
@@ -308,22 +308,22 @@ class InMemoryOrchestrationMessages {
 }
 
 function setInMemoryOrchestrationMessages(
-  runtime: OrcaRuntimeService,
+  runtime: SerperRuntimeService,
   db: InMemoryOrchestrationMessages
 ): void {
   runtime.setOrchestrationDb(db as unknown as OrchestrationDb)
 }
 
 function expectStablePaneKeyEnv(env: Record<string, string>): string {
-  expect(env.ORCA_TAB_ID).toMatch(UUID_RE)
-  const leafId = env.ORCA_PANE_KEY?.slice(`${env.ORCA_TAB_ID}:`.length)
+  expect(env.SERPER_TAB_ID).toMatch(UUID_RE)
+  const leafId = env.SERPER_PANE_KEY?.slice(`${env.SERPER_TAB_ID}:`.length)
   expect(leafId).toMatch(UUID_RE)
-  expect(env.ORCA_PANE_KEY).toBe(`${env.ORCA_TAB_ID}:${leafId}`)
-  return env.ORCA_PANE_KEY
+  expect(env.SERPER_PANE_KEY).toBe(`${env.SERPER_TAB_ID}:${leafId}`)
+  return env.SERPER_PANE_KEY
 }
 
-function createRuntime(): OrcaRuntimeService {
-  return new OrcaRuntimeService(store)
+function createRuntime(): SerperRuntimeService {
+  return new SerperRuntimeService(store)
 }
 
 function makeWorktreeMeta(overrides: Partial<WorktreeMeta> = {}): WorktreeMeta {
@@ -427,7 +427,7 @@ computeWorktreePathMock.mockImplementation(
 )
 ensurePathWithinWorkspaceMock.mockImplementation((targetPath: string) => targetPath)
 
-describe('OrcaRuntimeService', () => {
+describe('SerperRuntimeService', () => {
   it('starts unavailable with no authoritative window', () => {
     const runtime = createRuntime()
 
@@ -515,7 +515,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('lists live terminals and issues stable handles for synced leaves', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
 
     runtime.attachWindow(1)
     runtime.syncWindowGraph(1, {
@@ -565,7 +565,7 @@ describe('OrcaRuntimeService', () => {
       }
     ])
 
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
 
     const worktree = await runtime.showManagedWorktree('branch:Jinwoo-H/test-3a')
     expect(worktree).toMatchObject({
@@ -619,7 +619,7 @@ describe('OrcaRuntimeService', () => {
     }
     registerSshFilesystemProvider('ssh-1', fsProvider as never)
     registerSshGitProvider('ssh-1', gitProvider as never)
-    const runtime = new OrcaRuntimeService(remoteStore as never)
+    const runtime = new SerperRuntimeService(remoteStore as never)
 
     try {
       await runtime.readFileExplorerDir('path://server/share/repo', 'src')
@@ -665,7 +665,7 @@ describe('OrcaRuntimeService', () => {
         return metaById[worktreeId]
       }
     }
-    const runtime = new OrcaRuntimeService(runtimeStore as never)
+    const runtime = new SerperRuntimeService(runtimeStore as never)
 
     const listed = await runtime.listManagedWorktrees('id:remote-repo')
 
@@ -695,13 +695,13 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('does not interpret active as a runtime-global worktree selector', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
 
     await expect(runtime.showManagedWorktree('active')).rejects.toThrow('selector_not_found')
   })
 
   it('does not reuse stale in-flight worktree scans after creating a worktree', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const staleScan = deferred<typeof MOCK_GIT_WORKTREES>()
     const createdWorktree = {
       path: '/tmp/workspaces/cache-race',
@@ -734,7 +734,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('refreshes runtime remote-tracking bases before creating local worktrees', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const refresh = deferred<{ stdout: string; stderr: string }>()
     const createdWorktree = {
       path: '/tmp/workspaces/cli-fresh-base',
@@ -792,7 +792,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('does not create runtime local worktrees when remote-tracking base refresh fails', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const gitSpy = vi.spyOn(gitRunner, 'gitExecFileAsync').mockImplementation(async (args) => {
       if (args[0] === 'remote') {
         return { stdout: 'origin\n', stderr: '' }
@@ -825,7 +825,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('creates a branchNameOverride worktree from the selected matching remote base ref', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     vi.spyOn(gitRunner, 'gitExecFileAsync').mockResolvedValue({ stdout: '', stderr: '' })
     computeWorktreePathMock.mockReturnValue('/tmp/workspaces/feature-something')
     ensurePathWithinWorkspaceMock.mockReturnValue('/tmp/workspaces/feature-something')
@@ -915,7 +915,7 @@ describe('OrcaRuntimeService', () => {
     }
     registerSshGitProvider('ssh-1', provider as never)
     getActiveMultiplexerMock.mockReturnValue({ request: muxRequestMock, notify: vi.fn() })
-    const runtime = new OrcaRuntimeService(remoteStore as never)
+    const runtime = new SerperRuntimeService(remoteStore as never)
 
     const result = await runtime.createManagedWorktree({
       repoSelector: TEST_REPO_ID,
@@ -973,7 +973,7 @@ describe('OrcaRuntimeService', () => {
       removeWorktree: vi.fn().mockResolvedValue(undefined)
     }
     registerSshGitProvider('ssh-1', gitProvider as never)
-    const runtime = new OrcaRuntimeService(remoteStore as never)
+    const runtime = new SerperRuntimeService(remoteStore as never)
 
     try {
       await runtime.removeManagedWorktree('path:/remote/repo', true)
@@ -1006,21 +1006,21 @@ describe('OrcaRuntimeService', () => {
         isBinary: false
       })
     }
-    vi.mocked(parseOrcaYaml).mockReturnValue({ scripts: { setup: 'pnpm install' } })
+    vi.mocked(parseSerperYaml).mockReturnValue({ scripts: { setup: 'pnpm install' } })
     registerSshFilesystemProvider('ssh-1', fsProvider as never)
-    const runtime = new OrcaRuntimeService(remoteStore as never)
+    const runtime = new SerperRuntimeService(remoteStore as never)
 
     try {
       await expect(runtime.getRepoHooks('id:repo-1')).resolves.toMatchObject({
         hasHooksFile: true,
         hooks: { scripts: { setup: 'pnpm install' } },
-        source: 'orca.yaml'
+        source: 'serper.yaml'
       })
     } finally {
       unregisterSshFilesystemProvider('ssh-1')
     }
 
-    expect(fsProvider.readFile).toHaveBeenCalledWith('C:\\remote\\repo\\.orca.yaml')
+    expect(fsProvider.readFile).toHaveBeenCalledWith('C:\\remote\\repo\\.serper.yaml')
     expect(hasHooksFile).not.toHaveBeenCalled()
     expect(getEffectiveHooks).not.toHaveBeenCalled()
   })
@@ -1041,7 +1041,7 @@ describe('OrcaRuntimeService', () => {
     }
     const fsProvider = {
       readFile: vi.fn(async (filePath: string) => ({
-        content: filePath.includes('.orca.yaml')
+        content: filePath.includes('.serper.yaml')
           ? 'scripts:\n  setup: pnpm install\n'
           : filePath.endsWith('.gitignore')
             ? 'node_modules\n'
@@ -1053,7 +1053,7 @@ describe('OrcaRuntimeService', () => {
       deletePath: vi.fn().mockResolvedValue(undefined)
     }
     registerSshFilesystemProvider('ssh-1', fsProvider as never)
-    const runtime = new OrcaRuntimeService(remoteStore as never)
+    const runtime = new SerperRuntimeService(remoteStore as never)
 
     try {
       await expect(runtime.checkRepoHooks('id:repo-1')).resolves.toMatchObject({
@@ -1063,7 +1063,7 @@ describe('OrcaRuntimeService', () => {
       await expect(runtime.readRepoIssueCommand('id:repo-1')).resolves.toMatchObject({
         localContent: 'Fix it',
         effectiveContent: 'Fix it',
-        localFilePath: 'C:\\remote\\repo\\.orca\\issue-command'
+        localFilePath: 'C:\\remote\\repo\\.serper\\issue-command'
       })
       await expect(runtime.writeRepoIssueCommand('id:repo-1', 'Ship it')).resolves.toEqual({
         ok: true
@@ -1072,20 +1072,20 @@ describe('OrcaRuntimeService', () => {
       unregisterSshFilesystemProvider('ssh-1')
     }
 
-    expect(fsProvider.readFile).toHaveBeenCalledWith('C:\\remote\\repo\\.orca.yaml')
-    expect(fsProvider.readFile).toHaveBeenCalledWith('C:\\remote\\repo\\.orca\\issue-command')
-    expect(fsProvider.createDir).toHaveBeenCalledWith('C:\\remote\\repo\\.orca')
+    expect(fsProvider.readFile).toHaveBeenCalledWith('C:\\remote\\repo\\.serper.yaml')
+    expect(fsProvider.readFile).toHaveBeenCalledWith('C:\\remote\\repo\\.serper\\issue-command')
+    expect(fsProvider.createDir).toHaveBeenCalledWith('C:\\remote\\repo\\.serper')
     expect(fsProvider.writeFile).toHaveBeenCalledWith(
-      'C:\\remote\\repo\\.orca\\issue-command',
+      'C:\\remote\\repo\\.serper\\issue-command',
       'Ship it\n'
     )
     expect(fsProvider.writeFile).toHaveBeenCalledWith(
       'C:\\remote\\repo\\.gitignore',
-      'node_modules\n.orca\n'
+      'node_modules\n.serper\n'
     )
   })
 
-  it('resolves SSH issue commands from shared orca.yaml and deletes empty overrides', async () => {
+  it('resolves SSH issue commands from shared serper.yaml and deletes empty overrides', async () => {
     const remoteStore = {
       ...store,
       getRepos: () => [
@@ -1099,16 +1099,16 @@ describe('OrcaRuntimeService', () => {
         }
       ]
     }
-    vi.mocked(parseOrcaYaml).mockReturnValue({
+    vi.mocked(parseSerperYaml).mockReturnValue({
       scripts: {},
       issueCommand: 'claude -p "Fix #{{issue}}"'
     })
     const fsProvider = {
       readFile: vi.fn(async (filePath: string) => {
-        if (filePath.endsWith('.orca/issue-command')) {
+        if (filePath.endsWith('.serper/issue-command')) {
           throw Object.assign(new Error('missing'), { code: 'ENOENT' })
         }
-        if (filePath.endsWith('orca.yaml')) {
+        if (filePath.endsWith('serper.yaml')) {
           return { content: 'issueCommand: claude -p "Fix #{{issue}}"', isBinary: false }
         }
         return { content: '', isBinary: false }
@@ -1118,14 +1118,14 @@ describe('OrcaRuntimeService', () => {
       deletePath: vi.fn().mockResolvedValue(undefined)
     }
     registerSshFilesystemProvider('ssh-1', fsProvider as never)
-    const runtime = new OrcaRuntimeService(remoteStore as never)
+    const runtime = new SerperRuntimeService(remoteStore as never)
 
     try {
       await expect(runtime.readRepoIssueCommand('id:repo-1')).resolves.toMatchObject({
         localContent: null,
         sharedContent: 'claude -p "Fix #{{issue}}"',
         effectiveContent: 'claude -p "Fix #{{issue}}"',
-        localFilePath: '/remote/repo/.orca/issue-command',
+        localFilePath: '/remote/repo/.serper/issue-command',
         source: 'shared'
       })
       await expect(runtime.writeRepoIssueCommand('id:repo-1', '   ')).resolves.toEqual({
@@ -1135,10 +1135,10 @@ describe('OrcaRuntimeService', () => {
       unregisterSshFilesystemProvider('ssh-1')
     }
 
-    expect(fsProvider.readFile).toHaveBeenCalledWith('/remote/repo/orca.yaml')
-    expect(fsProvider.deletePath).toHaveBeenCalledWith('/remote/repo/.orca/issue-command', false)
+    expect(fsProvider.readFile).toHaveBeenCalledWith('/remote/repo/serper.yaml')
+    expect(fsProvider.deletePath).toHaveBeenCalledWith('/remote/repo/.serper/issue-command', false)
     expect(fsProvider.writeFile).not.toHaveBeenCalledWith(
-      '/remote/repo/.orca/issue-command',
+      '/remote/repo/.serper/issue-command',
       expect.anything()
     )
   })
@@ -1157,7 +1157,7 @@ describe('OrcaRuntimeService', () => {
         }
       ]
     }
-    const runtime = new OrcaRuntimeService(remoteStore as never)
+    const runtime = new SerperRuntimeService(remoteStore as never)
 
     await expect(runtime.getRepoSlug('id:repo-1')).rejects.toThrow(
       'repo_slug_unsupported_for_ssh_repo'
@@ -1203,7 +1203,7 @@ describe('OrcaRuntimeService', () => {
       getRepos: () => repos,
       getRepo: (id: string) => repos.find((repo) => repo.id === id)
     }
-    const runtime = new OrcaRuntimeService(multiRepoStore as never)
+    const runtime = new SerperRuntimeService(multiRepoStore as never)
 
     await expect(
       runtime.getHostedReviewCreationEligibility({
@@ -1263,7 +1263,7 @@ describe('OrcaRuntimeService', () => {
       ])
     }
     registerSshGitProvider('ssh-1', gitProvider as never)
-    const runtime = new OrcaRuntimeService(remoteStore as never)
+    const runtime = new SerperRuntimeService(remoteStore as never)
 
     try {
       await expect(runtime.probeWorktreeDrift('path:/remote/repo')).resolves.toBeNull()
@@ -1296,7 +1296,7 @@ describe('OrcaRuntimeService', () => {
       },
       getRepo: (id: string) => [...uncStore.getRepos()].find((repo) => repo.id === id) as never
     }
-    const runtime = new OrcaRuntimeService(uncStore as never)
+    const runtime = new SerperRuntimeService(uncStore as never)
 
     const repo = await runtime.addRepo('//server/share/repo', 'folder')
 
@@ -1314,7 +1314,7 @@ describe('OrcaRuntimeService', () => {
       },
       getRepo: (id: string) => added.find((repo) => repo.id === id) as never
     }
-    const runtime = new OrcaRuntimeService(colorStore as never)
+    const runtime = new SerperRuntimeService(colorStore as never)
 
     const repo = await runtime.addRepo('/tmp/runtime-add-default', 'folder')
 
@@ -1332,8 +1332,8 @@ describe('OrcaRuntimeService', () => {
       },
       getRepo: (id: string) => added.find((repo) => repo.id === id) as never
     }
-    const runtime = new OrcaRuntimeService(colorStore as never)
-    const parentDir = await mkdtemp('/tmp/orca-runtime-create-')
+    const runtime = new SerperRuntimeService(colorStore as never)
+    const parentDir = await mkdtemp('/tmp/serper-runtime-create-')
     try {
       const result = await runtime.createRepo(parentDir, 'runtime-create-default', 'folder')
       if ('error' in result) {
@@ -1360,7 +1360,7 @@ describe('OrcaRuntimeService', () => {
       ...store,
       getRepos: () => [existing]
     }
-    const runtime = new OrcaRuntimeService(colorStore as never)
+    const runtime = new SerperRuntimeService(colorStore as never)
 
     const result = await runtime.createRepo('/tmp', 'runtime-existing-create', 'folder')
 
@@ -1385,7 +1385,7 @@ describe('OrcaRuntimeService', () => {
       queueMicrotask(() => proc.emit('close', 0, null))
       return proc as never
     })
-    const runtime = new OrcaRuntimeService(colorStore as never)
+    const runtime = new SerperRuntimeService(colorStore as never)
 
     try {
       const repo = await runtime.cloneRepo('https://example.com/repo-badge-color.git', '/tmp')
@@ -1422,7 +1422,7 @@ describe('OrcaRuntimeService', () => {
         return upgraded as never
       }
     }
-    const runtime = new OrcaRuntimeService(colorStore as never)
+    const runtime = new SerperRuntimeService(colorStore as never)
 
     try {
       const repo = await runtime.cloneRepo('https://example.com/repo-badge-color.git', '/tmp')
@@ -1482,7 +1482,7 @@ describe('OrcaRuntimeService', () => {
 
   it('reads bounded terminal output and writes through the PTY controller', async () => {
     const writes: string[] = []
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setPtyController({
       write: (_ptyId, data) => {
         writes.push(data)
@@ -1540,7 +1540,7 @@ describe('OrcaRuntimeService', () => {
     const spawn = vi.fn().mockResolvedValue({ id: 'pty-bg' })
     const createTerminal = vi.fn()
     const revealTerminalSession = vi.fn().mockResolvedValue({ tabId: 'tab-bg' })
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setPtyController({
       spawn,
       write: () => true,
@@ -1585,26 +1585,26 @@ describe('OrcaRuntimeService', () => {
     expect(result.handle).toMatch(/^term_/)
     expect(createTerminal).not.toHaveBeenCalled()
     // Why: hook-based agent status keys off `${tabId}:${leafId}`, so main must
-    // pre-allocate the tabId and stamp ORCA_PANE_KEY/TAB_ID/WORKTREE_ID into
+    // pre-allocate the tabId and stamp SERPER_PANE_KEY/TAB_ID/WORKTREE_ID into
     // the PTY env before spawn. The same tabId is then handed to the renderer
     // via `revealTerminalSession` so adoption preserves attribution.
     const spawnCall = spawn.mock.calls[0]?.[0] as { env?: Record<string, string> } | undefined
     const spawnedEnv = spawnCall?.env ?? {}
     expectStablePaneKeyEnv(spawnedEnv)
-    const spawnedLeafId = spawnedEnv.ORCA_PANE_KEY.slice(`${spawnedEnv.ORCA_TAB_ID}:`.length)
-    expect(spawnedEnv.ORCA_WORKTREE_ID).toBe(TEST_WORKTREE_ID)
+    const spawnedLeafId = spawnedEnv.SERPER_PANE_KEY.slice(`${spawnedEnv.SERPER_TAB_ID}:`.length)
+    expect(spawnedEnv.SERPER_WORKTREE_ID).toBe(TEST_WORKTREE_ID)
     expect(revealTerminalSession).toHaveBeenCalledWith(TEST_WORKTREE_ID, {
       ptyId: 'pty-bg',
       title: 'worker',
       activate: false,
-      tabId: spawnedEnv.ORCA_TAB_ID,
+      tabId: spawnedEnv.SERPER_TAB_ID,
       leafId: spawnedLeafId
     })
   })
 
   it('adopts renderer pane identity for remote runtime terminal creates', async () => {
     const spawn = vi.fn().mockResolvedValue({ id: 'pty-bg' })
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const tabId = 'tab-remote-runtime'
     const leafId = '11111111-1111-4111-8111-111111111111'
     runtime.setPtyController({
@@ -1619,20 +1619,20 @@ describe('OrcaRuntimeService', () => {
       tabId,
       leafId,
       env: {
-        ORCA_PANE_KEY: `${tabId}:${leafId}`,
-        ORCA_TAB_ID: tabId
+        SERPER_PANE_KEY: `${tabId}:${leafId}`,
+        SERPER_TAB_ID: tabId
       }
     })
 
     const spawnedEnv =
       (spawn.mock.calls[0]?.[0] as { env?: Record<string, string> } | undefined)?.env ?? {}
-    expect(spawnedEnv.ORCA_TAB_ID).toBe(tabId)
-    expect(spawnedEnv.ORCA_PANE_KEY).toBe(`${tabId}:${leafId}`)
+    expect(spawnedEnv.SERPER_TAB_ID).toBe(tabId)
+    expect(spawnedEnv.SERPER_PANE_KEY).toBe(`${tabId}:${leafId}`)
   })
 
   it('does not adopt web mirror ids as host terminal ids', async () => {
     const spawn = vi.fn().mockResolvedValue({ id: 'pty-bg' })
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const tabId = 'web-terminal-host-tab-1'
     const leafId = '11111111-1111-4111-8111-111111111111'
     runtime.setPtyController({
@@ -1650,14 +1650,14 @@ describe('OrcaRuntimeService', () => {
 
     const spawnedEnv =
       (spawn.mock.calls[0]?.[0] as { env?: Record<string, string> } | undefined)?.env ?? {}
-    expect(spawnedEnv.ORCA_TAB_ID).not.toBe(tabId)
-    expect(spawnedEnv.ORCA_TAB_ID).not.toMatch(/^web-terminal-/)
-    expect(spawnedEnv.ORCA_PANE_KEY).toMatch(`${spawnedEnv.ORCA_TAB_ID}:`)
+    expect(spawnedEnv.SERPER_TAB_ID).not.toBe(tabId)
+    expect(spawnedEnv.SERPER_TAB_ID).not.toMatch(/^web-terminal-/)
+    expect(spawnedEnv.SERPER_PANE_KEY).toMatch(`${spawnedEnv.SERPER_TAB_ID}:`)
   })
 
   it('creates background terminal sessions while the renderer graph is unavailable', async () => {
     const spawn = vi.fn().mockResolvedValue({ id: 'pty-bg' })
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setPtyController({
       spawn,
       write: () => true,
@@ -1683,7 +1683,7 @@ describe('OrcaRuntimeService', () => {
       .mockResolvedValueOnce({ id: 'pty-split' })
     const revealTerminalSession = vi.fn().mockResolvedValue({ tabId: 'tab-bg' })
     const splitTerminal = vi.fn()
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setPtyController({
       spawn,
       write: () => true,
@@ -1710,25 +1710,25 @@ describe('OrcaRuntimeService', () => {
     const { handle } = await runtime.createTerminal(`path:${TEST_WORKTREE_PATH}`)
     const sourceEnv =
       (spawn.mock.calls[0]?.[0] as { env?: Record<string, string> } | undefined)?.env ?? {}
-    const sourceLeafId = sourceEnv.ORCA_PANE_KEY.slice(`${sourceEnv.ORCA_TAB_ID}:`.length)
+    const sourceLeafId = sourceEnv.SERPER_PANE_KEY.slice(`${sourceEnv.SERPER_TAB_ID}:`.length)
 
     await expect(runtime.splitTerminal(handle, { direction: 'vertical' })).resolves.toMatchObject({
       handle: expect.stringMatching(/^term_/),
-      tabId: sourceEnv.ORCA_TAB_ID,
+      tabId: sourceEnv.SERPER_TAB_ID,
       paneRuntimeId: -1
     })
 
     const splitEnv =
       (spawn.mock.calls[1]?.[0] as { env?: Record<string, string> } | undefined)?.env ?? {}
-    const splitLeafId = splitEnv.ORCA_PANE_KEY.slice(`${sourceEnv.ORCA_TAB_ID}:`.length)
+    const splitLeafId = splitEnv.SERPER_PANE_KEY.slice(`${sourceEnv.SERPER_TAB_ID}:`.length)
     expect(splitTerminal).not.toHaveBeenCalled()
-    expect(splitEnv.ORCA_TAB_ID).toBe(sourceEnv.ORCA_TAB_ID)
-    expect(splitEnv.ORCA_WORKTREE_ID).toBe(TEST_WORKTREE_ID)
+    expect(splitEnv.SERPER_TAB_ID).toBe(sourceEnv.SERPER_TAB_ID)
+    expect(splitEnv.SERPER_WORKTREE_ID).toBe(TEST_WORKTREE_ID)
     expect(revealTerminalSession).toHaveBeenLastCalledWith(TEST_WORKTREE_ID, {
       ptyId: 'pty-split',
       title: null,
       activate: true,
-      tabId: sourceEnv.ORCA_TAB_ID,
+      tabId: sourceEnv.SERPER_TAB_ID,
       leafId: splitLeafId,
       splitFromLeafId: sourceLeafId,
       splitDirection: 'vertical'
@@ -1739,7 +1739,7 @@ describe('OrcaRuntimeService', () => {
     const spawn = vi.fn().mockResolvedValue({ id: 'pty-bg' })
     const revealTerminalSession = vi.fn().mockRejectedValue(new Error('Renderer timed out'))
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setPtyController({
       spawn,
       write: () => true,
@@ -1770,12 +1770,12 @@ describe('OrcaRuntimeService', () => {
       const spawnCall = spawn.mock.calls[0]?.[0] as { env?: Record<string, string> } | undefined
       const spawnedEnv = spawnCall?.env ?? {}
       expectStablePaneKeyEnv(spawnedEnv)
-      const spawnedLeafId = spawnedEnv.ORCA_PANE_KEY.slice(`${spawnedEnv.ORCA_TAB_ID}:`.length)
+      const spawnedLeafId = spawnedEnv.SERPER_PANE_KEY.slice(`${spawnedEnv.SERPER_TAB_ID}:`.length)
       expect(revealTerminalSession).toHaveBeenCalledWith(TEST_WORKTREE_ID, {
         ptyId: 'pty-bg',
         title: null,
         activate: false,
-        tabId: spawnedEnv.ORCA_TAB_ID,
+        tabId: spawnedEnv.SERPER_TAB_ID,
         leafId: spawnedLeafId
       })
       expect(warn).toHaveBeenCalledWith(
@@ -1788,7 +1788,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('waits for exit on background terminal handles', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setPtyController({
       spawn: vi.fn().mockResolvedValue({ id: 'pty-bg' }),
       write: () => true,
@@ -1815,7 +1815,7 @@ describe('OrcaRuntimeService', () => {
 
   it('splits text and enter writes for background terminal handles', async () => {
     const writes: string[] = []
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setPtyController({
       spawn: vi.fn().mockResolvedValue({ id: 'pty-bg' }),
       write: (_ptyId, data) => {
@@ -1834,7 +1834,7 @@ describe('OrcaRuntimeService', () => {
 
   it('reveals a background terminal session when focusing its handle', async () => {
     const revealTerminalSession = vi.fn().mockResolvedValue({ tabId: 'tab-adopted' })
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setPtyController({
       spawn: vi.fn().mockResolvedValue({ id: 'pty-bg' }),
       write: () => true,
@@ -1879,7 +1879,7 @@ describe('OrcaRuntimeService', () => {
 
   it('rejects focusing an exited background terminal session', async () => {
     const revealTerminalSession = vi.fn()
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setPtyController({
       spawn: vi.fn().mockResolvedValue({ id: 'pty-bg' }),
       write: () => true,
@@ -1911,7 +1911,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('renames background terminal handles without requiring a visible tab', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setPtyController({
       spawn: vi.fn().mockResolvedValue({ id: 'pty-bg' }),
       write: () => true,
@@ -1933,7 +1933,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('keeps a background terminal handle stable while reveal adoption is racing', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setPtyController({
       spawn: vi.fn().mockResolvedValue({ id: 'pty-bg' }),
       write: () => true,
@@ -1971,7 +1971,7 @@ describe('OrcaRuntimeService', () => {
 
   it('clears terminal scrollback through the PTY controller and headless buffer', async () => {
     const clearBuffer = vi.fn().mockResolvedValue(undefined)
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setPtyController({
       write: () => true,
       kill: () => true,
@@ -1998,7 +1998,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('waits for terminal exit and resolves with the exit status', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
 
     runtime.attachWindow(1)
     runtime.syncWindowGraph(1, {
@@ -2036,7 +2036,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('keeps partial-line output readable across cursor-based pagination', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
 
     runtime.attachWindow(1)
     runtime.syncWindowGraph(1, {
@@ -2091,7 +2091,7 @@ describe('OrcaRuntimeService', () => {
   it('delivers pending orchestration messages to an already-idle agent', async () => {
     vi.useFakeTimers()
     try {
-      const runtime = new OrcaRuntimeService(store)
+      const runtime = new SerperRuntimeService(store)
       const db = new InMemoryOrchestrationMessages()
       const write = vi.fn().mockReturnValue(true)
       setInMemoryOrchestrationMessages(runtime, db)
@@ -2133,7 +2133,7 @@ describe('OrcaRuntimeService', () => {
   it('does not replay an already-delivered message on a later idle transition', async () => {
     vi.useFakeTimers()
     try {
-      const runtime = new OrcaRuntimeService(store)
+      const runtime = new SerperRuntimeService(store)
       const db = new InMemoryOrchestrationMessages()
       const write = vi.fn().mockReturnValue(true)
       setInMemoryOrchestrationMessages(runtime, db)
@@ -2173,8 +2173,8 @@ describe('OrcaRuntimeService', () => {
     }
   })
 
-  it('adopts preallocated ORCA_TERMINAL_HANDLE as a valid runtime handle', async () => {
-    const runtime = new OrcaRuntimeService(store)
+  it('adopts preallocated SERPER_TERMINAL_HANDLE as a valid runtime handle', async () => {
+    const runtime = new SerperRuntimeService(store)
     const handle = runtime.preAllocateHandleForPty('pty-1')
 
     syncSinglePty(runtime)
@@ -2186,7 +2186,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('keeps preallocated terminal handles valid across renderer reloads', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const handle = runtime.preAllocateHandleForPty('pty-1')
 
     syncSinglePty(runtime)
@@ -2199,7 +2199,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('keeps preallocated terminal handles valid when a reload graph omits the live leaf', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const handle = runtime.preAllocateHandleForPty('pty-1')
 
     syncSinglePty(runtime)
@@ -2215,7 +2215,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('keeps preallocated terminal handles valid after graph unavailable during reload', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const handle = runtime.preAllocateHandleForPty('pty-1')
 
     syncSinglePty(runtime)
@@ -2233,7 +2233,7 @@ describe('OrcaRuntimeService', () => {
 
   it('keeps runtime-created PTY handles valid after graph unavailable', async () => {
     const writes: string[] = []
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setPtyController({
       spawn: vi.fn().mockResolvedValue({ id: 'pty-bg' }),
       write: (_ptyId, data) => {
@@ -2262,7 +2262,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('keeps mobile terminal surfaces visible while their leaf handle is pending', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.attachWindow(1)
     runtime.syncWindowGraph(1, {
       tabs: [],
@@ -2304,7 +2304,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('keeps mobile terminal surfaces pending while a live leaf has no PTY', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.attachWindow(1)
     runtime.syncWindowGraph(1, {
       tabs: [
@@ -2361,7 +2361,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('omits stale browser session tabs that no longer have live webContents', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const tabList = vi.fn(() => ({
       tabs: [
         {
@@ -2434,7 +2434,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('does not let the active browser webContents steal session focus from terminals', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const tabList = vi.fn(() => ({
       tabs: [
         {
@@ -2505,7 +2505,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('publishes terminal surface agent status for paired web clients', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const leafId = '11111111-1111-4111-8111-111111111111'
     const hostPaneKey = `tab-1:${leafId}`
     runtime.attachWindow(1)
@@ -2563,7 +2563,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('keeps saved PTY bindings pending until the runtime knows the PTY is connected', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.attachWindow(1)
     runtime.syncWindowGraph(1, {
       tabs: [],
@@ -2613,7 +2613,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('refreshes daemon PTY liveness before publishing mobile session tabs', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setPtyController({
       write: () => true,
       kill: () => true,
@@ -2669,7 +2669,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('reattaches mobile terminal surfaces from saved PTY bindings when the PTY is connected', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.attachWindow(1)
     runtime.syncWindowGraph(1, {
       tabs: [
@@ -2733,7 +2733,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('does not publish exited saved PTY bindings as ready terminal streams', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.attachWindow(1)
     runtime.syncWindowGraph(1, {
       tabs: [],
@@ -2777,7 +2777,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('resolves mobile terminal surfaces by exact split leaf', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.attachWindow(1)
     runtime.syncWindowGraph(1, {
       tabs: [
@@ -2853,7 +2853,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('keeps published mobile terminal handles usable across renderer graph epochs', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.attachWindow(1)
     runtime.syncWindowGraph(1, {
       tabs: [
@@ -2956,7 +2956,7 @@ describe('OrcaRuntimeService', () => {
   it('closes the matching mobile terminal UUID leaf without closing the whole tab', async () => {
     const closeTerminal = vi.fn()
     const kill = vi.fn(() => true)
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setPtyController({
       spawn: vi.fn(),
       write: () => true,
@@ -3039,7 +3039,7 @@ describe('OrcaRuntimeService', () => {
   it('closes the whole mobile terminal tab when addressed by parent tab id', async () => {
     const closeTerminal = vi.fn()
     const kill = vi.fn(() => true)
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setPtyController({
       spawn: vi.fn(),
       write: () => true,
@@ -3111,7 +3111,7 @@ describe('OrcaRuntimeService', () => {
 
   it('activates the active split leaf when addressed by parent tab id', async () => {
     const focusTerminal = vi.fn()
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setNotifier({
       worktreesChanged: vi.fn(),
       reposChanged: vi.fn(),
@@ -3167,7 +3167,7 @@ describe('OrcaRuntimeService', () => {
 
   it('closes browser mobile session tabs when addressed by browser workspace id', async () => {
     const closeSessionTab = vi.fn()
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setNotifier({
       worktreesChanged: vi.fn(),
       reposChanged: vi.fn(),
@@ -3220,7 +3220,7 @@ describe('OrcaRuntimeService', () => {
 
   it('creates mobile session terminals in a headless runtime server', async () => {
     const spawn = vi.fn().mockResolvedValue({ id: 'pty-headless' })
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setPtyController({
       spawn,
       write: () => true,
@@ -3256,14 +3256,14 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('reports browser tab creation as unsupported for headless runtime servers', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.syncWindowGraph(0, { tabs: [], leaves: [] })
 
     await expect(
       runtime.browserTabCreate({ worktree: `id:${TEST_WORKTREE_ID}`, url: 'https://example.com' })
     ).rejects.toMatchObject({
       code: 'browser_error',
-      message: expect.stringContaining('headless orca serve')
+      message: expect.stringContaining('headless serper serve')
     })
   })
 
@@ -3498,7 +3498,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('keeps already-idle status after tui-idle wait for immediate message delivery', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const db = new InMemoryOrchestrationMessages()
     const write = vi.fn().mockReturnValue(true)
     setInMemoryOrchestrationMessages(runtime, db)
@@ -3522,7 +3522,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('resolves message waiters when notifyMessageArrived is called', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
 
     const waitPromise = runtime.waitForMessage('term_abc', { timeoutMs: 5000 })
     runtime.notifyMessageArrived('term_abc')
@@ -3530,7 +3530,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('resolves message waiters on timeout when no message arrives', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
 
     const start = Date.now()
     await runtime.waitForMessage('term_abc', { timeoutMs: 100 })
@@ -3540,7 +3540,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('fails terminal waits closed when the handle goes stale during reload', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
 
     runtime.attachWindow(1)
     runtime.syncWindowGraph(1, {
@@ -3574,7 +3574,7 @@ describe('OrcaRuntimeService', () => {
   it('tui-idle times out when PTY data has no agent OSC title transitions', async () => {
     vi.useFakeTimers()
     try {
-      const runtime = new OrcaRuntimeService(store)
+      const runtime = new SerperRuntimeService(store)
 
       runtime.attachWindow(1)
       runtime.syncWindowGraph(1, {
@@ -3615,7 +3615,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('tui-idle resolves on agent working→idle OSC title transition', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
 
     runtime.attachWindow(1)
     runtime.syncWindowGraph(1, {
@@ -3657,7 +3657,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('builds a compact worktree summary from persisted and live runtime state', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
 
     runtime.attachWindow(1)
     runtime.syncWindowGraph(1, {
@@ -3746,7 +3746,7 @@ describe('OrcaRuntimeService', () => {
       listWorktrees: vi.fn().mockResolvedValue([remoteWorktree])
     } as never)
 
-    const runtime = new OrcaRuntimeService(runtimeStore as never)
+    const runtime = new SerperRuntimeService(runtimeStore as never)
     const summaries = await runtime.getWorktreePs()
 
     expect(summaries.worktrees).toEqual([
@@ -3765,7 +3765,7 @@ describe('OrcaRuntimeService', () => {
     // kept playing forever because lastAgentStatus was sticky on 'working'
     // once an agent exited without emitting an idle/agent-shaped final OSC
     // title. worktree.ps must recompute from the live OSC title each call.
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
 
     runtime.attachWindow(1)
     runtime.syncWindowGraph(1, {
@@ -3801,7 +3801,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('fails terminal stop closed while the renderer graph is reloading', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     let killed = false
     runtime.setPtyController({
       write: () => true,
@@ -3842,7 +3842,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('fails terminal listing closed if the graph reloads during selector resolution', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
 
     runtime.attachWindow(1)
     runtime.syncWindowGraph(1, {
@@ -3882,7 +3882,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('fails terminal stop closed if the graph reloads during selector resolution', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     let killed = false
     runtime.setPtyController({
       write: () => true,
@@ -3932,7 +3932,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('rejects invalid positive limits for bounded list commands', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
 
     await expect(runtime.getWorktreePs(-1)).rejects.toThrow('invalid_limit')
     await expect(runtime.listManagedWorktrees(undefined, 0)).rejects.toThrow('invalid_limit')
@@ -3985,7 +3985,7 @@ describe('OrcaRuntimeService', () => {
       getWorktreeLineage: () => undefined,
       setWorktreeLineage
     }
-    const runtime = new OrcaRuntimeService(runtimeStore as never)
+    const runtime = new SerperRuntimeService(runtimeStore as never)
 
     await runtime.updateManagedWorktreeMeta(`id:${childId}`, {
       lineage: { parentWorktree: `id:${parentId}` }
@@ -4052,7 +4052,7 @@ describe('OrcaRuntimeService', () => {
         isMainWorktree: false
       }
     ])
-    const runtime = new OrcaRuntimeService(runtimeStore as never)
+    const runtime = new SerperRuntimeService(runtimeStore as never)
 
     await runtime.updateManagedWorktreeMeta(`id:${childId}`, {
       lineage: { parentWorktree: `id:${parentId}` }
@@ -4109,7 +4109,7 @@ describe('OrcaRuntimeService', () => {
         isMainWorktree: false
       }
     ])
-    const runtime = new OrcaRuntimeService(runtimeStore as never)
+    const runtime = new SerperRuntimeService(runtimeStore as never)
 
     await runtime.updateManagedWorktreeMeta(`id:${childId}`, {
       lineage: { parentWorktree: `id:${parentId}` }
@@ -4186,7 +4186,7 @@ describe('OrcaRuntimeService', () => {
           isMainWorktree: false
         }
       ])
-    const runtime = new OrcaRuntimeService(runtimeStore as never)
+    const runtime = new SerperRuntimeService(runtimeStore as never)
 
     await runtime.showManagedWorktree(`id:${childId}`)
     const rotatedParentInstance = metaById[parentId].instanceId
@@ -4244,7 +4244,7 @@ describe('OrcaRuntimeService', () => {
       removeWorktreeLineage
     }
     vi.mocked(listWorktrees).mockRejectedValueOnce(new Error('git unavailable'))
-    const runtime = new OrcaRuntimeService(runtimeStore as never)
+    const runtime = new SerperRuntimeService(runtimeStore as never)
 
     await expect(runtime.showManagedWorktree(`id:${childId}`)).rejects.toThrow('selector_not_found')
 
@@ -4296,7 +4296,7 @@ describe('OrcaRuntimeService', () => {
       getAllWorktreeLineage: () => lineageById,
       removeWorktreeLineage
     }
-    const runtime = new OrcaRuntimeService(runtimeStore as never)
+    const runtime = new SerperRuntimeService(runtimeStore as never)
 
     await expect(runtime.showManagedWorktree(`id:${childId}`)).resolves.toMatchObject({
       id: childId,
@@ -4362,7 +4362,7 @@ describe('OrcaRuntimeService', () => {
         isMainWorktree: false
       }
     ])
-    const runtime = new OrcaRuntimeService(runtimeStore as never)
+    const runtime = new SerperRuntimeService(runtimeStore as never)
 
     const listed = await runtime.listManagedWorktrees('id:repo-1')
     const parent = listed.worktrees.find((worktree) => worktree.id === parentId)
@@ -4413,7 +4413,7 @@ describe('OrcaRuntimeService', () => {
       getWorktreeLineage: () => undefined,
       setWorktreeLineage
     }
-    const runtime = new OrcaRuntimeService(runtimeStore as never)
+    const runtime = new SerperRuntimeService(runtimeStore as never)
     computeWorktreePathMock.mockReturnValue(childPath)
     ensurePathWithinWorkspaceMock.mockReturnValue(childPath)
     vi.mocked(listWorktrees)
@@ -4492,7 +4492,7 @@ describe('OrcaRuntimeService', () => {
       getWorktreeLineage: () => undefined,
       setWorktreeLineage
     }
-    const runtime = new OrcaRuntimeService(runtimeStore as never)
+    const runtime = new SerperRuntimeService(runtimeStore as never)
     const workerHandle = runtime.preAllocateHandleForPty('pty-worker')
     const coordinatorHandle = runtime.preAllocateHandleForPty('pty-coordinator')
     runtime.setOrchestrationDb({
@@ -4610,7 +4610,7 @@ describe('OrcaRuntimeService', () => {
       getWorktreeLineage: () => undefined,
       setWorktreeLineage
     }
-    const runtime = new OrcaRuntimeService(runtimeStore as never)
+    const runtime = new SerperRuntimeService(runtimeStore as never)
     computeWorktreePathMock.mockReturnValue(childPath)
     ensurePathWithinWorkspaceMock.mockReturnValue(childPath)
     vi.mocked(listWorktrees)
@@ -4671,7 +4671,7 @@ describe('OrcaRuntimeService', () => {
           isMainWorktree: false
         }
       ])
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
 
     const result = await runtime.createManagedWorktree({
       repoSelector: 'id:repo-1',
@@ -4691,7 +4691,7 @@ describe('OrcaRuntimeService', () => {
       expect.objectContaining({
         code: 'LINEAGE_PARENT_CONTEXT_MISSING',
         message:
-          'Worktree created, but Orca could not validate the current directory as a parent workspace.'
+          'Worktree created, but Serper could not validate the current directory as a parent workspace.'
       })
     ])
   })
@@ -4720,7 +4720,7 @@ describe('OrcaRuntimeService', () => {
       getWorktreeLineage: () => undefined,
       setWorktreeLineage
     }
-    const runtime = new OrcaRuntimeService(runtimeStore as never)
+    const runtime = new SerperRuntimeService(runtimeStore as never)
     const workerHandle = runtime.preAllocateHandleForPty('pty-worker')
     runtime.setOrchestrationDb({
       getDispatchContext: vi.fn(() => ({
@@ -4818,7 +4818,7 @@ describe('OrcaRuntimeService', () => {
       getWorktreeLineage: () => undefined,
       setWorktreeLineage
     }
-    const runtime = new OrcaRuntimeService(runtimeStore as never)
+    const runtime = new SerperRuntimeService(runtimeStore as never)
     const parentHandle = runtime.preAllocateHandleForPty('pty-parent')
     runtime.setOrchestrationDb({
       getDispatchContext: vi.fn(() => undefined),
@@ -4893,7 +4893,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('returns a setup launch payload for CLI-created worktrees when hooks are explicitly enabled', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const activateWorktree = vi.fn()
     runtime.setNotifier({
       worktreesChanged: vi.fn(),
@@ -4918,10 +4918,10 @@ describe('OrcaRuntimeService', () => {
       }
     })
     vi.mocked(createSetupRunnerScript).mockReturnValue({
-      runnerScriptPath: '/tmp/repo/.git/orca/setup-runner.sh',
+      runnerScriptPath: '/tmp/repo/.git/serper/setup-runner.sh',
       envVars: {
-        ORCA_ROOT_PATH: '/tmp/repo',
-        ORCA_WORKTREE_PATH: '/tmp/workspaces/runtime-hook-test'
+        SERPER_ROOT_PATH: '/tmp/repo',
+        SERPER_WORKTREE_PATH: '/tmp/workspaces/runtime-hook-test'
       }
     })
     vi.mocked(listWorktrees).mockResolvedValueOnce([
@@ -4960,10 +4960,10 @@ describe('OrcaRuntimeService', () => {
         branch: 'runtime-hook-test'
       }),
       setup: {
-        runnerScriptPath: '/tmp/repo/.git/orca/setup-runner.sh',
+        runnerScriptPath: '/tmp/repo/.git/serper/setup-runner.sh',
         envVars: {
-          ORCA_ROOT_PATH: '/tmp/repo',
-          ORCA_WORKTREE_PATH: '/tmp/workspaces/runtime-hook-test'
+          SERPER_ROOT_PATH: '/tmp/repo',
+          SERPER_WORKTREE_PATH: '/tmp/workspaces/runtime-hook-test'
         }
       }
     })
@@ -4971,7 +4971,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('passes setup payloads through when explicitly activating CLI-created worktrees', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const activateWorktree = vi.fn()
     runtime.setNotifier({
       worktreesChanged: vi.fn(),
@@ -4996,10 +4996,10 @@ describe('OrcaRuntimeService', () => {
       }
     })
     vi.mocked(createSetupRunnerScript).mockReturnValue({
-      runnerScriptPath: '/tmp/repo/.git/orca/setup-runner.sh',
+      runnerScriptPath: '/tmp/repo/.git/serper/setup-runner.sh',
       envVars: {
-        ORCA_ROOT_PATH: '/tmp/repo',
-        ORCA_WORKTREE_PATH: '/tmp/workspaces/runtime-hook-activate'
+        SERPER_ROOT_PATH: '/tmp/repo',
+        SERPER_WORKTREE_PATH: '/tmp/workspaces/runtime-hook-activate'
       }
     })
     vi.mocked(listWorktrees).mockResolvedValueOnce([
@@ -5023,7 +5023,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('follows normal setup policy for CLI-created worktrees without activating them', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const activateWorktree = vi.fn()
     const revealTerminalSession = vi.fn().mockResolvedValue({ tabId: 'tab-created-worktree' })
     const spawn = vi
@@ -5061,10 +5061,10 @@ describe('OrcaRuntimeService', () => {
     })
     vi.mocked(shouldRunSetupForCreate).mockReturnValue(true)
     vi.mocked(createSetupRunnerScript).mockReturnValue({
-      runnerScriptPath: '/tmp/repo/.git/orca/setup-runner.sh',
+      runnerScriptPath: '/tmp/repo/.git/serper/setup-runner.sh',
       envVars: {
-        ORCA_ROOT_PATH: '/tmp/repo',
-        ORCA_WORKTREE_PATH: '/tmp/workspaces/runtime-hook-skip'
+        SERPER_ROOT_PATH: '/tmp/repo',
+        SERPER_WORKTREE_PATH: '/tmp/workspaces/runtime-hook-skip'
       }
     })
     vi.mocked(listWorktrees).mockResolvedValue([
@@ -5095,10 +5095,10 @@ describe('OrcaRuntimeService', () => {
         branch: 'runtime-hook-skip'
       }),
       setup: {
-        runnerScriptPath: '/tmp/repo/.git/orca/setup-runner.sh',
+        runnerScriptPath: '/tmp/repo/.git/serper/setup-runner.sh',
         envVars: {
-          ORCA_ROOT_PATH: '/tmp/repo',
-          ORCA_WORKTREE_PATH: '/tmp/workspaces/runtime-hook-skip'
+          SERPER_ROOT_PATH: '/tmp/repo',
+          SERPER_WORKTREE_PATH: '/tmp/workspaces/runtime-hook-skip'
         }
       }
     })
@@ -5115,16 +5115,16 @@ describe('OrcaRuntimeService', () => {
       2,
       expect.objectContaining({
         cwd: '/tmp/workspaces/runtime-hook-skip',
-        command: 'bash /tmp/repo/.git/orca/setup-runner.sh',
-        // Why: createTerminal stamps ORCA_PANE_KEY/TAB_ID/WORKTREE_ID into the
+        command: 'bash /tmp/repo/.git/serper/setup-runner.sh',
+        // Why: createTerminal stamps SERPER_PANE_KEY/TAB_ID/WORKTREE_ID into the
         // PTY env on top of the caller-supplied env so hook-based agent status
         // can attribute hook events to a stable pane.
         env: expect.objectContaining({
-          ORCA_ROOT_PATH: '/tmp/repo',
-          ORCA_WORKTREE_PATH: '/tmp/workspaces/runtime-hook-skip',
-          ORCA_TAB_ID: expect.stringMatching(UUID_RE),
-          ORCA_PANE_KEY: expect.any(String),
-          ORCA_WORKTREE_ID: result.worktree.id
+          SERPER_ROOT_PATH: '/tmp/repo',
+          SERPER_WORKTREE_PATH: '/tmp/workspaces/runtime-hook-skip',
+          SERPER_TAB_ID: expect.stringMatching(UUID_RE),
+          SERPER_PANE_KEY: expect.any(String),
+          SERPER_WORKTREE_ID: result.worktree.id
         }),
         worktreeId: result.worktree.id
       })
@@ -5132,18 +5132,20 @@ describe('OrcaRuntimeService', () => {
     const setupSpawnEnv =
       (spawn.mock.calls[1]?.[0] as { env?: Record<string, string> } | undefined)?.env ?? {}
     expectStablePaneKeyEnv(setupSpawnEnv)
-    const setupLeafId = setupSpawnEnv.ORCA_PANE_KEY.slice(`${setupSpawnEnv.ORCA_TAB_ID}:`.length)
+    const setupLeafId = setupSpawnEnv.SERPER_PANE_KEY.slice(
+      `${setupSpawnEnv.SERPER_TAB_ID}:`.length
+    )
     expect(revealTerminalSession).toHaveBeenLastCalledWith(result.worktree.id, {
       ptyId: 'pty-setup',
       title: 'Setup',
       activate: false,
-      tabId: setupSpawnEnv.ORCA_TAB_ID,
+      tabId: setupSpawnEnv.SERPER_TAB_ID,
       leafId: setupLeafId
     })
   })
 
   it('creates the first terminal for CLI-created worktrees without activating them', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const activateWorktree = vi.fn()
     const revealTerminalSession = vi.fn().mockResolvedValue({ tabId: 'tab-created-worktree' })
     const spawn = vi.fn().mockResolvedValue({ id: 'pty-created-worktree' })
@@ -5198,20 +5200,20 @@ describe('OrcaRuntimeService', () => {
     const initialSpawnEnv =
       (spawn.mock.calls[0]?.[0] as { env?: Record<string, string> } | undefined)?.env ?? {}
     expectStablePaneKeyEnv(initialSpawnEnv)
-    const initialLeafId = initialSpawnEnv.ORCA_PANE_KEY.slice(
-      `${initialSpawnEnv.ORCA_TAB_ID}:`.length
+    const initialLeafId = initialSpawnEnv.SERPER_PANE_KEY.slice(
+      `${initialSpawnEnv.SERPER_TAB_ID}:`.length
     )
     expect(revealTerminalSession).toHaveBeenCalledWith(result.worktree.id, {
       ptyId: 'pty-created-worktree',
       title: null,
       activate: false,
-      tabId: initialSpawnEnv.ORCA_TAB_ID,
+      tabId: initialSpawnEnv.SERPER_TAB_ID,
       leafId: initialLeafId
     })
   })
 
   it('creates the first terminal by id when duplicate repo entries expose the same path', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const spawn = vi.fn().mockResolvedValue({ id: 'pty-duplicate-path' })
     runtime.setPtyController({
       spawn,
@@ -5284,7 +5286,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('keeps CLI-created worktrees successful when initial terminal creation fails', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const spawn = vi.fn().mockRejectedValue(new Error('pty unavailable'))
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     runtime.setPtyController({
@@ -5344,7 +5346,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('activates CLI-created worktrees only when explicitly requested', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const activateWorktree = vi.fn()
     runtime.setNotifier({
       worktreesChanged: vi.fn(),
@@ -5387,7 +5389,7 @@ describe('OrcaRuntimeService', () => {
     // Why: parity with createLocalWorktree / createRemoteWorktree. Without
     // createdAt, ambient PTY bumps in OTHER worktrees during the few seconds
     // after creation can push the new worktree below them in Recent sort.
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setNotifier({
       worktreesChanged: vi.fn(),
       reposChanged: vi.fn(),
@@ -5432,7 +5434,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('skips archive hooks for CLI worktree removal by default', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     vi.mocked(getEffectiveHooks).mockReturnValue({
       scripts: {
         archive: 'pnpm worktree:archive'
@@ -5445,12 +5447,12 @@ describe('OrcaRuntimeService', () => {
     expect(runHook).not.toHaveBeenCalled()
     expect(removeWorktree).toHaveBeenCalledWith(TEST_REPO_PATH, TEST_WORKTREE_PATH, false)
     expect(result.warning).toBe(
-      `orca.yaml archive hook skipped for ${TEST_WORKTREE_PATH}; pass --run-hooks to run it.`
+      `serper.yaml archive hook skipped for ${TEST_WORKTREE_PATH}; pass --run-hooks to run it.`
     )
   })
 
   it('fails dirty non-force deletes before PTY teardown', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const killSpy = vi.fn().mockReturnValue(true)
     runtime.setPtyController({
       write: () => true,
@@ -5474,7 +5476,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('formats preflight subprocess failures and skips PTY teardown', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const killSpy = vi.fn().mockReturnValue(true)
     runtime.setPtyController({
       write: () => true,
@@ -5498,7 +5500,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('falls through to orphan cleanup when preflight reports missing/non-repo worktree', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     vi.mocked(getEffectiveHooks).mockReturnValue(null)
     vi.mocked(assertWorktreeCleanForRemoval).mockRejectedValue(
       Object.assign(new Error('status failed'), {
@@ -5517,7 +5519,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('runs archive hooks for CLI worktree removal when hooks are explicitly enabled', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     vi.mocked(getEffectiveHooks).mockReturnValue({
       scripts: {
         archive: 'pnpm worktree:archive'
@@ -5537,7 +5539,7 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('clears optimistic reconcile tokens when a CLI worktree removal succeeds', async () => {
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     const worktreeBaseStatus = vi.fn()
     runtime.setNotifier({
       worktreesChanged: vi.fn(),
@@ -5584,11 +5586,11 @@ describe('OrcaRuntimeService', () => {
   }
 
   function createReconcileRuntime(): {
-    runtime: OrcaRuntimeService
+    runtime: SerperRuntimeService
     worktreeBaseStatus: ReturnType<typeof vi.fn>
   } {
     const worktreeBaseStatus = vi.fn()
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setNotifier({
       worktreeBaseStatus,
       worktreeRemoteBranchConflict: vi.fn()
@@ -5644,7 +5646,7 @@ describe('OrcaRuntimeService', () => {
     })
   }
 
-  async function reconcileWithToken(runtime: OrcaRuntimeService, token: string): Promise<void> {
+  async function reconcileWithToken(runtime: SerperRuntimeService, token: string): Promise<void> {
     await runtime.reconcileWorktreeBaseStatus({
       repoId: TEST_REPO_ID,
       repoPath: TEST_REPO_PATH,
@@ -5767,7 +5769,7 @@ describe('OrcaRuntimeService', () => {
     // Reproduces: CLI-created worktrees fail with "Access denied: unknown
     // repository or worktree path" because the filesystem-auth cache was
     // not invalidated, so git:branchCompare could not resolve the new path.
-    const runtime = new OrcaRuntimeService(store)
+    const runtime = new SerperRuntimeService(store)
     runtime.setNotifier({
       worktreesChanged: vi.fn(),
       reposChanged: vi.fn(),
@@ -5870,7 +5872,7 @@ describe('OrcaRuntimeService', () => {
         }
       ])
 
-    const runtime = new OrcaRuntimeService(runtimeStore)
+    const runtime = new SerperRuntimeService(runtimeStore)
     await runtime.createManagedWorktree({
       repoSelector: 'id:repo-1',
       name: 'Improve Dashboard'
@@ -6118,7 +6120,7 @@ describe('OrcaRuntimeService', () => {
         callOrder.push('git-removeWorktree')
       })
 
-      const runtime = new OrcaRuntimeService(store, undefined, {
+      const runtime = new SerperRuntimeService(store, undefined, {
         getLocalProvider: () => {
           callOrder.push('getLocalProvider')
           return localProvider as never
@@ -6149,7 +6151,7 @@ describe('OrcaRuntimeService', () => {
     })
 
     it('thunk resolves the installed provider lazily, not at construction time', async () => {
-      // Simulates the daemon adapter being installed AFTER OrcaRuntimeService
+      // Simulates the daemon adapter being installed AFTER SerperRuntimeService
       // construction (setLocalPtyProvider(routedAdapter) in daemon-init).
       // A capture-at-construction refactor would break this test.
       const preDaemonProvider = createProviderStub(async () => [
@@ -6161,7 +6163,7 @@ describe('OrcaRuntimeService', () => {
       ])
       let currentProvider: ReturnType<typeof createProviderStub> = preDaemonProvider
 
-      const runtime = new OrcaRuntimeService(store, undefined, {
+      const runtime = new SerperRuntimeService(store, undefined, {
         getLocalProvider: () => currentProvider as never
       })
       vi.mocked(removeWorktree).mockResolvedValue(undefined)

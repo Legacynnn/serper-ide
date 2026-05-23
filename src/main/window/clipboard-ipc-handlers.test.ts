@@ -140,10 +140,10 @@ describe('registerClipboardHandlers', () => {
 
     const handlers = getRegisteredHandlers()
     await expect(handlers.get('clipboard:saveImageAsTempFile')?.({}, undefined)).resolves.toBe(
-      '/tmp/orca-paste-1760000000000-00000000-0000-4000-8000-000000000000.png'
+      '/tmp/serper-paste-1760000000000-00000000-0000-4000-8000-000000000000.png'
     )
     expect(fsWriteFileMock).toHaveBeenCalledWith(
-      '/tmp/orca-paste-1760000000000-00000000-0000-4000-8000-000000000000.png',
+      '/tmp/serper-paste-1760000000000-00000000-0000-4000-8000-000000000000.png',
       png
     )
     expect(getSshFilesystemProviderMock).not.toHaveBeenCalled()
@@ -164,11 +164,11 @@ describe('registerClipboardHandlers', () => {
     const handlers = getRegisteredHandlers()
     await expect(
       handlers.get('clipboard:saveImageAsTempFile')?.({}, { connectionId: 'ssh-1' })
-    ).resolves.toBe('/var/tmp/orca-paste-1760000000000-00000000-0000-4000-8000-000000000000.png')
+    ).resolves.toBe('/var/tmp/serper-paste-1760000000000-00000000-0000-4000-8000-000000000000.png')
     expect(getSshFilesystemProviderMock).toHaveBeenCalledWith('ssh-1')
     expect(getTempDir).toHaveBeenCalled()
     expect(writeFileBase64).toHaveBeenCalledWith(
-      '/var/tmp/orca-paste-1760000000000-00000000-0000-4000-8000-000000000000.png',
+      '/var/tmp/serper-paste-1760000000000-00000000-0000-4000-8000-000000000000.png',
       png.toString('base64')
     )
     expect(fsWriteFileMock).not.toHaveBeenCalled()
@@ -192,10 +192,10 @@ describe('registerClipboardHandlers', () => {
     await expect(
       handlers.get('clipboard:saveImageAsTempFile')?.({}, { connectionId: 'ssh-1' })
     ).resolves.toBe(
-      'C:\\Users\\alice\\AppData\\Local\\Temp\\orca-paste-1760000000000-00000000-0000-4000-8000-000000000000.png'
+      'C:\\Users\\alice\\AppData\\Local\\Temp\\serper-paste-1760000000000-00000000-0000-4000-8000-000000000000.png'
     )
     expect(writeFileBase64).toHaveBeenCalledWith(
-      'C:\\Users\\alice\\AppData\\Local\\Temp\\orca-paste-1760000000000-00000000-0000-4000-8000-000000000000.png',
+      'C:\\Users\\alice\\AppData\\Local\\Temp\\serper-paste-1760000000000-00000000-0000-4000-8000-000000000000.png',
       png.toString('base64')
     )
   })

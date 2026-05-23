@@ -95,7 +95,7 @@ export class BrowserGrabSessionController {
       }
 
       // Why: the guest overlay runtime handles the click in-page and calls
-      // __orcaGrabResolve() which is wired by the 'awaitClick' script to
+      // __serperGrabResolve() which is wired by the 'awaitClick' script to
       // resolve the executeJavaScript Promise with the extracted payload.
       // Main just needs to run that script and await its result.
       const awaitGuestClick = async (): Promise<void> => {
@@ -105,11 +105,11 @@ export class BrowserGrabSessionController {
             settleOnce({ opId, kind: 'cancelled', reason: 'user' })
             return
           }
-          // Why: the guest wraps right-click results in { __orcaContextMenu, payload }
+          // Why: the guest wraps right-click results in { __serperContextMenu, payload }
           // so the renderer can show the full action dropdown instead of auto-copying.
           const isContextMenu =
-            '__orcaContextMenu' in (rawPayload as Record<string, unknown>) &&
-            (rawPayload as Record<string, unknown>).__orcaContextMenu === true
+            '__serperContextMenu' in (rawPayload as Record<string, unknown>) &&
+            (rawPayload as Record<string, unknown>).__serperContextMenu === true
           const payloadSource = isContextMenu
             ? (rawPayload as Record<string, unknown>).payload
             : rawPayload

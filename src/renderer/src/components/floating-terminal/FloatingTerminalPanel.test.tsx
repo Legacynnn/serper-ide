@@ -252,7 +252,7 @@ describe('FloatingTerminalPanel close behavior', () => {
     hookRuntime.values = []
     resetStore()
     mocks.createTab.mockReturnValue(makeTab({ id: 'created-tab' }))
-    mocks.getFloatingTerminalCwd.mockResolvedValue('/tmp/orca')
+    mocks.getFloatingTerminalCwd.mockResolvedValue('/tmp/serper')
     mocks.getInstallStatus.mockResolvedValue({ state: 'installed' })
     vi.stubGlobal('window', {
       addEventListener: vi.fn(),

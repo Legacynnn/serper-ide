@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { colors, spacing, radii, typography } from '../theme/mobile-theme'
 import { BottomDrawer } from './BottomDrawer'
 
-const STORAGE_KEY = 'orca:custom-accessory-keys'
+const STORAGE_KEY = 'serper:custom-accessory-keys'
 
 export type CustomKey = {
   id: string

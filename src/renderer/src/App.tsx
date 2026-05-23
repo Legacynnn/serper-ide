@@ -617,7 +617,7 @@ function App(): React.JSX.Element {
         // Why (issue #1158): previously this catch called hydrateWorkspaceSession
         // with empty defaults, which overwrote the in-memory tab map. The
         // debounced session writer then serialized that empty state back to
-        // orca-data.json, silently erasing the user's saved tabs. The fix is
+        // serper-data.json, silently erasing the user's saved tabs. The fix is
         // to leave in-memory state untouched and keep hydrationSucceeded
         // false so the writer stays gated. We still ensure persistedUIReady and
         // workspaceSessionReady flip so the UI can mount without a session.
@@ -1265,7 +1265,7 @@ function App(): React.JSX.Element {
           <div className="titlebar-traffic-light-pad" />
         ) : isWindows ? (
           /* Why: on Windows the native title bar is hidden, so we render the
-             Orca logo as a non-interactive identity anchor and a ··· button
+             Serper logo as a non-interactive identity anchor and a ··· button
              that pops up the application menu (the same menu revealed by Alt
              on the default autoHideMenuBar). */
           <>
@@ -1293,8 +1293,8 @@ function App(): React.JSX.Element {
             {settings?.showTitlebarAppName !== false && (
               <ContextMenu>
                 <ContextMenuTrigger asChild>
-                  <div className="titlebar-app-name" aria-label="Orca">
-                    <span className="titlebar-app-name-main">Orca</span>
+                  <div className="titlebar-app-name" aria-label="Serper">
+                    <span className="titlebar-app-name-main">Serper</span>
                   </div>
                 </ContextMenuTrigger>
                 <ContextMenuContent>
@@ -1445,6 +1445,18 @@ function App(): React.JSX.Element {
                 </div>
                 {activeView === 'activity' ? (
                   <ActivityTitlebarControls />
+                ) : activeView === 'dashboard' ||
+                  activeView === 'tasks' ||
+                  activeView === 'automations' ? (
+                  // Why: portal target for full-page nav surfaces that own a
+                  // title row (Dashboard/Tasks/Automations). The page mounts
+                  // its controls into this div so the titlebar shows the page
+                  // identity instead of leaving an empty 36px strip above a
+                  // duplicate page header. See TitlebarPageControlsPortal.
+                  <div
+                    id="titlebar-page-controls"
+                    className="flex min-w-0 flex-1 items-center self-stretch border-l border-border"
+                  />
                 ) : (
                   <div
                     id="titlebar-tabs"
@@ -1482,7 +1494,7 @@ function App(): React.JSX.Element {
                 workspaceActive ? (
                   /* Why: left column wraps the sidebar with a titlebar-height
                      header above it. The header holds the same controls
-                     (traffic lights, sidebar toggle, "Orca" title, agent badge)
+                     (traffic lights, sidebar toggle, "Serper" title, agent badge)
                      that the full-width titlebar held while the center and right
                      columns keep their own top strips at the same 36px height.
                      When the sidebar is collapsed, take this header out of flex

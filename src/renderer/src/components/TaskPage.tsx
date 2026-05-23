@@ -91,6 +91,7 @@ import { parseGitHubIssueOrPRLink } from '@/lib/github-links'
 import { useRepoAssigneesBySlug } from '@/hooks/useGitHubSlugMetadata'
 import GitHubItemDialog from '@/components/GitHubItemDialog'
 import GitLabItemDialog from '@/components/GitLabItemDialog'
+import { TitlebarPageControlsPortal } from '@/components/titlebar-page-controls/TitlebarPageControlsPortal'
 import ProjectViewWrapper from '@/components/github-project/ProjectViewWrapper'
 import LinearIssueWorkspace from '@/components/LinearIssueWorkspace'
 import { cn } from '@/lib/utils'
@@ -364,7 +365,7 @@ type LinearIssueListRow =
   | { type: 'section'; key: string; label: string; count: number }
   | { type: 'issue'; issue: LinearIssue }
 
-const LINEAR_BOARD_DRAG_ISSUE_MIME = 'application/x-orca-linear-issue-id'
+const LINEAR_BOARD_DRAG_ISSUE_MIME = 'application/x-serper-linear-issue-id'
 
 const LINEAR_VIEW_OPTIONS: {
   id: LinearViewMode
@@ -3459,11 +3460,16 @@ export default function TaskPage(): React.JSX.Element {
   return (
     <div className="relative flex h-full min-h-0 flex-1 overflow-hidden bg-background text-foreground">
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="mx-auto flex min-h-0 min-w-0 w-full flex-1 flex-col px-5 pt-1.5 pb-5 md:px-8 md:pt-1.5 md:pb-7">
-          <header className="flex shrink-0 items-center gap-2 pb-3">
-            <List className="size-4 text-muted-foreground" strokeWidth={2.25} />
-            <h1 className="text-sm font-semibold">Tasks</h1>
-          </header>
+        <div className="mx-auto flex min-h-0 min-w-0 w-full flex-1 flex-col px-5 pt-3 pb-5 md:px-8 md:pt-3 md:pb-7">
+          <TitlebarPageControlsPortal>
+            <div
+              className="flex h-full min-w-0 items-center gap-2 px-3"
+              style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+            >
+              <List className="size-3.5 shrink-0 text-muted-foreground" strokeWidth={2.25} />
+              <h1 className="truncate text-xs font-semibold">Tasks</h1>
+            </div>
+          </TitlebarPageControlsPortal>
           <div className="flex-none flex flex-col gap-3">
             <section className="flex flex-col gap-3">
               <div className="flex flex-col gap-3">
@@ -4196,7 +4202,7 @@ export default function TaskPage(): React.JSX.Element {
                       <div
                         // Why: combine repoId with item.id because two selected repos
                         // that route issues through the same upstream (e.g. fork +
-                        // non-fork both resolving to stablyai/orca) surface the same
+                        // non-fork both resolving to Legacynnn/serper) surface the same
                         // item.id under different repoIds. React treats a bare id as
                         // a collision and warns + silently drops rows otherwise.
                         key={`${item.repoId}:${item.id}`}
@@ -5119,7 +5125,7 @@ export default function TaskPage(): React.JSX.Element {
               // personal TODO against upstream/fork after #1076 changed
               // routing) is specifically about this dialog. The description
               // line doubles as the source indicator: inlining the resolved
-              // `{owner}/{repo}` slug (e.g. "stablyai/orca") means the
+              // `{owner}/{repo}` slug (e.g. "Legacynnn/serper") means the
               // destination is impossible to miss before the user submits,
               // without needing a secondary chip that duplicates the info.
               // Falls back to the local displayName when the slug isn't

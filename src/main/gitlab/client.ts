@@ -101,7 +101,7 @@ export async function getMergeRequest(repoPath: string, iid: number): Promise<MR
  * Find the merge request whose source branch matches the given branch
  * name. Mirrors github/getPRForBranch — returns the most recently
  * updated MR for the branch, or null when none exists. The branch is the
- * local checkout's current ref (Orca strips refs/heads/ prefix upstream
+ * local checkout's current ref (Serper strips refs/heads/ prefix upstream
  * so we don't need to here).
  */
 export async function getMergeRequestForBranch(
@@ -395,7 +395,7 @@ async function fetchIssuesAsWorkItems(
  * IPC handler's path-validation guard has something to check.
  *
  * Why: GitLab's todos surface is the closest GitLab-native analogue of
- * GitHub's notifications/inbox. Surfacing it in Orca lets users start
+ * GitHub's notifications/inbox. Surfacing it in Serper lets users start
  * work directly from a mention/assignment without going to gitlab.com
  * first.
  */

@@ -1,6 +1,6 @@
-export type OrcaHookScriptKind = 'setup' | 'archive' | 'issueCommand'
+export type SerperHookScriptKind = 'setup' | 'archive' | 'issueCommand'
 
-export async function hashOrcaHookScript(content: string): Promise<string> {
+export async function hashSerperHookScript(content: string): Promise<string> {
   const normalized = content.trim()
   const bytes = new TextEncoder().encode(normalized)
   const digest = await crypto.subtle.digest('SHA-256', bytes)

@@ -2,7 +2,7 @@ const { chmodSync, existsSync, readdirSync } = require('node:fs')
 const { execFileSync } = require('node:child_process')
 const { join, resolve } = require('node:path')
 
-const isMacRelease = process.env.ORCA_MAC_RELEASE === '1'
+const isMacRelease = process.env.SERPER_MAC_RELEASE === '1'
 const featureWallResources = {
   from: 'resources/onboarding/feature-wall',
   to: 'onboarding/feature-wall'
@@ -17,8 +17,8 @@ const relayExtraResource = {
 
 /** @type {import('electron-builder').Configuration} */
 module.exports = {
-  appId: 'com.stablyai.orca',
-  productName: 'Orca',
+  appId: 'com.legacynnn.serper',
+  productName: 'Serper',
   directories: {
     buildResources: 'resources/build'
   },
@@ -86,16 +86,16 @@ module.exports = {
       chmodSync(join(resourcesDir, filename), 0o755)
     }
     if (context.electronPlatformName === 'darwin') {
-      await signMacComputerUseHelper(join(resourcesDir, 'Orca Computer Use.app'), context.packager)
+      await signMacComputerUseHelper(join(resourcesDir, 'Serper Computer Use.app'), context.packager)
     }
   },
   win: {
-    executableName: 'Orca',
+    executableName: 'Serper',
     extraResources: [
       relayExtraResource,
       {
-        from: 'resources/win32/bin/orca.cmd',
-        to: 'bin/orca.cmd'
+        from: 'resources/win32/bin/serper.cmd',
+        to: 'bin/serper.cmd'
       },
       {
         from: 'node_modules/agent-browser/bin/agent-browser-win32-x64.exe',
@@ -109,7 +109,7 @@ module.exports = {
     ]
   },
   nsis: {
-    artifactName: 'orca-windows-setup.${ext}',
+    artifactName: 'serper-windows-setup.${ext}',
     shortcutName: '${productName}',
     uninstallDisplayName: '${productName}',
     createDesktopShortcut: 'always'
@@ -120,19 +120,19 @@ module.exports = {
     entitlementsInherit: 'resources/build/entitlements.mac.plist',
     extendInfo: {
       NSAppleEventsUsageDescription:
-        'Orca allows terminal-launched developer tools to automate local apps when you request it.',
+        'Serper allows terminal-launched developer tools to automate local apps when you request it.',
       NSBluetoothAlwaysUsageDescription:
-        'Orca allows terminal-launched developer tools to access Bluetooth devices when you request it.',
+        'Serper allows terminal-launched developer tools to access Bluetooth devices when you request it.',
       NSBluetoothPeripheralUsageDescription:
-        'Orca allows terminal-launched developer tools to access Bluetooth devices when you request it.',
+        'Serper allows terminal-launched developer tools to access Bluetooth devices when you request it.',
       NSCameraUsageDescription: "Application requests access to the device's camera.",
       NSLocationUsageDescription:
-        'Orca allows terminal-launched developer tools to access location when you request it.',
+        'Serper allows terminal-launched developer tools to access location when you request it.',
       NSLocalNetworkUsageDescription:
-        'Orca allows terminal-launched developer tools to discover and connect to local development servers when you request it.',
+        'Serper allows terminal-launched developer tools to discover and connect to local development servers when you request it.',
       NSMicrophoneUsageDescription: "Application requests access to the device's microphone.",
       NSAudioCaptureUsageDescription:
-        'Orca allows terminal-launched developer tools to capture desktop audio when you request it.',
+        'Serper allows terminal-launched developer tools to capture desktop audio when you request it.',
       NSBonjourServices: ['_http._tcp', '_https._tcp'],
       NSDocumentsFolderUsageDescription:
         "Application requests access to the user's Documents folder.",
@@ -148,16 +148,16 @@ module.exports = {
     extraResources: [
       relayExtraResource,
       {
-        from: 'resources/darwin/bin/orca',
-        to: 'bin/orca'
+        from: 'resources/darwin/bin/serper',
+        to: 'bin/serper'
       },
       {
         from: 'node_modules/agent-browser/bin/agent-browser-darwin-${arch}',
         to: 'agent-browser-darwin-${arch}'
       },
       {
-        from: 'native/computer-use-macos/.build/release/Orca Computer Use.app',
-        to: 'Orca Computer Use.app'
+        from: 'native/computer-use-macos/.build/release/Serper Computer Use.app',
+        to: 'Serper Computer Use.app'
       },
       featureWallResources
     ],
@@ -176,20 +176,18 @@ module.exports = {
   // silently downgrading to ad-hoc artifacts that look shippable in CI logs.
   forceCodeSigning: isMacRelease,
   dmg: {
-    artifactName: 'orca-macos-${arch}.${ext}'
+    artifactName: 'serper-macos-${arch}.${ext}'
   },
   linux: {
-    // Why: Ubuntu 26 ships GNOME Orca as the `orca` package and /usr/bin/orca.
-    // The Linux installer should not claim those system package/file names.
-    executableName: 'orca-ide',
+    executableName: 'serper',
     // Why: pin the Linux app icon source so AppImage/deb icon payloads stay
     // deterministic if electron-builder defaults or resource discovery change.
     icon: 'resources/build/icon.png',
     extraResources: [
       relayExtraResource,
       {
-        from: 'resources/linux/bin/orca',
-        to: 'bin/orca'
+        from: 'resources/linux/bin/serper',
+        to: 'bin/serper'
       },
       {
         from: 'node_modules/agent-browser/bin/agent-browser-linux-${arch}',
@@ -202,15 +200,15 @@ module.exports = {
       featureWallResources
     ],
     target: ['AppImage', 'deb'],
-    maintainer: 'stablyai',
+    maintainer: 'legacynnn',
     category: 'Utility'
   },
   appImage: {
-    artifactName: 'orca-linux.${ext}'
+    artifactName: 'serper-linux.${ext}'
   },
   deb: {
-    packageName: 'orca-ide',
-    artifactName: 'orca-ide_${version}_${arch}.${ext}',
+    packageName: 'serper',
+    artifactName: 'serper_${version}_${arch}.${ext}',
     depends: ['python3', 'python3-gi', 'gir1.2-atspi-2.0', 'at-spi2-core', 'xdotool', 'xclip']
   },
   // Why: must be true so that electron-builder rebuilds native modules
@@ -221,8 +219,8 @@ module.exports = {
   npmRebuild: true,
   publish: {
     provider: 'github',
-    owner: 'stablyai',
-    repo: 'orca',
+    owner: 'Legacynnn',
+    repo: 'serper',
     releaseType: 'release'
   }
 }
@@ -230,7 +228,7 @@ module.exports = {
 async function signMacComputerUseHelper(helperAppPath, packager) {
   if (!existsSync(helperAppPath)) {
     if (isMacRelease) {
-      throw new Error(`Missing Orca Computer Use helper app at ${helperAppPath}`)
+      throw new Error(`Missing Serper Computer Use helper app at ${helperAppPath}`)
     }
     return
   }
@@ -239,15 +237,15 @@ async function signMacComputerUseHelper(helperAppPath, packager) {
       ? await packager.codeSigningInfo.value
       : null
   const identity =
-    process.env.ORCA_COMPUTER_MACOS_SIGN_IDENTITY ??
+    process.env.SERPER_COMPUTER_MACOS_SIGN_IDENTITY ??
     process.env.CSC_NAME ??
     findInstalledMacSigningIdentity(codeSigningInfo?.keychainFile) ??
     (isMacRelease ? null : '-')
   if (!identity) {
-    throw new Error('Missing signing identity for Orca Computer Use helper app')
+    throw new Error('Missing signing identity for Serper Computer Use helper app')
   }
   // Why: TCC grants attach to this nested app's code identity. Sign it before
-  // the outer Orca.app is sealed so production builds preserve that identity.
+  // the outer Serper.app is sealed so production builds preserve that identity.
   execFileSync('codesign', codesignArgs(identity, helperAppPath), { stdio: 'inherit' })
   execFileSync('codesign', ['--verify', '--deep', '--strict', helperAppPath], {
     stdio: 'inherit'

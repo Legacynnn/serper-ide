@@ -1,5 +1,5 @@
 import XCTest
-@testable import OrcaComputerUseMacOSCore
+@testable import SerperComputerUseMacOSCore
 
 final class SnapshotRenderingTests: XCTestCase {
     func testElidesAnonymousWrappers() {

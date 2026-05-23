@@ -37,34 +37,34 @@ describe('PluginOverlayManager', () => {
     manager.setSources({ opencodePluginSource: 'export const X = 1' })
     const dir = manager.materializeOpenCode('tab-1:0')
     expect(dir).not.toBeNull()
-    const expected = join(dir!, 'plugins', 'orca-opencode-status.js')
+    const expected = join(dir!, 'plugins', 'serper-opencode-status.js')
     expect(existsSync(expected)).toBe(true)
     expect(readFileSync(expected, 'utf8')).toBe('export const X = 1')
   })
 
-  it('mirrors a preexisting remote OpenCode config dir before adding Orca plugin', () => {
+  it('mirrors a preexisting remote OpenCode config dir before adding Serper plugin', () => {
     const userConfigDir = join(homeDir, 'company-opencode')
     mkdirSync(join(userConfigDir, 'plugins'), { recursive: true })
     writeFileSync(join(userConfigDir, 'opencode.json'), '{"provider":"custom"}')
     writeFileSync(join(userConfigDir, 'plugins', 'user-plugin.js'), 'user plugin')
-    writeFileSync(join(userConfigDir, 'plugins', 'orca-opencode-status.js'), 'user same-name')
+    writeFileSync(join(userConfigDir, 'plugins', 'serper-opencode-status.js'), 'user same-name')
 
-    manager.setSources({ opencodePluginSource: 'orca plugin' })
+    manager.setSources({ opencodePluginSource: 'serper plugin' })
     const dir = manager.materializeOpenCode('tab-opencode:0', userConfigDir)
 
     expect(dir).not.toBeNull()
     expect(readFileSync(join(dir!, 'opencode.json'), 'utf8')).toBe('{"provider":"custom"}')
     expect(readFileSync(join(dir!, 'plugins', 'user-plugin.js'), 'utf8')).toBe('user plugin')
-    expect(readFileSync(join(dir!, 'plugins', 'orca-opencode-status.js'), 'utf8')).toBe(
-      'orca plugin'
+    expect(readFileSync(join(dir!, 'plugins', 'serper-opencode-status.js'), 'utf8')).toBe(
+      'serper plugin'
     )
-    expect(readFileSync(join(userConfigDir, 'plugins', 'orca-opencode-status.js'), 'utf8')).toBe(
+    expect(readFileSync(join(userConfigDir, 'plugins', 'serper-opencode-status.js'), 'utf8')).toBe(
       'user same-name'
     )
   })
 
   it('does not override a missing preexisting OpenCode config dir', () => {
-    manager.setSources({ opencodePluginSource: 'orca plugin' })
+    manager.setSources({ opencodePluginSource: 'serper plugin' })
 
     expect(manager.materializeOpenCode('tab-missing:0', join(homeDir, 'missing'))).toBeNull()
   })
@@ -73,11 +73,11 @@ describe('PluginOverlayManager', () => {
     manager.setSources({ piExtensionSource: '// pi extension' })
     const dir = manager.materializePi('tab-2:0')
     expect(dir).not.toBeNull()
-    const file = join(dir!, 'extensions', 'orca-agent-status.ts')
+    const file = join(dir!, 'extensions', 'serper-agent-status.ts')
     expect(existsSync(file)).toBe(true)
   })
 
-  it('mirrors the remote default Pi agent dir before adding Orca status extension', () => {
+  it('mirrors the remote default Pi agent dir before adding Serper status extension', () => {
     const piAgentDir = join(homeDir, '.pi', 'agent')
     mkdirSync(join(piAgentDir, 'skills', 'my-skill'), { recursive: true })
     mkdirSync(join(piAgentDir, 'extensions', 'user-ext'), { recursive: true })
@@ -97,7 +97,7 @@ describe('PluginOverlayManager', () => {
       'user extension'
     )
     expect(readdirSync(join(dir!, 'extensions')).sort()).toEqual([
-      'orca-agent-status.ts',
+      'serper-agent-status.ts',
       'user-ext'
     ])
   })
@@ -117,7 +117,7 @@ describe('PluginOverlayManager', () => {
     expect(dir).not.toBeNull()
     expect(readFileSync(join(dir!, 'auth.json'), 'utf8')).toBe('custom token')
     expect(readFileSync(join(dir!, 'extensions', 'custom.ts'), 'utf8')).toBe('custom extension')
-    expect(readFileSync(join(dir!, 'extensions', 'orca-agent-status.ts'), 'utf8')).toBe(
+    expect(readFileSync(join(dir!, 'extensions', 'serper-agent-status.ts'), 'utf8')).toBe(
       '// pi extension'
     )
   })
@@ -154,7 +154,7 @@ describe('PluginOverlayManager', () => {
       writeFileSync(join(linkedTarget, 'keep.js'), 'do not delete')
       symlinkSync(linkedTarget, join(userConfigDir, 'plugins', 'linked-plugin'), 'dir')
 
-      manager.setSources({ opencodePluginSource: 'orca plugin' })
+      manager.setSources({ opencodePluginSource: 'serper plugin' })
       const dir = manager.materializeOpenCode('tab-opencode-symlink:0', userConfigDir)!
       expect(existsSync(join(dir, 'plugins', 'linked-plugin'))).toBe(true)
 
@@ -171,7 +171,7 @@ describe('PluginOverlayManager', () => {
     manager.setSources({ opencodePluginSource: 'second' })
     const dirB = manager.materializeOpenCode('tab-stable:0')!
     expect(dirA).toBe(dirB)
-    expect(readFileSync(join(dirA, 'plugins', 'orca-opencode-status.js'), 'utf8')).toBe('second')
+    expect(readFileSync(join(dirA, 'plugins', 'serper-opencode-status.js'), 'utf8')).toBe('second')
   })
 
   it('hashes unsafe pane ids into portable overlay directory names', () => {
@@ -181,6 +181,6 @@ describe('PluginOverlayManager', () => {
     expect(dir).not.toBeNull()
     expect(basename(dir!)).toMatch(/^[a-f0-9]{32}$/)
     expect(dir).not.toContain('tab/with')
-    expect(existsSync(join(dir!, 'plugins', 'orca-opencode-status.js'))).toBe(true)
+    expect(existsSync(join(dir!, 'plugins', 'serper-opencode-status.js'))).toBe(true)
   })
 })

@@ -284,7 +284,7 @@ export class SshConnection {
     this.proxyProcess?.kill()
     this.proxyProcess = null
 
-    const channel = this.spawnTrackedSystemSshCommand('printf ORCA-SYSTEM-SSH-OK')
+    const channel = this.spawnTrackedSystemSshCommand('printf SERPER-SYSTEM-SSH-OK')
     try {
       await new Promise<void>((resolve, reject) => {
         let stdout = ''
@@ -320,7 +320,7 @@ export class SshConnection {
             reject(new Error('SSH connection attempt was cancelled'))
             return
           }
-          if (code !== 0 || !stdout.includes('ORCA-SYSTEM-SSH-OK')) {
+          if (code !== 0 || !stdout.includes('SERPER-SYSTEM-SSH-OK')) {
             reject(
               new Error(
                 `System SSH probe failed${code != null ? ` (exit ${code})` : ''}.${stderr ? ` stderr: ${stderr.trim()}` : ''}`
@@ -567,7 +567,7 @@ export function shouldUseSystemSshTransport(
   _target: SshTarget,
   resolved: Pick<SshResolvedConfig, 'proxyUseFdpass'> | null
 ): boolean {
-  return process.env.ORCA_SSH_FORCE_SYSTEM_TRANSPORT === '1' || resolved?.proxyUseFdpass === true
+  return process.env.SERPER_SSH_FORCE_SYSTEM_TRANSPORT === '1' || resolved?.proxyUseFdpass === true
 }
 
 export { SshConnectionManager } from './ssh-connection-manager'

@@ -114,7 +114,7 @@ export function useRemoteRepo(
       const state = useAppStore.getState()
       const existingIdx = state.repos.findIndex((r) => r.id === repo.id)
       if (existingIdx !== -1) {
-        state.clearOrcaHookTrustForRepo(repo.id)
+        state.clearSerperHookTrustForRepo(repo.id)
       }
       if (existingIdx === -1) {
         useAppStore.setState({ repos: [...state.repos, repo] })

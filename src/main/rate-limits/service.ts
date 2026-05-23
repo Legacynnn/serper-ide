@@ -369,7 +369,7 @@ export class RateLimitService {
     if (!this.mainWindow || this.mainWindow.isDestroyed()) {
       return false
     }
-    // Why: these quota fetches only power in-app UI. When Orca is hidden,
+    // Why: these quota fetches only power in-app UI. When Serper is hidden,
     // minimized, or unfocused, polling only burns CLI/API budget without any
     // visible benefit. We refresh again as soon as the window becomes active.
     if (!this.mainWindow.isVisible() || this.mainWindow.isMinimized()) {

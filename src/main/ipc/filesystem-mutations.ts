@@ -195,7 +195,7 @@ export function registerFilesystemMutationHandlers(store: Store): void {
 
   // Why: terminal drag-and-drop resolver. Local worktrees pass paths through
   // unchanged (reference-in-place; preserves zero-latency drop). SSH worktrees
-  // upload each path into `${worktreePath}/.orca/drops/` and return remote
+  // upload each path into `${worktreePath}/.serper/drops/` and return remote
   // paths the remote agent can read. Kept as a separate IPC from
   // fs:importExternalPaths because terminal semantics differ from the
   // explorer's "copy into user-picked destDir". See docs/terminal-drop-ssh.md.
@@ -211,7 +211,7 @@ export function registerFilesystemMutationHandlers(store: Store): void {
         return { resolvedPaths: args.paths, skipped: [], failed: [] }
       }
       const worktreePath = args.worktreePath.replace(/\/+$/, '')
-      const destDir = `${worktreePath}/.orca/drops`
+      const destDir = `${worktreePath}/.serper/drops`
       const { results } = await importExternalPathsSsh(args.paths, destDir, args.connectionId, {
         ensureDir: true
       })

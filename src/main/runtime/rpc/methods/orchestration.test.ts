@@ -3,17 +3,17 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ORCHESTRATION_METHODS } from './orchestration'
 import { buildRegistry, type RpcContext } from '../core'
 import { OrchestrationDb } from '../../orchestration/db'
-import { OrcaRuntimeService } from '../../orca-runtime'
+import { SerperRuntimeService } from '../../serper-runtime'
 import type { RuntimeTerminalSummary } from '../../../../shared/runtime-types'
 
 describe('orchestration RPC methods', () => {
   let db: OrchestrationDb
-  let runtime: OrcaRuntimeService
+  let runtime: SerperRuntimeService
   let ctx: RpcContext
 
   function setup(): void {
     db = new OrchestrationDb(':memory:')
-    runtime = new OrcaRuntimeService()
+    runtime = new SerperRuntimeService()
     runtime.setOrchestrationDb(db)
     ctx = { runtime }
   }
@@ -648,7 +648,7 @@ describe('orchestration RPC methods', () => {
         devMode: true
       })
 
-      expect(send.mock.calls[0]?.[1].text).toContain('orca-dev orchestration send')
+      expect(send.mock.calls[0]?.[1].text).toContain('serper-dev orchestration send')
     })
 
     it('rejects inject to terminal without recognized agent', async () => {

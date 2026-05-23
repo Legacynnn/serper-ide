@@ -31,7 +31,7 @@ import {
 } from './local-pty-shell-ready'
 import { removeInheritedNoColor } from '../pty/terminal-color-env'
 
-const PANE_IDENTITY_ENV_KEYS = ['ORCA_PANE_KEY', 'ORCA_TAB_ID', 'ORCA_WORKTREE_ID'] as const
+const PANE_IDENTITY_ENV_KEYS = ['SERPER_PANE_KEY', 'SERPER_TAB_ID', 'SERPER_WORKTREE_ID'] as const
 
 let ptyCounter = 0
 const ptyProcesses = new Map<string, pty.IPty>()
@@ -234,22 +234,22 @@ export class LocalPtyProvider implements IPtyProvider {
       ...args.env,
       TERM: 'xterm-256color',
       COLORTERM: 'truecolor',
-      TERM_PROGRAM: 'Orca',
+      TERM_PROGRAM: 'Serper',
       // Why: TUIs feature-gate on TERM_PROGRAM_VERSION (Neovim's termcap
-      // autodetection, bat/delta paging hints). Sourced from ORCA_APP_VERSION
+      // autodetection, bat/delta paging hints). Sourced from SERPER_APP_VERSION
       // which main/index.ts seeds from app.getVersion() at startup; the
       // fallback keeps tests and non-Electron runs working.
-      TERM_PROGRAM_VERSION: process.env.ORCA_APP_VERSION ?? '0.0.0-dev',
+      TERM_PROGRAM_VERSION: process.env.SERPER_APP_VERSION ?? '0.0.0-dev',
       // Why: opt tools (Claude Code, ls --hyperlink, etc.) into emitting OSC 8
       // hyperlinks. The `supports-hyperlinks` npm package gates on a hard-coded
       // TERM_PROGRAM allowlist (iTerm.app / WezTerm / vscode) and returns false
-      // for TERM_PROGRAM=Orca, so callers drop OSC 8 output entirely and emit
-      // bare text instead. xterm.js in Orca parses OSC 8 and the pane's
+      // for TERM_PROGRAM=Serper, so callers drop OSC 8 output entirely and emit
+      // bare text instead. xterm.js in Serper parses OSC 8 and the pane's
       // linkHandler routes clicks, so forcing the advertisement is safe and
       // restores clickable refs like `owner/repo#123` / `PR#123`.
       FORCE_HYPERLINK: '1'
     } as Record<string, string>
-    // Why: Orca can be launched from an Orca terminal while developing. Pane
+    // Why: Serper can be launched from an Serper terminal while developing. Pane
     // identity belongs to the child PTY, not the parent shell that spawned app.
     removeUnspecifiedPaneIdentityEnv(spawnEnv, args.env)
     removeInheritedNoColor(spawnEnv)
@@ -270,12 +270,12 @@ export class LocalPtyProvider implements IPtyProvider {
 
     const finalEnv = this.opts.buildSpawnEnv ? this.opts.buildSpawnEnv(id, spawnEnv) : spawnEnv
     if (!wslInfo && process.platform !== 'win32') {
-      // Why: any Orca-injected overlay env that user rc files can clobber
+      // Why: any Serper-injected overlay env that user rc files can clobber
       // needs the wrapper so the post-rc restore line runs.
       const needsNoMarkerWrapper =
-        finalEnv.ORCA_ATTRIBUTION_SHIM_DIR ||
-        finalEnv.ORCA_OPENCODE_CONFIG_DIR ||
-        finalEnv.ORCA_PI_CODING_AGENT_DIR
+        finalEnv.SERPER_ATTRIBUTION_SHIM_DIR ||
+        finalEnv.SERPER_OPENCODE_CONFIG_DIR ||
+        finalEnv.SERPER_PI_CODING_AGENT_DIR
       getFallbackShellReadyConfig = args.command
         ? (shell) => getShellReadyLaunchConfig(shell)
         : needsNoMarkerWrapper

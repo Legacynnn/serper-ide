@@ -83,6 +83,6 @@ export function classifyConnection(args: {
 // "ws://192.168.x.y:port" unless someone is debugging).
 export function unreachableHint(reason: 'never-connected' | 'stale'): string {
   return reason === 'never-connected'
-    ? "Can't reach this Orca desktop. Its network address may have changed since pairing — try re-pairing from the desktop's Settings → Mobile screen."
-    : 'Lost contact with the Orca desktop. If your network changed (different Wi-Fi, IP renewed, or desktop restarted), try re-pairing.'
+    ? "Can't reach this Serper desktop. Its network address may have changed since pairing — try re-pairing from the desktop's Settings → Mobile screen."
+    : 'Lost contact with the Serper desktop. If your network changed (different Wi-Fi, IP renewed, or desktop restarted), try re-pairing.'
 }

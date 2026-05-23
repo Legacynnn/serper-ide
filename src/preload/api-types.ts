@@ -76,7 +76,7 @@ import type {
   NotificationPermissionStatusResult,
   NotificationSoundResult,
   OnboardingState,
-  OrcaHooks,
+  SerperHooks,
   PathSource,
   PersistedUIState,
   PRCheckDetail,
@@ -314,7 +314,7 @@ export type BrowserApi = {
   onPaneFocus: (
     callback: (data: { worktreeId: string | null; browserPageId: string }) => void
   ) => () => void
-  onOpenLinkInOrcaTab: (
+  onOpenLinkInSerperTab: (
     callback: (event: { browserPageId: string; url: string }) => void
   ) => () => void
   acceptDownload: (args: {
@@ -925,8 +925,8 @@ export type PreloadApi = {
         number: number
       }) => void
     ) => () => void
-    checkOrcaStarred: () => Promise<boolean | null>
-    starOrca: () => Promise<boolean>
+    checkSerperStarred: () => Promise<boolean | null>
+    starSerper: () => Promise<boolean>
     /**
      * GitHub API rate-limit snapshot. Does NOT consume quota (the
      * `rate_limit` endpoint is exempt). Cached 30s server-side — pass
@@ -1244,7 +1244,7 @@ export type PreloadApi = {
   hooks: {
     check: (args: {
       repoId: string
-    }) => Promise<{ hasHooks: boolean; hooks: OrcaHooks | null; mayNeedUpdate: boolean }>
+    }) => Promise<{ hasHooks: boolean; hooks: SerperHooks | null; mayNeedUpdate: boolean }>
     createIssueCommandRunner: (args: {
       repoId: string
       worktreePath: string

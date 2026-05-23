@@ -169,7 +169,7 @@ export async function addWorktree(
   refreshLocalBaseRef = false,
   noCheckout = false
 ): Promise<void> {
-  // Why: Some users want Orca-created worktrees to make plain commands like
+  // Why: Some users want Serper-created worktrees to make plain commands like
   // `git diff main...HEAD` work out of the box, while others do not want
   // worktree creation to mutate their local main/master ref at all. Keep this
   // behavior behind an explicit setting so the default stays conservative.
@@ -249,7 +249,7 @@ export async function addWorktree(
   // `--local` on a linked worktree writes to the shared common-dir config,
   // so this affects the whole repo, not just this worktree. That is
   // intentional and acceptable: the value is benign and idempotent, and
-  // every Orca-created worktree wants the same default. True per-worktree
+  // every Serper-created worktree wants the same default. True per-worktree
   // scope would require enabling extensions.worktreeConfig=true repo-wide,
   // which is a larger change we deliberately avoid.
   //
@@ -263,7 +263,7 @@ export async function addWorktree(
   //   or system) so a deliberate user `false` is preserved.
   // - Not rolled back on creation failure: addSparseWorktree's catch path
   //   removes the worktree but does not unset this config. That is consistent
-  //   with the "benign and idempotent" rationale above — every Orca-created
+  //   with the "benign and idempotent" rationale above — every Serper-created
   //   worktree wants this default, and a future creation will silently re-set
   //   it via the existing-value check anyway.
   try {
@@ -366,7 +366,7 @@ export async function removeWorktree(
   }
 
   try {
-    // Why: `git worktree remove` only detaches the filesystem entry. Orca also
+    // Why: `git worktree remove` only detaches the filesystem entry. Serper also
     // drops the now-unused local branch here so delete-worktree does not leave
     // behind orphaned feature branches unless another worktree still points at it.
     await gitExecFileAsync(['branch', '-D', branchName], { cwd: repoPath })

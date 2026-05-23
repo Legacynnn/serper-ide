@@ -1702,8 +1702,8 @@ describe('createEditorSlice activateMarkdownLink', () => {
 
     store.getState().openFile(
       {
-        filePath: '/remote/.orca/drops/log.txt',
-        relativePath: '.orca/drops/log.txt',
+        filePath: '/remote/.serper/drops/log.txt',
+        relativePath: '.serper/drops/log.txt',
         worktreeId: 'wt-1',
         language: 'text',
         mode: 'edit'
@@ -1712,7 +1712,7 @@ describe('createEditorSlice activateMarkdownLink', () => {
     )
 
     expect(store.getState().openFiles[0]).toMatchObject({
-      filePath: '/remote/.orca/drops/log.txt'
+      filePath: '/remote/.serper/drops/log.txt'
     })
     expect(store.getState().openFiles[0]?.runtimeEnvironmentId).toBeUndefined()
   })
@@ -1763,7 +1763,7 @@ describe('createEditorSlice activateMarkdownLink', () => {
     expect(store.getState().openFiles).toEqual([])
   })
 
-  it('opens in-worktree file links in Orca', async () => {
+  it('opens in-worktree file links in Serper', async () => {
     const store = createEditorStore()
     await store.getState().activateMarkdownLink('./image.png', {
       sourceFilePath: '/repo/docs/note.md',
@@ -1805,7 +1805,7 @@ describe('createEditorSlice activateMarkdownLink', () => {
     })
   })
 
-  it('opens explicit file URLs inside the worktree in Orca', async () => {
+  it('opens explicit file URLs inside the worktree in Serper', async () => {
     const store = createEditorStore()
     await store.getState().activateMarkdownLink('file:///repo/docs/image.png', {
       sourceFilePath: '/repo/docs/note.md',
@@ -1823,7 +1823,7 @@ describe('createEditorSlice activateMarkdownLink', () => {
     expect(openFileUriMock).not.toHaveBeenCalled()
   })
 
-  it('opens explicit file URLs outside the worktree in Orca after authorizing them', async () => {
+  it('opens explicit file URLs outside the worktree in Serper after authorizing them', async () => {
     const store = createEditorStore()
     await store.getState().activateMarkdownLink('file:///tmp/image.png', {
       sourceFilePath: '/repo/docs/note.md',

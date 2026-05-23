@@ -1,9 +1,9 @@
-import type { GlobalSettings, OrcaHooks } from '../../../shared/types'
+import type { GlobalSettings, SerperHooks } from '../../../shared/types'
 import { callRuntimeRpc, getActiveRuntimeTarget } from './runtime-rpc-client'
 
 export type HookCheckResult = {
   hasHooks: boolean
-  hooks: OrcaHooks | null
+  hooks: SerperHooks | null
   mayNeedUpdate: boolean
 }
 

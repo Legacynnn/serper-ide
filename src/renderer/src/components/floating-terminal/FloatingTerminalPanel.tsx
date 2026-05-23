@@ -385,7 +385,7 @@ export function FloatingTerminalPanel({
             <div className="space-y-0.5">
               <p className="text-sm font-medium">Enable orchestration</p>
               <p className="text-xs leading-5 text-muted-foreground">
-                Set up the Orca CLI and agent skill so agents can coordinate through Orca.
+                Set up the Serper CLI and agent skill so agents can coordinate through Serper.
               </p>
             </div>
             <div className="flex items-center gap-2">

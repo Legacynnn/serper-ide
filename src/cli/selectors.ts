@@ -64,7 +64,7 @@ export async function resolveCurrentWorktreeSelector(
   if (!enclosingWorktree) {
     throw new RuntimeClientError(
       'selector_not_found',
-      `No Orca-managed worktree contains the current directory: ${currentPath}`
+      `No Serper-managed worktree contains the current directory: ${currentPath}`
     )
   }
 
@@ -138,7 +138,7 @@ export async function getBrowserWorktreeSelector(
 
 // Why: mirrors browser's implicit active-tab targeting. When --terminal is
 // omitted, resolve the active terminal in the current worktree so commands
-// like `orca terminal send --text "hello" --enter` Just Work.
+// like `serper terminal send --text "hello" --enter` Just Work.
 export async function getTerminalHandle(
   flags: Map<string, string | boolean>,
   cwd: string,

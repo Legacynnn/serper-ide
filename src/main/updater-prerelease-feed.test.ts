@@ -14,7 +14,7 @@ function buildAtomFeed(tags: string[]): string {
   const entries = tags
     .map(
       (tag) =>
-        `<entry><link rel="alternate" type="text/html" href="https://github.com/stablyai/orca/releases/tag/${tag}"/><title>${tag}</title></entry>`
+        `<entry><link rel="alternate" type="text/html" href="https://github.com/Legacynnn/serper/releases/tag/${tag}"/><title>${tag}</title></entry>`
     )
     .join('')
   return `<?xml version="1.0" encoding="UTF-8"?><feed>${entries}</feed>`
@@ -23,7 +23,7 @@ function buildAtomFeed(tags: string[]): string {
 function respondWithAtom(tags: string[], missingManifestTags: string[] = []): void {
   const missingManifests = new Set(missingManifestTags)
   netFetchMock.mockImplementation((url: string) => {
-    if (url === 'https://github.com/stablyai/orca/releases.atom') {
+    if (url === 'https://github.com/Legacynnn/serper/releases.atom') {
       return Promise.resolve({
         ok: true,
         text: () => Promise.resolve(buildAtomFeed(tags))
@@ -85,7 +85,7 @@ describe('fetchNewerReleaseTag', () => {
       const manifestUrls: string[] = []
 
       netFetchMock.mockImplementation((url: string) => {
-        if (url === 'https://github.com/stablyai/orca/releases.atom') {
+        if (url === 'https://github.com/Legacynnn/serper/releases.atom') {
           return Promise.resolve({
             ok: true,
             text: () => Promise.resolve(buildAtomFeed(['v1.4.1']))
@@ -103,7 +103,7 @@ describe('fetchNewerReleaseTag', () => {
 
       expect(await fetchNewerReleaseTag('1.4.0')).toBe('v1.4.1')
       expect(manifestUrls).toEqual([
-        `https://github.com/stablyai/orca/releases/download/v1.4.1/${manifestName}`
+        `https://github.com/Legacynnn/serper/releases/download/v1.4.1/${manifestName}`
       ])
     }
   )
@@ -187,7 +187,7 @@ describe('fetchNewerReleaseTag', () => {
     const manifestResolvers: (() => void)[] = []
 
     netFetchMock.mockImplementation((url: string) => {
-      if (url === 'https://github.com/stablyai/orca/releases.atom') {
+      if (url === 'https://github.com/Legacynnn/serper/releases.atom') {
         return Promise.resolve({
           ok: true,
           text: () => Promise.resolve(buildAtomFeed(feedTags))

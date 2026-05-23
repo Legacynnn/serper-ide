@@ -1,4 +1,4 @@
-/* eslint-disable max-lines -- Why: OrcaRuntimeService still owns the mutable live graph, PTY handles, waiters, mobile floor/layout state, and managed-worktree reconciliation. Stateless browser and file command adapters live beside it; the remaining split points need state-owner extraction before enforcing max-lines. */
+/* eslint-disable max-lines -- Why: SerperRuntimeService still owns the mutable live graph, PTY handles, waiters, mobile floor/layout state, and managed-worktree reconciliation. Stateless browser and file command adapters live beside it; the remaining split points need state-owner extraction before enforcing max-lines. */
 /* eslint-disable unicorn/no-useless-spread -- Why: waiter sets and handle keys are cloned intentionally before mutation so resolution and rejection can safely remove entries while iterating. */
 /* eslint-disable no-control-regex -- Why: terminal normalization must strip ANSI and OSC control sequences from PTY output before returning bounded text to agents. */
 import {
@@ -99,9 +99,9 @@ import type {
   BrowserScreencastResult
 } from '../../shared/runtime-types'
 import type { AutomationService } from '../automations/service'
-import { RuntimeBrowserCommands } from './orca-runtime-browser'
-import { RuntimeFileCommands } from './orca-runtime-files'
-import { RuntimeGitCommands } from './orca-runtime-git'
+import { RuntimeBrowserCommands } from './serper-runtime-browser'
+import { RuntimeFileCommands } from './serper-runtime-files'
+import { RuntimeGitCommands } from './serper-runtime-git'
 import { joinWorktreeRelativePath } from './runtime-relative-paths'
 import { BrowserWindow, ipcMain } from 'electron'
 import type { AgentBrowserBridge } from '../browser/agent-browser-bridge'
@@ -241,10 +241,10 @@ import {
   createSetupRunnerScript,
   getEffectiveHooks,
   getEffectiveSetupRunPolicy,
-  hasUnrecognizedOrcaYamlKeys,
+  hasUnrecognizedSerperYamlKeys,
   hasHooksFile,
   loadHooks,
-  parseOrcaYaml,
+  parseSerperYaml,
   readIssueCommand,
   runHook,
   shouldRunSetupForCreate,
@@ -691,7 +691,7 @@ type LayoutQueueEntry = {
   }[]
 }
 
-export class OrcaRuntimeService {
+export class SerperRuntimeService {
   private readonly runtimeId = randomUUID()
   private readonly startedAt = Date.now()
   private readonly store: RuntimeStore | null
@@ -1736,7 +1736,7 @@ export class OrcaRuntimeService {
   }
 
   // Why: terminal handles are normally created lazily when first referenced via
-  // RPC, but agents need their own handle at spawn time (via ORCA_TERMINAL_HANDLE
+  // RPC, but agents need their own handle at spawn time (via SERPER_TERMINAL_HANDLE
   // env var) so they can self-identify in orchestration messages without an
   // extra RPC round-trip. Pre-allocating by ptyId lets issueHandle reuse it.
   preAllocateHandleForPty(ptyId: string): string {
@@ -1967,7 +1967,7 @@ export class OrcaRuntimeService {
     return this.ptyController?.getSize?.(ptyId) ?? null
   }
 
-  // Why: daemon-backed PTYs that the runtime adopted after an Orca relaunch
+  // Why: daemon-backed PTYs that the runtime adopted after an Serper relaunch
   // start with a fresh headless emulator that has zero scrollback, even though
   // the daemon's on-disk checkpoint and the desktop xterm both contain the
   // full prior history. Without this hydration, mobile subscribers see only
@@ -4180,7 +4180,7 @@ export class OrcaRuntimeService {
       truncated = opts.cursor < bufferStart
     } else {
       tail = allLines
-      // Why: Orca does not have a truthful main-owned screen model yet,
+      // Why: Serper does not have a truthful main-owned screen model yet,
       // especially for hidden panes. Focused v1 therefore returns the bounded
       // tail lines directly instead of duplicating the same text in a fake
       // screen field that would waste agent tokens.
@@ -4567,7 +4567,7 @@ export class OrcaRuntimeService {
     }
     if (!isAbsolute(path)) {
       // Why: remote clients may run in a different cwd than the server. Require
-      // server-side repo paths to be explicit so `orca serve` cwd is irrelevant.
+      // server-side repo paths to be explicit so `serper serve` cwd is irrelevant.
       throw new Error('Repo path must be an absolute path')
     }
     if (kind === 'git' && !isGitRepo(path)) {
@@ -5446,13 +5446,15 @@ export class OrcaRuntimeService {
         }
       }
       try {
-        const result = await fsProvider.readFile(joinWorktreeRelativePath(repo.path, '.orca.yaml'))
-        const hooks = result.isBinary ? null : parseOrcaYaml(result.content)
+        const result = await fsProvider.readFile(
+          joinWorktreeRelativePath(repo.path, '.serper.yaml')
+        )
+        const hooks = result.isBinary ? null : parseSerperYaml(result.content)
         return {
           hasHooksFile: Boolean(hooks),
           hooks,
           setupRunPolicy: getEffectiveSetupRunPolicy(repo),
-          source: hooks ? 'orca.yaml' : null
+          source: hooks ? 'serper.yaml' : null
         }
       } catch {
         return {
@@ -5470,7 +5472,7 @@ export class OrcaRuntimeService {
       hasHooksFile: hasFile,
       hooks,
       setupRunPolicy,
-      source: hasFile ? 'orca.yaml' : hooks ? 'legacy' : null
+      source: hasFile ? 'serper.yaml' : hooks ? 'legacy' : null
     }
   }
 
@@ -5486,7 +5488,9 @@ export class OrcaRuntimeService {
         return { hasHooks: false, hooks: null, mayNeedUpdate: false }
       }
       try {
-        const result = await fsProvider.readFile(joinWorktreeRelativePath(repo.path, '.orca.yaml'))
+        const result = await fsProvider.readFile(
+          joinWorktreeRelativePath(repo.path, '.serper.yaml')
+        )
         if (result.isBinary) {
           return { hasHooks: false, hooks: null, mayNeedUpdate: false }
         }
@@ -5503,7 +5507,7 @@ export class OrcaRuntimeService {
     return {
       hasHooks: has,
       hooks,
-      mayNeedUpdate: has && !hooks && hasUnrecognizedOrcaYamlKeys(repo.path)
+      mayNeedUpdate: has && !hooks && hasUnrecognizedSerperYamlKeys(repo.path)
     }
   }
 
@@ -5520,7 +5524,7 @@ export class OrcaRuntimeService {
     }
 
     if (repo.connectionId) {
-      const issueCommandPath = joinWorktreeRelativePath(repo.path, '.orca/issue-command')
+      const issueCommandPath = joinWorktreeRelativePath(repo.path, '.serper/issue-command')
       const fsProvider = getSshFilesystemProvider(repo.connectionId)
       if (!fsProvider) {
         return {
@@ -5570,11 +5574,11 @@ export class OrcaRuntimeService {
     repoPath: string
   ): Promise<string | null> {
     try {
-      const result = await fsProvider.readFile(joinWorktreeRelativePath(repoPath, 'orca.yaml'))
+      const result = await fsProvider.readFile(joinWorktreeRelativePath(repoPath, 'serper.yaml'))
       if (result.isBinary) {
         return null
       }
-      return parseOrcaYaml(result.content)?.issueCommand?.trim() || null
+      return parseSerperYaml(result.content)?.issueCommand?.trim() || null
     } catch {
       return null
     }
@@ -5587,7 +5591,7 @@ export class OrcaRuntimeService {
     }
 
     if (repo.connectionId) {
-      const issueCommandPath = joinWorktreeRelativePath(repo.path, '.orca/issue-command')
+      const issueCommandPath = joinWorktreeRelativePath(repo.path, '.serper/issue-command')
       const fsProvider = getSshFilesystemProvider(repo.connectionId)
       if (!fsProvider) {
         return { ok: true }
@@ -5601,8 +5605,8 @@ export class OrcaRuntimeService {
         })
         return { ok: true }
       }
-      await fsProvider.createDir(joinWorktreeRelativePath(repo.path, '.orca'))
-      await this.ensureRemoteOrcaDirIgnored(fsProvider, repo.path)
+      await fsProvider.createDir(joinWorktreeRelativePath(repo.path, '.serper'))
+      await this.ensureRemoteSerperDirIgnored(fsProvider, repo.path)
       await fsProvider.writeFile(issueCommandPath, `${trimmed}\n`)
       return { ok: true }
     }
@@ -5611,23 +5615,23 @@ export class OrcaRuntimeService {
     return { ok: true }
   }
 
-  private async ensureRemoteOrcaDirIgnored(
+  private async ensureRemoteSerperDirIgnored(
     fsProvider: IFilesystemProvider,
     repoPath: string
   ): Promise<void> {
     const gitignorePath = joinWorktreeRelativePath(repoPath, '.gitignore')
     try {
       const result = await fsProvider.readFile(gitignorePath)
-      if (result.isBinary || /^\.orca\/?$/m.test(result.content)) {
+      if (result.isBinary || /^\.serper\/?$/m.test(result.content)) {
         return
       }
       const separator = result.content.endsWith('\n') ? '' : '\n'
-      await fsProvider.writeFile(gitignorePath, `${result.content}${separator}.orca\n`)
+      await fsProvider.writeFile(gitignorePath, `${result.content}${separator}.serper\n`)
     } catch {
       try {
-        await fsProvider.writeFile(gitignorePath, '.orca\n')
+        await fsProvider.writeFile(gitignorePath, '.serper\n')
       } catch (error) {
-        console.warn('[runtime] Could not update remote .gitignore to exclude .orca', error)
+        console.warn('[runtime] Could not update remote .gitignore to exclude .serper', error)
       }
     }
   }
@@ -5758,12 +5762,12 @@ export class OrcaRuntimeService {
     }
 
     let worktreePath = computeWorktreePath(sanitizedName, repo.path, settings)
-    // Why: CLI-managed WSL worktrees live under ~/orca/workspaces inside the
+    // Why: CLI-managed WSL worktrees live under ~/serper/workspaces inside the
     // distro filesystem. If home lookup fails, still validate against the
     // configured workspace dir so the traversal guard is never bypassed.
     const wslInfo = isWslPath(repo.path) ? parseWslPath(repo.path) : null
     const wslHome = wslInfo ? getWslHome(wslInfo.distro) : null
-    const workspaceRoot = wslHome ? join(wslHome, 'orca', 'workspaces') : settings.workspaceDir
+    const workspaceRoot = wslHome ? join(wslHome, 'serper', 'workspaces') : settings.workspaceDir
     worktreePath = ensurePathWithinWorkspace(worktreePath, workspaceRoot)
     const remoteTrackingBase = await this.resolveRemoteTrackingBase(repo.path, baseBranch)
     if (remoteTrackingBase) {
@@ -5849,7 +5853,7 @@ export class OrcaRuntimeService {
         ? { displayName: requestedName }
         : {}
     const meta = this.store.setWorktreeMeta(worktreeId, {
-      // Why: worktree IDs are path-derived. If a path is deleted outside Orca
+      // Why: worktree IDs are path-derived. If a path is deleted outside Serper
       // and later recreated, creation must mint a fresh instance identity so
       // stale lineage records tied to the old occupant fail validation.
       instanceId: randomUUID(),
@@ -5908,7 +5912,7 @@ export class OrcaRuntimeService {
         lineageWarnings.push({
           code: 'LINEAGE_PARENT_CONTEXT_MISSING',
           message:
-            'Worktree created, but Orca could not record lineage because instance identity was unavailable.',
+            'Worktree created, but Serper could not record lineage because instance identity was unavailable.',
           details: {
             childHasInstanceId: Boolean(childInstanceId),
             parentHasInstanceId: Boolean(parentInstanceId),
@@ -5934,7 +5938,7 @@ export class OrcaRuntimeService {
     const hooks = getEffectiveHooks(repo, worktreePath)
     // Why: setupDecision lets mobile/CLI callers control whether the setup
     // script runs. 'skip' suppresses it, 'run' forces it, 'inherit' (default)
-    // defers to the repo's orca.yaml setupRunPolicy. runHooks === true maps
+    // defers to the repo's serper.yaml setupRunPolicy. runHooks === true maps
     // to 'run' for backwards compatibility with the desktop create flow.
     const effectiveDecision = args.runHooks ? 'run' : (args.setupDecision ?? 'inherit')
     const shouldRunSetup = hooks?.scripts.setup && shouldRunSetupForCreate(repo, effectiveDecision)
@@ -5942,7 +5946,7 @@ export class OrcaRuntimeService {
       if (this.authoritativeWindowId !== null) {
         try {
           // Why: CLI-created worktrees must use the same runner-script path as the
-          // renderer create flow so repo-committed `orca.yaml` setup hooks run in
+          // renderer create flow so repo-committed `serper.yaml` setup hooks run in
           // the visible first terminal instead of a hidden background shell with
           // different failure and prompt behavior.
           setup = createSetupRunnerScript(repo, worktreePath, hooks.scripts.setup)
@@ -5961,7 +5965,7 @@ export class OrcaRuntimeService {
       }
     } else if (hooks?.scripts.setup) {
       // Runtime RPC calls have no renderer trust prompt, so hooks require explicit CLI opt-in.
-      warning = `orca.yaml setup hook skipped for ${worktreePath}; pass --run-hooks to run it.`
+      warning = `serper.yaml setup hook skipped for ${worktreePath}; pass --run-hooks to run it.`
       console.warn(`[hooks] ${warning}`)
     }
 
@@ -5981,7 +5985,7 @@ export class OrcaRuntimeService {
       try {
         // Why: automation startup must not depend on a renderer TerminalPane
         // mounting. Runtime-spawned PTYs run immediately and the UI adopts the
-        // session later, matching `orca terminal create` background semantics.
+        // session later, matching `serper terminal create` background semantics.
         await this.createTerminal(`id:${worktree.id}`, {
           command: args.startup.command,
           env: args.startup.env
@@ -6227,7 +6231,7 @@ export class OrcaRuntimeService {
     ).finally(() => {
       // Why (§3.3 Lifecycle): evict on BOTH success and rejection. A
       // rejected entry that survived in the Map would wedge every future
-      // create on this repo until Orca restarted (the F2 bug §3.3 pins).
+      // create on this repo until Serper restarted (the F2 bug §3.3 pins).
       this.fetchInflight.delete(key)
     })
 
@@ -6652,7 +6656,7 @@ export class OrcaRuntimeService {
       }
     } else if (hooks?.scripts.archive) {
       // Runtime RPC calls have no renderer trust prompt, so hooks require explicit CLI opt-in.
-      warning = `orca.yaml archive hook skipped for ${worktree.path}; pass --run-hooks to run it.`
+      warning = `serper.yaml archive hook skipped for ${worktree.path}; pass --run-hooks to run it.`
       console.warn(`[hooks] ${warning}`)
     }
 
@@ -6792,9 +6796,9 @@ export class OrcaRuntimeService {
       const paneKey = makePaneKey(tabId, leafId)
       const env = {
         ...opts.env,
-        ORCA_PANE_KEY: paneKey,
-        ORCA_TAB_ID: tabId,
-        ORCA_WORKTREE_ID: worktree.id
+        SERPER_PANE_KEY: paneKey,
+        SERPER_TAB_ID: tabId,
+        SERPER_WORKTREE_ID: worktree.id
       }
       const result = await this.ptyController.spawn({
         cols: 120,
@@ -7284,9 +7288,9 @@ export class OrcaRuntimeService {
       cwd: worktree.path,
       command: opts.command,
       env: {
-        ORCA_PANE_KEY: paneKey,
-        ORCA_TAB_ID: parentTabId,
-        ORCA_WORKTREE_ID: worktree.id
+        SERPER_PANE_KEY: paneKey,
+        SERPER_TAB_ID: parentTabId,
+        SERPER_WORKTREE_ID: worktree.id
       },
       connectionId: repo?.connectionId ?? null,
       worktreeId: worktree.id,
@@ -7421,7 +7425,7 @@ export class OrcaRuntimeService {
     this.rememberDetachedPreAllocatedLeaves()
     this.handles.clear()
     this.handleByLeafKey.clear()
-    // Why: handleByPtyId maps ptyId → pre-allocated CLI handle (ORCA_TERMINAL_HANDLE).
+    // Why: handleByPtyId maps ptyId → pre-allocated CLI handle (SERPER_TERMINAL_HANDLE).
     // These must survive renderer reloads so CLI agents can keep controlling the
     // same terminal across graph rebuilds — adoptPreAllocatedHandle re-links
     // them when the new graph arrives.
@@ -7441,7 +7445,7 @@ export class OrcaRuntimeService {
     if (windowId !== this.authoritativeWindowId) {
       return
     }
-    // Why: once the authoritative renderer graph disappears, Orca must fail
+    // Why: once the authoritative renderer graph disappears, Serper must fail
     // closed for live-terminal operations instead of guessing from old state.
     if (this.graphStatus !== 'unavailable') {
       this.rendererGraphEpoch += 1
@@ -7591,7 +7595,7 @@ export class OrcaRuntimeService {
           'Parent workspace was not found.',
           {
             nextSteps: [
-              'Run `orca worktree list` and pass a valid --parent-worktree selector.',
+              'Run `serper worktree list` and pass a valid --parent-worktree selector.',
               'Retry with --no-parent to create without lineage.'
             ]
           }
@@ -7659,7 +7663,7 @@ export class OrcaRuntimeService {
         warnings.push({
           code: 'LINEAGE_PARENT_CONTEXT_MISSING',
           message:
-            'Worktree created, but Orca could not validate the caller terminal as a parent workspace.',
+            'Worktree created, but Serper could not validate the caller terminal as a parent workspace.',
           details: { callerTerminalHandle: input.callerTerminalHandle }
         })
       }
@@ -7675,7 +7679,7 @@ export class OrcaRuntimeService {
         warnings.push({
           code: 'LINEAGE_PARENT_CONTEXT_MISSING',
           message:
-            'Worktree created, but Orca could not validate the current directory as a parent workspace.',
+            'Worktree created, but Serper could not validate the current directory as a parent workspace.',
           details: { cwdParentWorktree: input.cwdParentWorktree }
         })
       }
@@ -7697,7 +7701,8 @@ export class OrcaRuntimeService {
         warnings: [
           {
             code: 'LINEAGE_PARENT_CONTEXT_CONFLICT',
-            message: 'Worktree created, but Orca could not prove which parent workspace caused it.',
+            message:
+              'Worktree created, but Serper could not prove which parent workspace caused it.',
             details: {
               terminalParentWorktreeId: candidates.find((c) => c.source === 'terminal-context')
                 ?.parent.id,
@@ -7927,7 +7932,7 @@ export class OrcaRuntimeService {
     )
     const worktrees = this.attachLineageToResolvedWorktrees(perRepoWorktrees.flat())
     // Why: terminal polling can be frequent, but git worktree state is still
-    // allowed to change outside Orca. A short TTL avoids shelling out on every
+    // allowed to change outside Serper. A short TTL avoids shelling out on every
     // read without pretending the cache is authoritative for long.
     if (generation === this.resolvedWorktreeGeneration) {
       this.resolvedWorktreeCache = {
@@ -8409,7 +8414,7 @@ export class OrcaRuntimeService {
           title: liveTab.title || tab.title,
           url: liveTab.url || tab.url,
           // Why: bridge "active" means active BrowserView/webContents, not
-          // active Orca tab. Preserve the renderer's app-level session focus.
+          // active Serper tab. Preserve the renderer's app-level session focus.
           isActive: tab.isActive
         })
         continue
@@ -8887,7 +8892,7 @@ export class OrcaRuntimeService {
   private rememberDetachedPreAllocatedLeaves(): void {
     for (const leaf of this.leaves.values()) {
       if (leaf.ptyId && this.handleByPtyId.has(leaf.ptyId)) {
-        // Why: ORCA_TERMINAL_HANDLE is an agent identity, so CLI control should
+        // Why: SERPER_TERMINAL_HANDLE is an agent identity, so CLI control should
         // survive renderer graph loss as long as the underlying PTY is alive.
         this.detachedPreAllocatedLeaves.set(leaf.ptyId, leaf)
       }
@@ -9865,7 +9870,7 @@ function buildPtyTerminalWaitResult(
 
 function branchSelectorMatches(branch: string, selector: string): boolean {
   // Why: Git worktree data can report local branches as either `refs/heads/foo`
-  // or `foo` depending on which plumbing path produced the record. Orca's
+  // or `foo` depending on which plumbing path produced the record. Serper's
   // branch selectors should accept either form so newly created worktrees stay
   // discoverable without exposing internal ref-shape differences to users.
   return normalizeBranchRef(branch) === normalizeBranchRef(selector)

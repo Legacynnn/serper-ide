@@ -30,8 +30,8 @@ describe('buildGuestOverlayScript', () => {
   it('arm script contains shadow DOM setup', () => {
     const script = buildGuestOverlayScript('arm')
     expect(script).toContain('attachShadow')
-    expect(script).toContain('__orca-grab-host')
-    expect(script).toContain('__orcaGrab')
+    expect(script).toContain('__serper-grab-host')
+    expect(script).toContain('__serperGrab')
   })
 
   it('arm script contains budget constants matching shared types', () => {
@@ -91,7 +91,7 @@ describe('buildGuestOverlayScript', () => {
   it('teardown script cleans up the overlay', () => {
     const script = buildGuestOverlayScript('teardown')
     expect(script).toContain('cleanup')
-    expect(script).toContain('__orcaGrab')
+    expect(script).toContain('__serperGrab')
   })
 
   it('teardown script cancels pending awaitClick', () => {

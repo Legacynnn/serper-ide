@@ -94,7 +94,7 @@ export class MacOSNativeProviderClient {
     const id = this.nextId++
     const helperExecutablePath = resolveMacOSComputerUseExecutablePath()
     if (!helperExecutablePath) {
-      throw new RuntimeClientError('accessibility_error', 'Orca Computer Use.app was not found')
+      throw new RuntimeClientError('accessibility_error', 'Serper Computer Use.app was not found')
     }
     const transport = await this.ensureSocketStarted(helperExecutablePath)
     const token = this.socketToken
@@ -175,14 +175,14 @@ export class MacOSNativeProviderClient {
     }
   }
   private async startSocket(helperExecutablePath: string): Promise<net.Socket> {
-    this.socketDirectory = mkdtempSync(join(tmpdir(), 'orca-computer-use-'))
+    this.socketDirectory = mkdtempSync(join(tmpdir(), 'serper-computer-use-'))
     chmodSync(this.socketDirectory, 0o700)
     this.socketPath = join(this.socketDirectory, 'provider.sock')
     this.socketToken = randomUUID()
     this.socketTokenPath = join(this.socketDirectory, 'provider.token')
     writeFileSync(this.socketTokenPath, this.socketToken, { encoding: 'utf8', mode: 0o600 })
     // Why: launching the nested helper via LaunchServices can make TCC evaluate
-    // Orca.app as responsible; the signed helper executable owns this grant.
+    // Serper.app as responsible; the signed helper executable owns this grant.
     const provider = spawn(
       helperExecutablePath,
       ['--agent', this.socketPath, '--token-file', this.socketTokenPath],

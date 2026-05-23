@@ -80,7 +80,7 @@ export class RelayDispatcher {
     this.notifyClientDetached(this.primaryClient.id)
   }
 
-  // Why: synced remote workspaces can have more than one Orca client attached
+  // Why: synced remote workspaces can have more than one Serper client attached
   // to the same relay. Frame sequence numbers and JSON-RPC request ids are per
   // SSH channel, so each socket client needs independent protocol state.
   attachClient(write: (data: Buffer) => void): number {

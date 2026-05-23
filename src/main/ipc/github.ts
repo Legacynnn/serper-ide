@@ -38,8 +38,8 @@ import {
   updatePRState,
   rerunPRChecks,
   requestPRReviewers,
-  checkOrcaStarred,
-  starOrca
+  checkSerperStarred,
+  starSerper
 } from '../github/client'
 import { getWorkItemDetails, getPRFileContents } from '../github/work-item-details'
 import { getRateLimit } from '../github/rate-limit'
@@ -145,7 +145,7 @@ export function registerGitHubHandlers(store: Store, stats: StatsCollector): voi
       )
       // Emit pr_created when a PR is first detected for a branch.
       // Why here: the renderer polls gh:prForBranch to check PR status per worktree.
-      // This captures PRs opened from any workflow (Orca UI, gh CLI, github.com).
+      // This captures PRs opened from any workflow (Serper UI, gh CLI, github.com).
       if (pr && !stats.hasCountedPR(pr.url)) {
         stats.record({
           type: 'pr_created',
@@ -685,10 +685,10 @@ export function registerGitHubHandlers(store: Store, stats: StatsCollector): voi
     return listAssignableUsers(repo.path, repo.issueSourcePreference, repoConnectionId(repo))
   })
 
-  // Star operations target the Orca repo itself — no repoPath validation needed
+  // Star operations target the Serper repo itself — no repoPath validation needed
   ipcMain.handle('gh:viewer', () => getAuthenticatedViewer())
-  ipcMain.handle('gh:checkOrcaStarred', () => checkOrcaStarred())
-  ipcMain.handle('gh:starOrca', () => starOrca())
+  ipcMain.handle('gh:checkSerperStarred', () => checkSerperStarred())
+  ipcMain.handle('gh:starSerper', () => starSerper())
 
   // Why: `rate_limit` is exempt from GitHub's rate-limit accounting, so
   // polling is cheap. A 30s in-process cache still avoids the gh subprocess

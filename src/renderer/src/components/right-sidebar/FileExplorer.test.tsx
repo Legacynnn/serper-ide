@@ -128,7 +128,7 @@ function makeRefreshState(
 
 function makeToolbar(overrides: Partial<Parameters<typeof FileExplorerToolbar>[0]> = {}) {
   return FileExplorerToolbar({
-    repoName: 'orca',
+    repoName: 'serper',
     refresh: makeRefreshState(),
     canCollapseAll: false,
     onCollapseAll: vi.fn(),

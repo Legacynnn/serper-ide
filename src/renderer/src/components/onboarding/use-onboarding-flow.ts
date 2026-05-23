@@ -595,7 +595,7 @@ export function useOnboardingFlow(
       const nextState = await persistStep(repoStep.stepNumber - 1)
       onOnboardingChange(nextState)
       // Why: users can skip optional preferences, but onboarding remains open
-      // because Orca needs a project before the app has a useful first state.
+      // because Serper needs a project before the app has a useful first state.
       track('onboarding_step_skipped', {
         step: currentStep.stepNumber,
         duration_ms: durationMs,

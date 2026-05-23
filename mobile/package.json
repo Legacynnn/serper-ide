@@ -1,5 +1,5 @@
 {
-  "name": "orca-mobile",
+  "name": "serper-mobile",
   "version": "0.0.1",
   "private": true,
   "main": "expo-router/entry",
@@ -13,8 +13,8 @@
     "mock-server": "npx tsx scripts/mock-server.ts"
   },
   "dependencies": {
-    "@orca/expo-two-way-audio": "file:./packages/expo-two-way-audio",
     "@react-native-async-storage/async-storage": "^2.2.0",
+    "@serper/expo-two-way-audio": "file:./packages/expo-two-way-audio",
     "buffer": "^6.0.3",
     "expo": "^55.0.23",
     "expo-build-properties": "^55.0.13",

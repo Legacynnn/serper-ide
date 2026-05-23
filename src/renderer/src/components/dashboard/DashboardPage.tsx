@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { useAppStore } from '@/store'
 import { useAllWorktrees, useRepoMap } from '@/store/selectors'
 import RepoDotLabel from '@/components/repo/RepoDotLabel'
+import { TitlebarPageControlsPortal } from '@/components/titlebar-page-controls/TitlebarPageControlsPortal'
 import SidebarFilter from '@/components/sidebar/SidebarFilter'
 import WorkspaceKanbanAreaSelectionOverlay from '@/components/sidebar/WorkspaceKanbanAreaSelectionOverlay'
 import WorkspaceKanbanLaneGrid from '@/components/sidebar/WorkspaceKanbanLaneGrid'
@@ -350,18 +351,21 @@ export default function DashboardPage(): React.JSX.Element {
       className="relative flex h-full min-h-0 flex-col bg-background text-foreground"
       data-workspace-board-compact={workspaceBoardCompact ? 'true' : 'false'}
     >
-      <header className="flex shrink-0 flex-col gap-2 px-5 pb-3 pt-1.5 md:px-8">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Kanban className="size-4 text-muted-foreground" strokeWidth={2.25} />
-            <h1 className="text-sm font-semibold">Dashboard</h1>
+      <TitlebarPageControlsPortal>
+        <div
+          className="flex h-full min-w-0 flex-1 items-center justify-between gap-2 px-3"
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+        >
+          <div className="flex min-w-0 items-center gap-2">
+            <Kanban className="size-3.5 shrink-0 text-muted-foreground" strokeWidth={2.25} />
+            <h1 className="truncate text-xs font-semibold">Dashboard</h1>
             {selectedCount > 1 ? (
-              <span className="rounded-full bg-sidebar-accent px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+              <span className="shrink-0 rounded-full bg-sidebar-accent px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
                 {selectedCount} selected
               </span>
             ) : null}
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex shrink-0 items-center gap-1">
             <SidebarFilter tooltipSide="bottom" contentSide="bottom" />
             <Tooltip>
               <TooltipTrigger asChild>
@@ -395,43 +399,43 @@ export default function DashboardPage(): React.JSX.Element {
             />
           </div>
         </div>
-        {canFilterRepos ? (
-          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-sleek">
-            <button
-              type="button"
-              onClick={handleClearRepoFilter}
-              aria-pressed={allReposSelected}
-              className={cn(
-                'shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors',
-                allReposSelected
-                  ? 'border-foreground/20 bg-foreground/10 text-foreground'
-                  : 'border-border/60 bg-transparent text-muted-foreground hover:border-foreground/20 hover:text-foreground'
-              )}
-            >
-              All repos
-            </button>
-            {repos.map((repo) => {
-              const checked = !allReposSelected && selectedRepoIds.has(repo.id)
-              return (
-                <button
-                  key={repo.id}
-                  type="button"
-                  onClick={() => handleToggleRepoFilter(repo.id)}
-                  aria-pressed={checked}
-                  className={cn(
-                    'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors',
-                    checked
-                      ? 'border-foreground/20 bg-foreground/10 text-foreground'
-                      : 'border-border/60 bg-transparent text-muted-foreground hover:border-foreground/20 hover:text-foreground'
-                  )}
-                >
-                  <RepoDotLabel name={repo.displayName} color={repo.badgeColor} />
-                </button>
-              )
-            })}
-          </div>
-        ) : null}
-      </header>
+      </TitlebarPageControlsPortal>
+      {canFilterRepos ? (
+        <div className="flex shrink-0 items-center gap-1.5 overflow-x-auto px-5 pt-2 pb-2 scrollbar-sleek md:px-8">
+          <button
+            type="button"
+            onClick={handleClearRepoFilter}
+            aria-pressed={allReposSelected}
+            className={cn(
+              'shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors',
+              allReposSelected
+                ? 'border-foreground/20 bg-foreground/10 text-foreground'
+                : 'border-border/60 bg-transparent text-muted-foreground hover:border-foreground/20 hover:text-foreground'
+            )}
+          >
+            All repos
+          </button>
+          {repos.map((repo) => {
+            const checked = !allReposSelected && selectedRepoIds.has(repo.id)
+            return (
+              <button
+                key={repo.id}
+                type="button"
+                onClick={() => handleToggleRepoFilter(repo.id)}
+                aria-pressed={checked}
+                className={cn(
+                  'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors',
+                  checked
+                    ? 'border-foreground/20 bg-foreground/10 text-foreground'
+                    : 'border-border/60 bg-transparent text-muted-foreground hover:border-foreground/20 hover:text-foreground'
+                )}
+              >
+                <RepoDotLabel name={repo.displayName} color={repo.badgeColor} />
+              </button>
+            )
+          })}
+        </div>
+      ) : null}
       <div
         ref={boardRef}
         className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-3 pb-3"

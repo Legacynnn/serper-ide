@@ -44,10 +44,10 @@ function createSettings(overrides: Partial<GlobalSettings> = {}): GlobalSettings
     terminalLigatures: 'auto',
     terminalCursorStyle: 'block',
     terminalCursorBlink: false,
-    terminalThemeDark: 'orca-dark',
+    terminalThemeDark: 'serper-dark',
     terminalDividerColorDark: '#000000',
     terminalUseSeparateLightTheme: false,
-    terminalThemeLight: 'orca-light',
+    terminalThemeLight: 'serper-light',
     terminalDividerColorLight: '#ffffff',
     terminalInactivePaneOpacity: 0.5,
     terminalActivePaneOpacity: 1,
@@ -146,7 +146,7 @@ function createRuntimeHome() {
 function createManagedHome(rootDir: string, accountId: string, config = '', auth = ''): string {
   const managedHomePath = join(rootDir, 'codex-accounts', accountId, 'home')
   mkdirSync(managedHomePath, { recursive: true })
-  writeFileSync(join(managedHomePath, '.orca-managed-home'), `${accountId}\n`, 'utf-8')
+  writeFileSync(join(managedHomePath, '.serper-managed-home'), `${accountId}\n`, 'utf-8')
   if (config) {
     writeFileSync(join(managedHomePath, 'config.toml'), config, 'utf-8')
   }
@@ -160,8 +160,8 @@ describe('CodexAccountService config sync', () => {
   beforeEach(() => {
     vi.resetModules()
     vi.clearAllMocks()
-    testState.userDataDir = mkdtempSync(join(tmpdir(), 'orca-codex-accounts-'))
-    testState.fakeHomeDir = mkdtempSync(join(tmpdir(), 'orca-codex-home-'))
+    testState.userDataDir = mkdtempSync(join(tmpdir(), 'serper-codex-accounts-'))
+    testState.fakeHomeDir = mkdtempSync(join(tmpdir(), 'serper-codex-home-'))
     mkdirSync(join(testState.fakeHomeDir, '.codex'), { recursive: true })
   })
 

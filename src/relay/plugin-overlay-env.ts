@@ -17,7 +17,7 @@ export function resolveOpenCodeSourceConfigDir(
   shell: string | undefined
 ): string | undefined {
   return firstNonEmpty(
-    env.ORCA_OPENCODE_SOURCE_CONFIG_DIR,
+    env.SERPER_OPENCODE_SOURCE_CONFIG_DIR,
     readStartupEnv('OPENCODE_CONFIG_DIR', env, shell),
     env.OPENCODE_CONFIG_DIR
   )
@@ -28,7 +28,7 @@ export function resolvePiSourceAgentDir(
   shell: string | undefined
 ): string | undefined {
   return firstNonEmpty(
-    env.ORCA_PI_SOURCE_AGENT_DIR,
+    env.SERPER_PI_SOURCE_AGENT_DIR,
     readStartupEnv('PI_CODING_AGENT_DIR', env, shell),
     env.PI_CODING_AGENT_DIR
   )

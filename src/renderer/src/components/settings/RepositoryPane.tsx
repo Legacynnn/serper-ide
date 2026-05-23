@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { OrcaHooks, Repo, RepoHookSettings } from '../../../../shared/types'
+import type { SerperHooks, Repo, RepoHookSettings } from '../../../../shared/types'
 import { getRepoKindLabel, isFolderRepo } from '../../../../shared/repo-kind'
 import { REPO_COLORS } from '../../../../shared/constants'
 import { Button } from '../ui/button'
@@ -19,7 +19,7 @@ import { useAppStore } from '../../store'
 
 type RepositoryPaneProps = {
   repo: Repo
-  yamlHooks: OrcaHooks | null
+  yamlHooks: SerperHooks | null
   hasHooksFile: boolean
   mayNeedUpdate: boolean
   updateRepo: (repoId: string, updates: Partial<Repo>) => void
@@ -69,7 +69,7 @@ export function getRepositoryPaneSearchEntries(repo: Repo): SettingsSearchEntry[
         ]),
     {
       title: 'Remove Repo',
-      description: 'Remove this repository from Orca.',
+      description: 'Remove this repository from Serper.',
       keywords: [repo.displayName, 'delete', 'repository']
     },
     ...(isFolder
@@ -103,7 +103,7 @@ export function getRepositoryPaneSearchEntries(repo: Repo): SettingsSearchEntry[
             ]
           },
           {
-            title: 'orca.yaml hooks',
+            title: 'serper.yaml hooks',
             description: 'Shared setup and archive hook commands for this repository.',
             keywords: [repo.displayName, 'hooks', 'setup', 'archive', 'yaml']
           },
@@ -115,11 +115,11 @@ export function getRepositoryPaneSearchEntries(repo: Repo): SettingsSearchEntry[
           {
             title: 'Command Source',
             description:
-              'Choose whether Orca runs commands from `orca.yaml`, local Settings, or both.',
+              'Choose whether Serper runs commands from `serper.yaml`, local Settings, or both.',
             keywords: [
               repo.displayName,
               'local',
-              'orca.yaml',
+              'serper.yaml',
               'shared',
               'both',
               'source',
@@ -140,15 +140,15 @@ export function getRepositoryPaneSearchEntries(repo: Repo): SettingsSearchEntry[
           {
             title: 'Custom GitHub Issue Command',
             description:
-              'File-based linked-issue command configured via orca.yaml and optional local override.',
+              'File-based linked-issue command configured via serper.yaml and optional local override.',
             keywords: [
               repo.displayName,
               'github issue command',
               'issue command',
               'workflow',
               'github',
-              'orca.yaml',
-              '.orca/issue-command'
+              'serper.yaml',
+              '.serper/issue-command'
             ]
           }
         ])
@@ -186,7 +186,7 @@ export function RepositoryPane({
   }
 
   const handleCopyTemplate = async () => {
-    // Why: the missing-`orca.yaml` state is a migration aid, so copying the shared-template
+    // Why: the missing-`serper.yaml` state is a migration aid, so copying the shared-template
     // snippet should be one click rather than forcing users to reconstruct the expected shape.
     await window.api.ui.writeClipboardText(`scripts:
   setup: |
@@ -212,7 +212,7 @@ export function RepositoryPane({
   )
   const hooksEntries = allEntries.filter((entry) =>
     [
-      'orca.yaml hooks',
+      'serper.yaml hooks',
       'Local Settings Commands',
       'Command Source',
       'When to Run Setup',
@@ -242,7 +242,7 @@ export function RepositoryPane({
           </div>
           <SearchableSetting
             title="Remove Repo"
-            description="Remove this repository from Orca."
+            description="Remove this repository from Serper."
             keywords={[repo.displayName, 'delete', 'repository']}
           >
             <Button

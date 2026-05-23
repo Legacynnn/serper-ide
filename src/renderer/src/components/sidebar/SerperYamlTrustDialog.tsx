@@ -9,9 +9,9 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/store'
-import type { OrcaHookScriptKind } from '@/lib/orca-hook-trust'
+import type { SerperHookScriptKind } from '@/lib/serper-hook-trust'
 
-type ScriptKind = OrcaHookScriptKind
+type ScriptKind = SerperHookScriptKind
 
 const SCRIPT_KIND_LABEL: Record<ScriptKind, string> = {
   setup: 'setup script',
@@ -25,15 +25,15 @@ const SCRIPT_KIND_TRIGGER: Record<ScriptKind, string> = {
   issueCommand: 'when this workspace launches with a linked issue'
 }
 
-const OrcaYamlTrustDialog = React.memo(function OrcaYamlTrustDialog() {
+const SerperYamlTrustDialog = React.memo(function SerperYamlTrustDialog() {
   const activeModal = useAppStore((s) => s.activeModal)
   const modalData = useAppStore((s) => s.modalData)
   const closeModal = useAppStore((s) => s.closeModal)
-  const markOrcaHookScriptConfirmed = useAppStore((s) => s.markOrcaHookScriptConfirmed)
-  const markOrcaHookRepoAlwaysTrusted = useAppStore((s) => s.markOrcaHookRepoAlwaysTrusted)
+  const markSerperHookScriptConfirmed = useAppStore((s) => s.markSerperHookScriptConfirmed)
+  const markSerperHookRepoAlwaysTrusted = useAppStore((s) => s.markSerperHookRepoAlwaysTrusted)
   const [alwaysTrust, setAlwaysTrust] = useState(false)
 
-  const isOpen = activeModal === 'confirm-orca-yaml-hooks'
+  const isOpen = activeModal === 'confirm-serper-yaml-hooks'
 
   const repoId = typeof modalData.repoId === 'string' ? modalData.repoId : ''
   const repoName = typeof modalData.repoName === 'string' ? modalData.repoName : 'this repository'
@@ -61,9 +61,9 @@ const OrcaYamlTrustDialog = React.memo(function OrcaYamlTrustDialog() {
     (decision: 'run' | 'skip') => {
       if (decision === 'run' && repoId) {
         if (alwaysTrust) {
-          markOrcaHookRepoAlwaysTrusted(repoId)
+          markSerperHookRepoAlwaysTrusted(repoId)
         } else if (contentHash) {
-          markOrcaHookScriptConfirmed(repoId, scriptKind, contentHash)
+          markSerperHookScriptConfirmed(repoId, scriptKind, contentHash)
         }
       }
       onResolve?.(decision)
@@ -73,8 +73,8 @@ const OrcaYamlTrustDialog = React.memo(function OrcaYamlTrustDialog() {
       alwaysTrust,
       closeModal,
       contentHash,
-      markOrcaHookRepoAlwaysTrusted,
-      markOrcaHookScriptConfirmed,
+      markSerperHookRepoAlwaysTrusted,
+      markSerperHookScriptConfirmed,
       onResolve,
       repoId,
       scriptKind
@@ -102,12 +102,12 @@ const OrcaYamlTrustDialog = React.memo(function OrcaYamlTrustDialog() {
           <DialogDescription className="text-xs">
             {previouslyApproved ? (
               <>
-                <code>orca.yaml</code> changed since you last approved. Re-review before it runs{' '}
+                <code>serper.yaml</code> changed since you last approved. Re-review before it runs{' '}
                 {SCRIPT_KIND_TRIGGER[scriptKind]}.
               </>
             ) : (
               <>
-                This repository&apos;s <code>orca.yaml</code> runs on your machine{' '}
+                This repository&apos;s <code>serper.yaml</code> runs on your machine{' '}
                 {SCRIPT_KIND_TRIGGER[scriptKind]}. Only run if you trust {repoName}.
               </>
             )}
@@ -139,7 +139,7 @@ const OrcaYamlTrustDialog = React.memo(function OrcaYamlTrustDialog() {
             onChange={(event) => setAlwaysTrust(event.target.checked)}
           />
           <span className="text-xs font-medium text-foreground">
-            Always trust <code>orca.yaml</code> in {repoName}
+            Always trust <code>serper.yaml</code> in {repoName}
           </span>
         </label>
 
@@ -154,4 +154,4 @@ const OrcaYamlTrustDialog = React.memo(function OrcaYamlTrustDialog() {
   )
 })
 
-export default OrcaYamlTrustDialog
+export default SerperYamlTrustDialog

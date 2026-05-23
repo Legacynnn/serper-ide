@@ -143,7 +143,7 @@ describe('AgentExecHandler', () => {
   })
 
   it('resolves bare Windows agent commands to batch shims before spawning', async () => {
-    const tempDir = mkdtempSync(join(tmpdir(), 'orca-agent-exec-'))
+    const tempDir = mkdtempSync(join(tmpdir(), 'serper-agent-exec-'))
     const originalComSpec = process.env.ComSpec
     process.env.ComSpec = 'C:\\Windows\\System32\\cmd.exe'
     try {

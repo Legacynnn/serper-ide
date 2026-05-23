@@ -1,5 +1,5 @@
 /**
- * Step for AddRepoDialog (orca#763).
+ * Step for AddRepoDialog (serper#763).
  *
  * Split from AddRepoDialog and AddRepoSteps to keep both under the 400-line
  * oxlint limit, following the same pattern as useRemoteRepo.
@@ -300,7 +300,7 @@ export function CreateStep({
       <DialogHeader>
         <DialogTitle>Start a new project</DialogTitle>
         <DialogDescription>
-          Create a Git repository or a plain folder and open it in Orca.
+          Create a Git repository or a plain folder and open it in Serper.
         </DialogDescription>
       </DialogHeader>
 

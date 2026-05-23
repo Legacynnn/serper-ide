@@ -344,7 +344,7 @@ function ChromePreview({ variant }: { variant: GlobalSettings['theme'] }) {
 }
 
 function ChromeMock({ dark, vesper = false }: { dark: boolean; vesper?: boolean }) {
-  // Tiny Orca chrome: sidebar with two rows + a content area with a tab and
+  // Tiny Serper chrome: sidebar with two rows + a content area with a tab and
   // a composer line. Pure Tailwind so it stays lightweight inside the tile.
   const bg = vesper ? 'bg-[#101010]' : dark ? 'bg-[#0f1115]' : 'bg-[#f7f8fa]'
   const sidebar = vesper ? 'bg-white/[0.04]' : dark ? 'bg-[#16181d]' : 'bg-[#eceef2]'

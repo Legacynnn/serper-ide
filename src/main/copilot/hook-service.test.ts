@@ -13,7 +13,7 @@ let originalHome: string | undefined
 let originalUserProfile: string | undefined
 
 beforeEach(() => {
-  tmpDir = mkdtempSync(join(tmpdir(), 'orca-copilot-hooks-'))
+  tmpDir = mkdtempSync(join(tmpdir(), 'serper-copilot-hooks-'))
   copilotHome = join(tmpDir, 'copilot-home')
   originalCopilotHome = process.env.COPILOT_HOME
   originalHome = process.env.HOME
@@ -43,7 +43,7 @@ afterEach(() => {
 })
 
 function readConfig(): Record<string, unknown> {
-  return JSON.parse(readFileSync(join(copilotHome, 'hooks', 'orca.json'), 'utf-8'))
+  return JSON.parse(readFileSync(join(copilotHome, 'hooks', 'serper.json'), 'utf-8'))
 }
 
 describe('CopilotHookService', () => {
@@ -54,7 +54,7 @@ describe('CopilotHookService', () => {
     const config = readConfig()
 
     expect(status.state).toBe('installed')
-    expect(status.configPath).toBe(join(copilotHome, 'hooks', 'orca.json'))
+    expect(status.configPath).toBe(join(copilotHome, 'hooks', 'serper.json'))
     expect(config.version).toBe(1)
     const hooks = config.hooks as Record<string, unknown[]>
     expect(Object.keys(hooks).sort()).toEqual(
@@ -80,14 +80,14 @@ describe('CopilotHookService', () => {
     if (process.platform === 'win32') {
       expect(firstPromptHook.powershell).toContain('agent-hooks')
       expect(firstPromptHook.powershell).toContain('copilot-hook.ps1')
-      expect(firstPromptHook.powershell).toContain('ORCA_COPILOT_HOOK_EVENT')
+      expect(firstPromptHook.powershell).toContain('SERPER_COPILOT_HOOK_EVENT')
       expect(firstPromptHook.powershell).toContain('UserPromptSubmit')
     } else {
       expect(firstPromptHook.bash).toContain('if [ -x ')
-      expect(firstPromptHook.bash).toContain('.orca/agent-hooks/copilot-hook.sh')
-      expect(firstPromptHook.bash).toContain("ORCA_COPILOT_HOOK_EVENT='UserPromptSubmit'")
+      expect(firstPromptHook.bash).toContain('.serper/agent-hooks/copilot-hook.sh')
+      expect(firstPromptHook.bash).toContain("SERPER_COPILOT_HOOK_EVENT='UserPromptSubmit'")
     }
-    expect(existsSync(join(tmpDir, '.orca', 'agent-hooks', 'copilot-hook.sh'))).toBe(
+    expect(existsSync(join(tmpDir, '.serper', 'agent-hooks', 'copilot-hook.sh'))).toBe(
       process.platform !== 'win32'
     )
   })
@@ -108,7 +108,7 @@ describe('CopilotHookService', () => {
   })
 
   it('preserves user-authored hooks and sweeps stale managed entries', () => {
-    const configPath = join(copilotHome, 'hooks', 'orca.json')
+    const configPath = join(copilotHome, 'hooks', 'serper.json')
     mkdirSync(join(copilotHome, 'hooks'), { recursive: true })
     writeFileSync(
       configPath,
@@ -140,7 +140,7 @@ describe('CopilotHookService', () => {
   })
 
   it('forces version 1 in the dedicated Copilot hook file', () => {
-    const configPath = join(copilotHome, 'hooks', 'orca.json')
+    const configPath = join(copilotHome, 'hooks', 'serper.json')
     mkdirSync(join(copilotHome, 'hooks'), { recursive: true })
     writeFileSync(
       configPath,
@@ -158,7 +158,7 @@ describe('CopilotHookService', () => {
   })
 
   it('clears disableAllHooks in the dedicated Copilot hook file', () => {
-    const configPath = join(copilotHome, 'hooks', 'orca.json')
+    const configPath = join(copilotHome, 'hooks', 'serper.json')
     mkdirSync(join(copilotHome, 'hooks'), { recursive: true })
     writeFileSync(
       configPath,
@@ -179,7 +179,7 @@ describe('CopilotHookService', () => {
   it('reports partial when the dedicated Copilot hook file is disabled', () => {
     const service = new CopilotHookService()
     service.install()
-    const configPath = join(copilotHome, 'hooks', 'orca.json')
+    const configPath = join(copilotHome, 'hooks', 'serper.json')
     const config = readConfig()
     config.disableAllHooks = true
     writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`)
@@ -190,10 +190,10 @@ describe('CopilotHookService', () => {
     expect(status.detail).toBe('Managed Copilot hook file is disabled')
   })
 
-  it('remove deletes only Orca-managed Copilot hooks', () => {
+  it('remove deletes only Serper-managed Copilot hooks', () => {
     const service = new CopilotHookService()
     service.install()
-    const configPath = join(copilotHome, 'hooks', 'orca.json')
+    const configPath = join(copilotHome, 'hooks', 'serper.json')
     const config = readConfig()
     const hooks = config.hooks as Record<string, unknown[]>
     hooks.UserPromptSubmit.unshift({ type: 'command', bash: 'echo user prompt' })
@@ -207,15 +207,15 @@ describe('CopilotHookService', () => {
     expect(nextHooks.SessionStart).toBeUndefined()
   })
 
-  it('remove does not create an orca.json file when nothing is installed', () => {
+  it('remove does not create an serper.json file when nothing is installed', () => {
     const status = new CopilotHookService().remove()
 
     expect(status.state).toBe('not_installed')
-    expect(existsSync(join(copilotHome, 'hooks', 'orca.json'))).toBe(false)
+    expect(existsSync(join(copilotHome, 'hooks', 'serper.json'))).toBe(false)
   })
 
   it('remove leaves nested user hooks untouched when no managed hook is present', () => {
-    const configPath = join(copilotHome, 'hooks', 'orca.json')
+    const configPath = join(copilotHome, 'hooks', 'serper.json')
     mkdirSync(join(copilotHome, 'hooks'), { recursive: true })
     const original = JSON.stringify(
       {
@@ -244,16 +244,16 @@ describe('CopilotHookService', () => {
 
   it('returns an error status for malformed JSON', () => {
     mkdirSync(join(copilotHome, 'hooks'), { recursive: true })
-    writeFileSync(join(copilotHome, 'hooks', 'orca.json'), '{not json')
+    writeFileSync(join(copilotHome, 'hooks', 'serper.json'), '{not json')
 
     const status = new CopilotHookService().getStatus()
 
     expect(status).toEqual({
       agent: 'copilot',
       state: 'error',
-      configPath: join(copilotHome, 'hooks', 'orca.json'),
+      configPath: join(copilotHome, 'hooks', 'serper.json'),
       managedHooksPresent: false,
-      detail: 'Could not parse Copilot hooks/orca.json'
+      detail: 'Could not parse Copilot hooks/serper.json'
     })
   })
 })

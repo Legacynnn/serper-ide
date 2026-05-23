@@ -14,7 +14,7 @@ import { join } from 'path'
 
 // The service calls app.getPath('userData') for its overlay root. Point that
 // at a real tmp dir so we can exercise the filesystem behavior end-to-end.
-const userDataDir = mkdtempSync(join(tmpdir(), 'orca-pi-test-userdata-'))
+const userDataDir = mkdtempSync(join(tmpdir(), 'serper-pi-test-userdata-'))
 
 vi.mock('electron', () => ({
   app: {
@@ -33,7 +33,7 @@ describe('PiTitlebarExtensionService', () => {
   let piHome: string
 
   beforeEach(() => {
-    piHome = mkdtempSync(join(tmpdir(), 'orca-pi-test-pihome-'))
+    piHome = mkdtempSync(join(tmpdir(), 'serper-pi-test-pihome-'))
     // Seed a realistic Pi agent dir with skills, extensions, auth, sessions.
     mkdirSync(join(piHome, 'skills', 'my-skill', 'nested'), { recursive: true })
     writeFileSync(join(piHome, 'skills', 'my-skill', 'SKILL.md'), 'critical user skill')
@@ -69,12 +69,12 @@ describe('PiTitlebarExtensionService', () => {
     const env = svc.buildPtyEnv('pty-1', piHome)
 
     expect(env.PI_CODING_AGENT_DIR).toBe(join(userDataDir, 'pi-agent-overlays', 'pty-1'))
-    // Orca's titlebar extension is added alongside user extensions, not replacing them.
+    // Serper's titlebar extension is added alongside user extensions, not replacing them.
     const overlayExtensions = readdirSync(join(env.PI_CODING_AGENT_DIR!, 'extensions')).sort()
     expect(overlayExtensions).toEqual([
-      'orca-agent-status.ts',
-      'orca-prefill.ts',
-      'orca-titlebar-spinner.ts',
+      'serper-agent-status.ts',
+      'serper-prefill.ts',
+      'serper-titlebar-spinner.ts',
       'user-ext'
     ])
     // User's top-level resources are reachable via the overlay.
@@ -109,7 +109,7 @@ describe('PiTitlebarExtensionService', () => {
   it.skipIf(process.platform === 'win32')(
     'safely handles a pre-existing stale overlay with dangling symlinks',
     () => {
-      // Why: simulate an overlay that was left behind by a prior Orca session,
+      // Why: simulate an overlay that was left behind by a prior Serper session,
       // where the original Pi home it mirrored has since moved. The teardown
       // should unlink the dangling symlinks in place without trying to follow them.
       const overlayDir = join(userDataDir, 'pi-agent-overlays', 'pty-4')

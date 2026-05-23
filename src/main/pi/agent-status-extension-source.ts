@@ -3,21 +3,21 @@
 // etc.). To get pi panes into the unified agent-hooks pipeline alongside
 // Claude/Codex/Gemini/OpenCode/Cursor, we ship a bundled extension into
 // the per-PTY Pi overlay (PiTitlebarExtensionService) that POSTs to
-// /hook/pi using the same ORCA_AGENT_HOOK_* + ORCA_PANE_KEY env that every
+// /hook/pi using the same SERPER_AGENT_HOOK_* + SERPER_PANE_KEY env that every
 // PTY already receives from ipc/pty.ts.
 //
 // The overlay is per-PTY, so each pi process boots with its own copy of
 // this extension and its own paneKey. Like the OpenCode plugin, the
 // returned source is a string (loaded by jiti from disk inside the pi
 // process), so we keep the source body in plain JS without TS types and
-// avoid pulling pi or any Orca dep into the pi runtime.
-export const ORCA_PI_AGENT_STATUS_EXTENSION_FILE = 'orca-agent-status.ts'
+// avoid pulling pi or any Serper dep into the pi runtime.
+export const SERPER_PI_AGENT_STATUS_EXTENSION_FILE = 'serper-agent-status.ts'
 
 export function getPiAgentStatusExtensionSource(): string {
   // Why: keep this string self-contained — it runs inside the pi process,
-  // so it cannot import from Orca's main bundle. fs/http coords come from
+  // so it cannot import from Serper's main bundle. fs/http coords come from
   // the same endpoint file the OpenCode plugin reads (process.env is frozen
-  // at PTY spawn, so on Orca restart we have to re-read it from disk).
+  // at PTY spawn, so on Serper restart we have to re-read it from disk).
   return [
     "import type { ExtensionAPI } from '@mariozechner/pi-coding-agent'",
     '',
@@ -32,7 +32,7 @@ export function getPiAgentStatusExtensionSource(): string {
     'let cachedEndpointValues: Record<string, string> | null = null',
     '',
     'function readEndpointFile(): Record<string, string> | null {',
-    '  const path = process.env.ORCA_AGENT_HOOK_ENDPOINT',
+    '  const path = process.env.SERPER_AGENT_HOOK_ENDPOINT',
     '  if (!path) return null',
     '  try {',
     "    const fs = require('fs')",
@@ -63,7 +63,7 @@ export function getPiAgentStatusExtensionSource(): string {
     '    const code = (err as { code?: string } | null)?.code',
     "    if (err && code !== 'ENOENT' && !warnedBadEndpoint) {",
     '      warnedBadEndpoint = true',
-    "      console.warn('[orca-pi-status] failed to parse endpoint file:', (err as Error).message)",
+    "      console.warn('[serper-pi-status] failed to parse endpoint file:', (err as Error).message)",
     '    }',
     '    return null',
     '  }',
@@ -72,22 +72,22 @@ export function getPiAgentStatusExtensionSource(): string {
     'function resolveHookCoords() {',
     '  const fileEnv = readEndpointFile() || {}',
     '  return {',
-    '    port: fileEnv.ORCA_AGENT_HOOK_PORT || process.env.ORCA_AGENT_HOOK_PORT,',
-    '    token: fileEnv.ORCA_AGENT_HOOK_TOKEN || process.env.ORCA_AGENT_HOOK_TOKEN,',
-    "    env: fileEnv.ORCA_AGENT_HOOK_ENV || process.env.ORCA_AGENT_HOOK_ENV || '',",
-    "    version: fileEnv.ORCA_AGENT_HOOK_VERSION || process.env.ORCA_AGENT_HOOK_VERSION || '',",
+    '    port: fileEnv.SERPER_AGENT_HOOK_PORT || process.env.SERPER_AGENT_HOOK_PORT,',
+    '    token: fileEnv.SERPER_AGENT_HOOK_TOKEN || process.env.SERPER_AGENT_HOOK_TOKEN,',
+    "    env: fileEnv.SERPER_AGENT_HOOK_ENV || process.env.SERPER_AGENT_HOOK_ENV || '',",
+    "    version: fileEnv.SERPER_AGENT_HOOK_VERSION || process.env.SERPER_AGENT_HOOK_VERSION || '',",
     '  }',
     '}',
     '',
     'async function post(hookEventName: string, extra: Record<string, unknown> = {}): Promise<void> {',
     '  const coords = resolveHookCoords()',
-    '  const paneKey = process.env.ORCA_PANE_KEY',
+    '  const paneKey = process.env.SERPER_PANE_KEY',
     '  if (!coords.port || !coords.token || !paneKey) return',
     '  const url = `http://127.0.0.1:${coords.port}/hook/pi`',
     '  const body = JSON.stringify({',
     '    paneKey,',
-    "    tabId: process.env.ORCA_TAB_ID || '',",
-    "    worktreeId: process.env.ORCA_WORKTREE_ID || '',",
+    "    tabId: process.env.SERPER_TAB_ID || '',",
+    "    worktreeId: process.env.SERPER_WORKTREE_ID || '',",
     '    env: coords.env,',
     '    version: coords.version,',
     '    payload: { hook_event_name: hookEventName, ...extra },',
@@ -97,13 +97,13 @@ export function getPiAgentStatusExtensionSource(): string {
     "      method: 'POST',",
     '      headers: {',
     "        'Content-Type': 'application/json',",
-    "        'X-Orca-Agent-Hook-Token': coords.token,",
+    "        'X-Serper-Agent-Hook-Token': coords.token,",
     '      },',
     '      body,',
     '    })',
     '  } catch {',
-    '    // Why: status reporting must never fail the pi run just because Orca',
-    '    // is unavailable or the loopback request failed (e.g. Orca restart).',
+    '    // Why: status reporting must never fail the pi run just because Serper',
+    '    // is unavailable or the loopback request failed (e.g. Serper restart).',
     '  }',
     '}',
     '',

@@ -8,7 +8,7 @@ vi.mock('../runtime-client', () => {
   class RuntimeClient {
     call = callMock
     getCliStatus = vi.fn()
-    openOrca = vi.fn()
+    openSerper = vi.fn()
   }
 
   class RuntimeClientError extends Error {
@@ -39,7 +39,7 @@ vi.mock('../runtime-client', () => {
 import { main } from '../index'
 import { buildWorktree, okFixture, queueFixtures, worktreeListFixture } from '../test-fixtures'
 
-describe('orca computer CLI handlers', () => {
+describe('serper computer CLI handlers', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
     callMock.mockReset()
@@ -80,7 +80,7 @@ describe('orca computer CLI handlers', () => {
       callMock,
       okFixture('req_capabilities', {
         platform: 'darwin',
-        provider: 'orca-computer-use-macos',
+        provider: 'serper-computer-use-macos',
         providerVersion: '1.0.0',
         protocolVersion: 1,
         supports: {
@@ -97,7 +97,7 @@ describe('orca computer CLI handlers', () => {
 
     expect(callMock).toHaveBeenCalledTimes(1)
     expect(callMock).toHaveBeenCalledWith('computer.capabilities', {})
-    expect(vi.mocked(console.log).mock.calls[0][0]).toContain('orca-computer-use-macos')
+    expect(vi.mocked(console.log).mock.calls[0][0]).toContain('serper-computer-use-macos')
   })
 
   it('opens computer permission setup without resolving a worktree', async () => {
@@ -105,7 +105,7 @@ describe('orca computer CLI handlers', () => {
       callMock,
       okFixture('req_permissions', {
         platform: 'darwin',
-        helperAppPath: '/Applications/Orca Computer Use.app',
+        helperAppPath: '/Applications/Serper Computer Use.app',
         openedSettings: false,
         launchedHelper: true
       })
@@ -116,8 +116,8 @@ describe('orca computer CLI handlers', () => {
     expect(callMock).toHaveBeenCalledTimes(1)
     expect(callMock).toHaveBeenCalledWith('computer.permissions', {})
     const output = vi.mocked(console.log).mock.calls[0][0]
-    expect(output).toContain('Opened Orca Computer Use permission setup')
-    expect(output).toContain('/Applications/Orca Computer Use.app')
+    expect(output).toContain('Opened Serper Computer Use permission setup')
+    expect(output).toContain('/Applications/Serper Computer Use.app')
   })
 
   it('passes get-app-state target and observe flags', async () => {
@@ -367,7 +367,7 @@ describe('orca computer CLI handlers', () => {
       expiresAt: expect.any(String)
     })
     expect(String(parsed.result.screenshot.path).replaceAll('\\', '/')).toContain(
-      'orca-computer-use/req_state-screenshot.png'
+      'serper-computer-use/req_state-screenshot.png'
     )
   })
 

@@ -96,7 +96,7 @@ export class ClaudeAccountService {
     try {
       const captured = await this.runClaudeLoginAndCapture()
       if (!captured.identity.email) {
-        throw new Error('Claude login completed, but Orca could not resolve the account email.')
+        throw new Error('Claude login completed, but Serper could not resolve the account email.')
       }
       await this.writeManagedAuth(accountId, managedAuthPath, captured)
 
@@ -137,7 +137,7 @@ export class ClaudeAccountService {
     const previousManagedAuth = await this.readManagedAuthSnapshot(accountId, managedAuthPath)
     const captured = await this.runClaudeLoginAndCapture()
     if (!captured.identity.email) {
-      throw new Error('Claude login completed, but Orca could not resolve the account email.')
+      throw new Error('Claude login completed, but Serper could not resolve the account email.')
     }
 
     const settings = this.store.getSettings()
@@ -315,7 +315,7 @@ export class ClaudeAccountService {
   }
 
   private async runClaudeLoginAndCapture(): Promise<CapturedClaudeAuth> {
-    const tempConfigDir = mkdtempSync(join(tmpdir(), 'orca-claude-login-'))
+    const tempConfigDir = mkdtempSync(join(tmpdir(), 'serper-claude-login-'))
     const previousLegacyKeychain = await readActiveClaudeKeychainCredentials()
     let captured: CapturedClaudeAuth | null = null
     let captureError: unknown = null
@@ -523,7 +523,7 @@ export class ClaudeAccountService {
   private createManagedAuthDir(accountId: string): string {
     const managedAuthPath = join(this.getManagedAccountsRoot(), accountId, 'auth')
     mkdirSync(managedAuthPath, { recursive: true })
-    writeFileSync(join(managedAuthPath, '.orca-managed-claude-auth'), `${accountId}\n`, 'utf-8')
+    writeFileSync(join(managedAuthPath, '.serper-managed-claude-auth'), `${accountId}\n`, 'utf-8')
     return this.assertManagedAuthPath(managedAuthPath, accountId)
   }
 
@@ -543,7 +543,7 @@ export class ClaudeAccountService {
       adoptLegacyMarker: true
     })
     if (!trustedPath) {
-      throw new Error('Managed Claude auth storage is not owned by Orca.')
+      throw new Error('Managed Claude auth storage is not owned by Serper.')
     }
     return trustedPath
   }

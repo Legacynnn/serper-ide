@@ -202,7 +202,7 @@ describe('createBrowserSlice runtime guard', () => {
           {
             id: 'default',
             scope: 'default',
-            partition: 'persist:orca-default',
+            partition: 'persist:serper-default',
             label: 'Default',
             source: null
           }
@@ -228,7 +228,7 @@ describe('createBrowserSlice runtime guard', () => {
       {
         id: 'default',
         scope: 'default',
-        partition: 'persist:orca-default',
+        partition: 'persist:serper-default',
         label: 'Default',
         source: null
       }
@@ -255,7 +255,7 @@ describe('createBrowserSlice runtime guard', () => {
       {
         id: 'default',
         scope: 'default',
-        partition: 'persist:orca-default',
+        partition: 'persist:serper-default',
         label: 'Default',
         source: null
       }
@@ -268,7 +268,7 @@ describe('createBrowserSlice runtime guard', () => {
       {
         id: 'default',
         scope: 'default',
-        partition: 'persist:orca-default',
+        partition: 'persist:serper-default',
         label: 'Default',
         source: null
       }

@@ -1,7 +1,7 @@
-export const ORCHESTRATION_SETUP_STATE_EVENT = 'orca:orchestration-setup-state'
-export const ORCHESTRATION_ENABLED_STORAGE_KEY = 'orca.orchestration.enabled'
-export const ORCHESTRATION_SKILL_INSTALLED_STORAGE_KEY = 'orca.orchestration.skillInstalled'
-export const ORCHESTRATION_SETUP_DISMISSED_STORAGE_KEY = 'orca.orchestration.setupDismissed'
+export const ORCHESTRATION_SETUP_STATE_EVENT = 'serper:orchestration-setup-state'
+export const ORCHESTRATION_ENABLED_STORAGE_KEY = 'serper.orchestration.enabled'
+export const ORCHESTRATION_SKILL_INSTALLED_STORAGE_KEY = 'serper.orchestration.skillInstalled'
+export const ORCHESTRATION_SETUP_DISMISSED_STORAGE_KEY = 'serper.orchestration.setupDismissed'
 
 export function isOrchestrationSetupEnabled(): boolean {
   return localStorage.getItem(ORCHESTRATION_ENABLED_STORAGE_KEY) === '1'

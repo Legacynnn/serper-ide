@@ -44,7 +44,7 @@ export function getTerminalFileOpenHint(): string {
   return isMacPlatform() ? '⌘+click to open' : 'Ctrl+click to open'
 }
 
-// Why: .html/.htm files are routed straight into Orca's embedded browser rather
+// Why: .html/.htm files are routed straight into Serper's embedded browser rather
 // than the Monaco editor (which would just show the source), matching the
 // standalone "Open Preview to the Side" entry point. Advertise the different
 // behavior in the hover tooltip so users know a click will render the page.
@@ -126,7 +126,7 @@ export function openDetectedFilePath(
       return
     }
 
-    // Why: .html/.htm files render in Orca's embedded browser instead of opening
+    // Why: .html/.htm files render in Serper's embedded browser instead of opening
     // as source in Monaco — ⌘/Ctrl+click on an HTML path in the terminal should
     // feel like clicking an http link and render the page, not dump HTML source.
     // Mirrors the editor's "Open Preview to the Side" action.
@@ -299,7 +299,7 @@ export function handleOscLink(
     return
   }
 
-  // Why: xterm renders URL links as clickable anchors. Once Orca decides to
+  // Why: xterm renders URL links as clickable anchors. Once Serper decides to
   // handle a modified click itself, we must suppress the browser's default
   // anchor navigation or Electron will still launch the system browser.
   // Note: we intentionally do NOT stopPropagation here — xterm's
@@ -330,7 +330,7 @@ export function handleOscLink(
   }
 
   if (parsed.protocol === 'file:') {
-    // Why: file:// URIs should open inside Orca, not via the OS default editor
+    // Why: file:// URIs should open inside Serper, not via the OS default editor
     // (shell.openPath). We extract the path from the URI and route it through
     // the same openDetectedFilePath logic used for detected file-path links.
     // Only local files are supported — remote hosts (file://remote/…) are rejected

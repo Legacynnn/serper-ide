@@ -19,10 +19,10 @@ vi.mock('../pwsh', () => ({
 
 import { createPtySubprocess } from './pty-subprocess'
 
-const ORCA_SHELL_WRAPPER_ENV = [
-  'ORCA_ATTRIBUTION_SHIM_DIR',
-  'ORCA_OPENCODE_CONFIG_DIR',
-  'ORCA_PI_CODING_AGENT_DIR'
+const SERPER_SHELL_WRAPPER_ENV = [
+  'SERPER_ATTRIBUTION_SHIM_DIR',
+  'SERPER_OPENCODE_CONFIG_DIR',
+  'SERPER_PI_CODING_AGENT_DIR'
 ] as const
 const POWERSHELL_OSC133_COMMAND_ARGS = ['-NoLogo', '-NoExit', '-EncodedCommand', expect.any(String)]
 const ZSH_SHELL_READY_DIR = /shell-ready[\\/]zsh/
@@ -50,7 +50,7 @@ function mockPtyProcess(pid = 12345) {
 }
 
 describe('createPtySubprocess', () => {
-  const savedWrapperEnv: Partial<Record<(typeof ORCA_SHELL_WRAPPER_ENV)[number], string>> = {}
+  const savedWrapperEnv: Partial<Record<(typeof SERPER_SHELL_WRAPPER_ENV)[number], string>> = {}
   let previousUserDataPath: string | undefined
   let userDataPath: string
 
@@ -58,10 +58,10 @@ describe('createPtySubprocess', () => {
     spawnMock.mockReset()
     isPwshAvailableMock.mockReset()
     isPwshAvailableMock.mockReturnValue(false)
-    previousUserDataPath = process.env.ORCA_USER_DATA_PATH
+    previousUserDataPath = process.env.SERPER_USER_DATA_PATH
     userDataPath = mkdtempSync(join(tmpdir(), 'daemon-pty-subprocess-test-'))
-    process.env.ORCA_USER_DATA_PATH = userDataPath
-    for (const key of ORCA_SHELL_WRAPPER_ENV) {
+    process.env.SERPER_USER_DATA_PATH = userDataPath
+    for (const key of SERPER_SHELL_WRAPPER_ENV) {
       savedWrapperEnv[key] = process.env[key]
       delete process.env[key]
     }
@@ -69,12 +69,12 @@ describe('createPtySubprocess', () => {
 
   afterEach(() => {
     if (previousUserDataPath === undefined) {
-      delete process.env.ORCA_USER_DATA_PATH
+      delete process.env.SERPER_USER_DATA_PATH
     } else {
-      process.env.ORCA_USER_DATA_PATH = previousUserDataPath
+      process.env.SERPER_USER_DATA_PATH = previousUserDataPath
     }
     rmSync(userDataPath, { recursive: true, force: true })
-    for (const key of ORCA_SHELL_WRAPPER_ENV) {
+    for (const key of SERPER_SHELL_WRAPPER_ENV) {
       if (savedWrapperEnv[key] === undefined) {
         delete process.env[key]
       } else {
@@ -128,17 +128,17 @@ describe('createPtySubprocess', () => {
     expect(handle.pid).toBe(42)
   })
 
-  it('does not inherit parent Orca pane identity when caller omits pane env', () => {
+  it('does not inherit parent Serper pane identity when caller omits pane env', () => {
     const proc = mockPtyProcess()
     spawnMock.mockReturnValue(proc)
     const saved = {
-      ORCA_PANE_KEY: process.env.ORCA_PANE_KEY,
-      ORCA_TAB_ID: process.env.ORCA_TAB_ID,
-      ORCA_WORKTREE_ID: process.env.ORCA_WORKTREE_ID
+      SERPER_PANE_KEY: process.env.SERPER_PANE_KEY,
+      SERPER_TAB_ID: process.env.SERPER_TAB_ID,
+      SERPER_WORKTREE_ID: process.env.SERPER_WORKTREE_ID
     }
-    process.env.ORCA_PANE_KEY = 'parent-tab:parent-leaf'
-    process.env.ORCA_TAB_ID = 'parent-tab'
-    process.env.ORCA_WORKTREE_ID = 'parent-worktree'
+    process.env.SERPER_PANE_KEY = 'parent-tab:parent-leaf'
+    process.env.SERPER_TAB_ID = 'parent-tab'
+    process.env.SERPER_WORKTREE_ID = 'parent-worktree'
 
     try {
       createPtySubprocess({ sessionId: 'test', cols: 80, rows: 24 })
@@ -153,22 +153,22 @@ describe('createPtySubprocess', () => {
     }
 
     const env = spawnMock.mock.calls.at(-1)?.[2].env
-    expect(env.ORCA_PANE_KEY).toBeUndefined()
-    expect(env.ORCA_TAB_ID).toBeUndefined()
-    expect(env.ORCA_WORKTREE_ID).toBeUndefined()
+    expect(env.SERPER_PANE_KEY).toBeUndefined()
+    expect(env.SERPER_TAB_ID).toBeUndefined()
+    expect(env.SERPER_WORKTREE_ID).toBeUndefined()
   })
 
-  it('preserves explicit child Orca pane identity over parent env', () => {
+  it('preserves explicit child Serper pane identity over parent env', () => {
     const proc = mockPtyProcess()
     spawnMock.mockReturnValue(proc)
     const saved = {
-      ORCA_PANE_KEY: process.env.ORCA_PANE_KEY,
-      ORCA_TAB_ID: process.env.ORCA_TAB_ID,
-      ORCA_WORKTREE_ID: process.env.ORCA_WORKTREE_ID
+      SERPER_PANE_KEY: process.env.SERPER_PANE_KEY,
+      SERPER_TAB_ID: process.env.SERPER_TAB_ID,
+      SERPER_WORKTREE_ID: process.env.SERPER_WORKTREE_ID
     }
-    process.env.ORCA_PANE_KEY = 'parent-tab:parent-leaf'
-    process.env.ORCA_TAB_ID = 'parent-tab'
-    process.env.ORCA_WORKTREE_ID = 'parent-worktree'
+    process.env.SERPER_PANE_KEY = 'parent-tab:parent-leaf'
+    process.env.SERPER_TAB_ID = 'parent-tab'
+    process.env.SERPER_WORKTREE_ID = 'parent-worktree'
 
     try {
       createPtySubprocess({
@@ -176,9 +176,9 @@ describe('createPtySubprocess', () => {
         cols: 80,
         rows: 24,
         env: {
-          ORCA_PANE_KEY: 'child-tab:child-leaf',
-          ORCA_TAB_ID: 'child-tab',
-          ORCA_WORKTREE_ID: 'child-worktree'
+          SERPER_PANE_KEY: 'child-tab:child-leaf',
+          SERPER_TAB_ID: 'child-tab',
+          SERPER_WORKTREE_ID: 'child-worktree'
         }
       })
     } finally {
@@ -192,9 +192,9 @@ describe('createPtySubprocess', () => {
     }
 
     const env = spawnMock.mock.calls.at(-1)?.[2].env
-    expect(env.ORCA_PANE_KEY).toBe('child-tab:child-leaf')
-    expect(env.ORCA_TAB_ID).toBe('child-tab')
-    expect(env.ORCA_WORKTREE_ID).toBe('child-worktree')
+    expect(env.SERPER_PANE_KEY).toBe('child-tab:child-leaf')
+    expect(env.SERPER_TAB_ID).toBe('child-tab')
+    expect(env.SERPER_WORKTREE_ID).toBe('child-worktree')
   })
 
   it('forwards write calls', () => {
@@ -340,7 +340,7 @@ describe('createPtySubprocess', () => {
         rows: 24,
         env: {
           SHELL: '/bin/zsh',
-          ORCA_ATTRIBUTION_SHIM_DIR: '/tmp/orca-terminal-attribution/posix'
+          SERPER_ATTRIBUTION_SHIM_DIR: '/tmp/serper-terminal-attribution/posix'
         }
       })
     } finally {
@@ -352,7 +352,7 @@ describe('createPtySubprocess', () => {
     const lastCall = spawnMock.mock.calls.at(-1)!
     expect(lastCall[1]).toEqual(['-l'])
     expect(lastCall[2].env.ZDOTDIR).toMatch(ZSH_SHELL_READY_DIR)
-    expect(lastCall[2].env.ORCA_SHELL_READY_MARKER).toBe('0')
+    expect(lastCall[2].env.SERPER_SHELL_READY_MARKER).toBe('0')
   })
 
   it('uses shell wrapper when OpenCode config must survive shell startup', () => {
@@ -368,8 +368,8 @@ describe('createPtySubprocess', () => {
         rows: 24,
         env: {
           SHELL: '/bin/zsh',
-          OPENCODE_CONFIG_DIR: '/tmp/orca-opencode-overlay',
-          ORCA_OPENCODE_CONFIG_DIR: '/tmp/orca-opencode-overlay'
+          OPENCODE_CONFIG_DIR: '/tmp/serper-opencode-overlay',
+          SERPER_OPENCODE_CONFIG_DIR: '/tmp/serper-opencode-overlay'
         }
       })
     } finally {
@@ -381,7 +381,7 @@ describe('createPtySubprocess', () => {
     const lastCall = spawnMock.mock.calls.at(-1)!
     expect(lastCall[1]).toEqual(['-l'])
     expect(lastCall[2].env.ZDOTDIR).toMatch(ZSH_SHELL_READY_DIR)
-    expect(lastCall[2].env.ORCA_SHELL_READY_MARKER).toBe('0')
+    expect(lastCall[2].env.SERPER_SHELL_READY_MARKER).toBe('0')
   })
 
   it('uses shell wrapper when Pi config must survive shell startup', () => {
@@ -397,8 +397,8 @@ describe('createPtySubprocess', () => {
         rows: 24,
         env: {
           SHELL: '/bin/zsh',
-          PI_CODING_AGENT_DIR: '/tmp/orca-pi-agent-overlay',
-          ORCA_PI_CODING_AGENT_DIR: '/tmp/orca-pi-agent-overlay'
+          PI_CODING_AGENT_DIR: '/tmp/serper-pi-agent-overlay',
+          SERPER_PI_CODING_AGENT_DIR: '/tmp/serper-pi-agent-overlay'
         }
       })
     } finally {
@@ -410,7 +410,7 @@ describe('createPtySubprocess', () => {
     const lastCall = spawnMock.mock.calls.at(-1)!
     expect(lastCall[1]).toEqual(['-l'])
     expect(lastCall[2].env.ZDOTDIR).toMatch(ZSH_SHELL_READY_DIR)
-    expect(lastCall[2].env.ORCA_SHELL_READY_MARKER).toBe('0')
+    expect(lastCall[2].env.SERPER_SHELL_READY_MARKER).toBe('0')
   })
 
   it('combines HOMEDRIVE and HOMEPATH for Windows default cwd', () => {
@@ -424,7 +424,7 @@ describe('createPtySubprocess', () => {
     Object.defineProperty(process, 'platform', { value: 'win32' })
     delete process.env.USERPROFILE
     process.env.HOMEDRIVE = 'D:'
-    process.env.HOMEPATH = '\\Users\\orca'
+    process.env.HOMEPATH = '\\Users\\serper'
 
     try {
       createPtySubprocess({ sessionId: 'test', cols: 80, rows: 24 })
@@ -452,7 +452,7 @@ describe('createPtySubprocess', () => {
     expect(spawnMock).toHaveBeenCalledWith(
       expect.any(String),
       expect.any(Array),
-      expect.objectContaining({ cwd: 'D:\\Users\\orca' })
+      expect.objectContaining({ cwd: 'D:\\Users\\serper' })
     )
   })
 
@@ -611,10 +611,10 @@ describe('createPtySubprocess', () => {
           sessionId: 'test',
           cols: 80,
           rows: 24,
-          cwd: 'C:\\definitely-missing-orca-cwd',
+          cwd: 'C:\\definitely-missing-serper-cwd',
           shellOverride: 'powershell.exe'
         })
-      ).toThrow(/Working directory "C:\\definitely-missing-orca-cwd" does not exist/)
+      ).toThrow(/Working directory "C:\\definitely-missing-serper-cwd" does not exist/)
     } finally {
       if (platform) {
         Object.defineProperty(process, 'platform', platform)
@@ -634,10 +634,10 @@ describe('createPtySubprocess', () => {
           sessionId: 'test',
           cols: 80,
           rows: 24,
-          cwd: 'C:\\definitely-missing-orca-wsl-cwd',
+          cwd: 'C:\\definitely-missing-serper-wsl-cwd',
           shellOverride: 'wsl.exe'
         })
-      ).toThrow(/Working directory "C:\\definitely-missing-orca-wsl-cwd" does not exist/)
+      ).toThrow(/Working directory "C:\\definitely-missing-serper-wsl-cwd" does not exist/)
     } finally {
       if (platform) {
         Object.defineProperty(process, 'platform', platform)

@@ -57,7 +57,7 @@ function createTestStore() {
         // Why: this test isolates the worktree slice, so it only provides the
         // state surface that `createWorktreeSlice` reads and writes.
         ...createWorktreeSlice(...a),
-        trustedOrcaHooks: {},
+        trustedSerperHooks: {},
         repos: [],
         openModal: vi.fn(),
         shutdownWorktreeTerminals: vi.fn().mockResolvedValue(undefined),

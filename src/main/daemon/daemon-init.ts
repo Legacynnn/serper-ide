@@ -103,7 +103,7 @@ function createOutOfProcessLauncher(runtimeDir: string): DaemonLauncher {
     const entryPath = getDaemonEntryPath()
     const healthy = await healthCheckDaemon(socketPath, tokenPath)
     if (healthy) {
-      // Why: dev worktrees share the same orca-dev userData, so a daemon from
+      // Why: dev worktrees share the same serper-dev userData, so a daemon from
       // a deleted sibling checkout can pass protocol health checks while still
       // pointing at missing native modules. Packaged app paths are stable and
       // should preserve existing warm daemon reuse semantics.
@@ -144,7 +144,7 @@ function createOutOfProcessLauncher(runtimeDir: string): DaemonLauncher {
         ELECTRON_RUN_AS_NODE: '1',
         // Why: the detached daemon is plain Node and cannot call Electron's
         // app.getPath(), but shell-ready rcfiles must live outside swept tmp.
-        ORCA_USER_DATA_PATH: userDataPath
+        SERPER_USER_DATA_PATH: userDataPath
       }
     })
 
@@ -377,7 +377,7 @@ async function runRestartDaemon(): Promise<RestartDaemonResult> {
 // Why: disconnect from the daemon without killing it. The daemon runs as a
 // separate process and survives app quit — sessions stay alive for warm
 // reattach on next launch. Leave history sessions marked "unclean" here so a
-// later daemon crash while Orca is closed is still recoverable on next launch.
+// later daemon crash while Serper is closed is still recoverable on next launch.
 export async function disconnectDaemon(): Promise<void> {
   await adapter?.disconnectOnly()
   adapter = null

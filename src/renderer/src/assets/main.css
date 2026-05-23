@@ -166,6 +166,7 @@
   --git-graph-lane-4: #40b0a6;
   --git-graph-lane-5: #b66dff;
   --annotation-highlight: #f59e0b;
+  --active-tab-indicator: #1e3d9c;
 }
 
 /* ── Dark Mode ───────────────────────────────────────── */
@@ -291,6 +292,10 @@
   --git-decoration-copied: #ffc799;
   --git-decoration-ignored: #7e7e7e;
   --annotation-highlight: #ffc799;
+  /* Why: Vesper palette has no blue. Swap the default tab indicator (a
+     VS-Code-flavored blue) for peach so the active-tab bar reads as part of
+     the theme instead of a chrome-blue accent. */
+  --active-tab-indicator: #ffc799;
 }
 
 /* Why: Chromium can paint an opaque page-level background under <body> even
@@ -389,17 +394,25 @@ html.vesper-blur.fullscreen [data-slot='dialog-content'] {
    in vesper-blur. Without an override the popover renders ~5% opaque and the
    markdown text underneath bleeds through. Paint near-opaque using the same
    #101010fa / #1c1c1cfa pattern as sheets and dialogs. */
-html.vesper-blur .orca-diff-comment-popover {
+html.vesper-blur .serper-diff-comment-popover {
   background-color: #101010fa;
 }
-html.vesper-blur .orca-diff-comment-popover .orca-diff-comment-popover-textarea {
+html.vesper-blur .serper-diff-comment-popover .serper-diff-comment-popover-textarea {
   background-color: #1c1c1cfa;
 }
-html.vesper-blur.fullscreen .orca-diff-comment-popover {
+html.vesper-blur.fullscreen .serper-diff-comment-popover {
   background-color: #1c1c1cfa;
 }
-html.vesper-blur.fullscreen .orca-diff-comment-popover .orca-diff-comment-popover-textarea {
+html.vesper-blur.fullscreen .serper-diff-comment-popover .serper-diff-comment-popover-textarea {
   background-color: #262626fa;
+}
+
+/* Why: Monaco's currentLineHighlight viewPart can generate an outline box for
+   the cursor line. Vesper's selected line should be a quiet peach-tinted fill,
+   not VS Code blue chrome, so remove the generated border entirely. */
+html.vesper-blur .monaco-editor .view-overlays .current-line-exact,
+html.vesper-blur .monaco-editor .margin-view-overlays .current-line-exact-margin {
+  border: none !important;
 }
 
 /* ── Base Layer ──────────────────────────────────────── */
@@ -1274,41 +1287,41 @@ html.vesper-blur.fullscreen .orca-diff-comment-popover .orca-diff-comment-popove
 
 /* ── Git conflict decorations ───────────────────────────────────── */
 
-.monaco-editor .orca-conflict-marker-line {
+.monaco-editor .serper-conflict-marker-line {
   background: color-mix(in srgb, var(--destructive) 12%, transparent);
 }
 
-.monaco-editor .orca-conflict-section-line {
+.monaco-editor .serper-conflict-section-line {
   border-left: 3px solid transparent;
 }
 
-.monaco-editor .orca-conflict-current-line {
+.monaco-editor .serper-conflict-current-line {
   background: color-mix(in srgb, var(--git-decoration-modified) 12%, transparent);
   border-left-color: color-mix(in srgb, var(--git-decoration-modified) 72%, transparent);
 }
 
-.monaco-editor .orca-conflict-base-line {
+.monaco-editor .serper-conflict-base-line {
   background: color-mix(in srgb, var(--muted-foreground) 7%, transparent);
   border-left-color: color-mix(in srgb, var(--muted-foreground) 36%, transparent);
 }
 
-.monaco-editor .orca-conflict-incoming-line {
+.monaco-editor .serper-conflict-incoming-line {
   background: color-mix(in srgb, var(--git-decoration-renamed) 11%, transparent);
   border-left-color: color-mix(in srgb, var(--git-decoration-renamed) 68%, transparent);
 }
 
-.monaco-editor .orca-conflict-line-decoration {
+.monaco-editor .serper-conflict-line-decoration {
   width: 4px !important;
   margin-left: 3px;
   background: var(--destructive);
   border-radius: 999px;
 }
 
-.monaco-editor .orca-conflict-margin {
+.monaco-editor .serper-conflict-margin {
   background: color-mix(in srgb, var(--destructive) 8%, transparent);
 }
 
-.monaco-editor .orca-conflict-marker-label {
+.monaco-editor .serper-conflict-marker-label {
   color: var(--destructive);
   font-family: var(--font-sans, system-ui, sans-serif);
   font-size: 11px;
@@ -1407,7 +1420,7 @@ html.vesper-blur.fullscreen .orca-diff-comment-popover .orca-diff-comment-popove
    useDiffCommentDecorator. Keep it visually subtle until hovered so it does
    not distract from the diff itself. Left position overlaps the glyph margin
    so the affordance reads as "add comment on this line". */
-.orca-diff-comment-add-btn {
+.serper-diff-comment-add-btn {
   position: absolute;
   left: 4px;
   width: 18px;
@@ -1431,27 +1444,27 @@ html.vesper-blur.fullscreen .orca-diff-comment-popover .orca-diff-comment-popove
     box-shadow 100ms ease;
 }
 
-.orca-diff-comment-add-btn:hover {
+.serper-diff-comment-add-btn:hover {
   color: var(--primary);
   border-color: color-mix(in srgb, var(--primary) 52%, var(--border));
   background: color-mix(in srgb, var(--primary) 12%, var(--background));
   box-shadow: 0 1px 4px color-mix(in srgb, var(--foreground) 16%, transparent);
 }
 
-.orca-diff-comment-add-btn:focus-visible {
+.serper-diff-comment-add-btn:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 1px;
 }
 
-.orca-diff-comment-range-highlight {
+.serper-diff-comment-range-highlight {
   background: rgba(59, 130, 246, 0.14);
 }
 
-.dark .orca-diff-comment-range-highlight {
+.dark .serper-diff-comment-range-highlight {
   background: rgba(96, 165, 250, 0.18);
 }
 
-.orca-diff-comment-inline {
+.serper-diff-comment-inline {
   width: 100%;
   /* Why: Monaco's view-zone node already starts after the diff gutter. Avoid
      adding a second left inset so saved notes sit flush with the code column. */
@@ -1459,7 +1472,7 @@ html.vesper-blur.fullscreen .orca-diff-comment-popover .orca-diff-comment-popove
   box-sizing: border-box;
 }
 
-.orca-diff-comment-inline > .orca-diff-comment-card {
+.serper-diff-comment-inline > .serper-diff-comment-card {
   max-width: 420px;
 }
 
@@ -1471,7 +1484,7 @@ html.vesper-blur.fullscreen .orca-diff-comment-popover .orca-diff-comment-popove
    to produce roughly the same absolute luminance delta above its editor
    surface — the foreground color is different (white vs black) so equal
    percentages would not give equal contrast. Override lives in `.dark`. */
-.orca-diff-comment-card {
+.serper-diff-comment-card {
   position: relative;
   /* Why: Monaco's view-lines overlay (data-mprt=8) is positioned absolutely on
      top of view-zone DOM. Without an explicit z-index here, clicks on
@@ -1488,11 +1501,11 @@ html.vesper-blur.fullscreen .orca-diff-comment-popover .orca-diff-comment-popove
   box-shadow: 0 1px 2px color-mix(in srgb, var(--foreground) 15%, transparent);
 }
 
-.dark .orca-diff-comment-card {
+.dark .serper-diff-comment-card {
   background: color-mix(in srgb, var(--foreground) 6%, var(--editor-surface));
 }
 
-.orca-diff-comment-header {
+.serper-diff-comment-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1500,7 +1513,7 @@ html.vesper-blur.fullscreen .orca-diff-comment-popover .orca-diff-comment-popove
   margin-bottom: 4px;
 }
 
-.orca-diff-comment-meta {
+.serper-diff-comment-meta {
   font-size: 11px;
   color: var(--foreground);
   font-weight: 600;
@@ -1511,13 +1524,13 @@ html.vesper-blur.fullscreen .orca-diff-comment-popover .orca-diff-comment-popove
 /* Why: keep edit + delete close together but visually distinct from the meta
    label. Both share the same subtle button styling; only delete recolours on
    hover (destructive intent). */
-.orca-diff-comment-actions {
+.serper-diff-comment-actions {
   display: inline-flex;
   align-items: center;
   gap: 2px;
 }
 
-.orca-diff-comment-edit {
+.serper-diff-comment-edit {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1532,7 +1545,7 @@ html.vesper-blur.fullscreen .orca-diff-comment-popover .orca-diff-comment-popove
   z-index: 1;
 }
 
-.orca-diff-comment-edit:hover {
+.serper-diff-comment-edit:hover {
   color: var(--foreground);
   border-color: color-mix(in srgb, var(--foreground) 20%, transparent);
   background: color-mix(in srgb, var(--foreground) 6%, transparent);
@@ -1544,7 +1557,7 @@ html.vesper-blur.fullscreen .orca-diff-comment-popover .orca-diff-comment-popove
    Pointer-events are explicit since the card lives inside a Monaco view zone
    where stray handlers higher in the tree have swallowed pointer events in
    the past. z-index keeps it above the note body for click reliability. */
-.orca-diff-comment-delete {
+.serper-diff-comment-delete {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1559,13 +1572,13 @@ html.vesper-blur.fullscreen .orca-diff-comment-popover .orca-diff-comment-popove
   z-index: 1;
 }
 
-.orca-diff-comment-delete:hover {
+.serper-diff-comment-delete:hover {
   color: var(--destructive);
   border-color: color-mix(in srgb, var(--destructive) 40%, transparent);
   background: color-mix(in srgb, var(--destructive) 10%, transparent);
 }
 
-.orca-diff-comment-body {
+.serper-diff-comment-body {
   font-size: 12px;
   line-height: 1.4;
   color: var(--foreground);
@@ -1578,7 +1591,7 @@ html.vesper-blur.fullscreen .orca-diff-comment-popover .orca-diff-comment-popove
    foreground-tinted fill over --editor-surface, same border + left accent
    bar, same shadow. Kept one level stronger on the shadow because the
    popover floats above the editor instead of being laid into a view zone. */
-.orca-diff-comment-popover {
+.serper-diff-comment-popover {
   position: absolute;
   left: 56px;
   right: 24px;
@@ -1596,11 +1609,11 @@ html.vesper-blur.fullscreen .orca-diff-comment-popover .orca-diff-comment-popove
   gap: 6px;
 }
 
-.dark .orca-diff-comment-popover {
+.dark .serper-diff-comment-popover {
   background: color-mix(in srgb, var(--foreground) 6%, var(--editor-surface));
 }
 
-.orca-diff-comment-popover-label {
+.serper-diff-comment-popover-label {
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
@@ -1608,7 +1621,7 @@ html.vesper-blur.fullscreen .orca-diff-comment-popover .orca-diff-comment-popove
   color: var(--muted-foreground);
 }
 
-.orca-diff-comment-popover-textarea {
+.serper-diff-comment-popover-textarea {
   width: 100%;
   min-height: 56px;
   max-height: 240px;
@@ -1629,25 +1642,25 @@ html.vesper-blur.fullscreen .orca-diff-comment-popover .orca-diff-comment-popove
   scrollbar-color: color-mix(in srgb, var(--muted-foreground, #737373) 34%, transparent) transparent;
 }
 
-.orca-diff-comment-popover-textarea::-webkit-scrollbar {
+.serper-diff-comment-popover-textarea::-webkit-scrollbar {
   width: 12px;
 }
 
-.orca-diff-comment-popover-textarea::-webkit-scrollbar-track {
+.serper-diff-comment-popover-textarea::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.orca-diff-comment-popover-textarea::-webkit-scrollbar-thumb {
+.serper-diff-comment-popover-textarea::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--muted-foreground, #737373) 28%, transparent);
   border: 3px solid transparent;
   background-clip: padding-box;
 }
 
-.orca-diff-comment-popover-textarea:focus {
+.serper-diff-comment-popover-textarea:focus {
   border-color: color-mix(in srgb, var(--primary) 60%, var(--border));
 }
 
-.orca-diff-comment-popover-footer {
+.serper-diff-comment-popover-footer {
   display: flex;
   align-items: center;
   justify-content: flex-end;

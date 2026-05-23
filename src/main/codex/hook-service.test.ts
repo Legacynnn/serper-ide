@@ -29,8 +29,8 @@ let tmpHome: string
 let userDataDir: string
 
 beforeEach(() => {
-  tmpHome = mkdtempSync(join(tmpdir(), 'orca-codex-home-'))
-  userDataDir = mkdtempSync(join(tmpdir(), 'orca-codex-user-data-'))
+  tmpHome = mkdtempSync(join(tmpdir(), 'serper-codex-home-'))
+  userDataDir = mkdtempSync(join(tmpdir(), 'serper-codex-user-data-'))
   homedirMock.mockReturnValue(tmpHome)
   getPathMock.mockImplementation((name: string) => {
     if (name === 'userData') {
@@ -47,7 +47,7 @@ afterEach(() => {
 })
 
 describe('CodexHookService', () => {
-  it('installs PermissionRequest with trust so Codex approval prompts reach Orca', () => {
+  it('installs PermissionRequest with trust so Codex approval prompts reach Serper', () => {
     const status = new CodexHookService().install()
 
     expect(status.state).toBe('installed')

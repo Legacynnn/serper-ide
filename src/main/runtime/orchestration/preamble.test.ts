@@ -101,28 +101,28 @@ describe('buildDispatchPreamble', () => {
     expect(result).toContain('refactor the auth module')
   })
 
-  it('uses orca CLI by default when devMode is not set', () => {
+  it('uses serper CLI by default when devMode is not set', () => {
     const result = buildDispatchPreamble(baseParams())
-    expect(result).toContain('orca orchestration send')
-    expect(result).toContain('orca orchestration check')
-    expect(result).toContain('orca orchestration ask')
+    expect(result).toContain('serper orchestration send')
+    expect(result).toContain('serper orchestration check')
+    expect(result).toContain('serper orchestration ask')
   })
 
-  it('uses orca-dev CLI when devMode is true', () => {
+  it('uses serper-dev CLI when devMode is true', () => {
     const result = buildDispatchPreamble(baseParams({ devMode: true }))
-    expect(result).toContain('orca-dev orchestration send')
-    expect(result).toContain('orca-dev orchestration check')
-    expect(result).toContain('orca-dev orchestration ask')
-    const fragments = result.split('orca-dev')
+    expect(result).toContain('serper-dev orchestration send')
+    expect(result).toContain('serper-dev orchestration check')
+    expect(result).toContain('serper-dev orchestration ask')
+    const fragments = result.split('serper-dev')
     for (const fragment of fragments) {
-      expect(fragment).not.toMatch(/orca orchestration/)
+      expect(fragment).not.toMatch(/serper orchestration/)
     }
   })
 
-  it('uses orca CLI when devMode is false', () => {
+  it('uses serper CLI when devMode is false', () => {
     const result = buildDispatchPreamble(baseParams({ devMode: false }))
-    expect(result).toContain('orca orchestration send')
-    expect(result).toContain('orca orchestration check')
+    expect(result).toContain('serper orchestration send')
+    expect(result).toContain('serper orchestration check')
   })
 
   it('appends a BASE DRIFT section when baseDrift.behind > 0', () => {

@@ -9,8 +9,8 @@ describe('parseGitHubIssueOrPRNumber', () => {
   it('parses plain issue numbers and GitHub pull request URLs', () => {
     expect(parseGitHubIssueOrPRNumber('42')).toBe(42)
     expect(parseGitHubIssueOrPRNumber('#42')).toBe(42)
-    expect(parseGitHubIssueOrPRNumber('https://github.com/stablyai/orca/pull/123')).toBe(123)
-    expect(parseGitHubIssueOrPRNumber('https://github.com/stablyai/orca/issues/923')).toBe(923)
+    expect(parseGitHubIssueOrPRNumber('https://github.com/Legacynnn/serper/pull/123')).toBe(123)
+    expect(parseGitHubIssueOrPRNumber('https://github.com/Legacynnn/serper/issues/923')).toBe(923)
   })
 
   it('parses GitHub item URLs with trailing page segments', () => {
@@ -32,9 +32,9 @@ describe('parseGitHubIssueOrPRNumber', () => {
   })
 
   it('rejects invalid GitHub item URLs', () => {
-    expect(parseGitHubIssueOrPRNumber('https://example.com/stablyai/orca/pull/123')).toBeNull()
+    expect(parseGitHubIssueOrPRNumber('https://example.com/Legacynnn/serper/pull/123')).toBeNull()
     expect(
-      parseGitHubIssueOrPRNumber('https://github.example.com/stablyai/orca/pull/123')
+      parseGitHubIssueOrPRNumber('https://github.example.com/Legacynnn/serper/pull/123')
     ).toBeNull()
     expect(
       parseGitHubIssueOrPRNumber('https://github.com/o/r/pull/not-a-number/changes')
@@ -47,13 +47,13 @@ describe('parseGitHubIssueOrPRNumber', () => {
 
 describe('parseGitHubIssueOrPRLink', () => {
   it('parses slug, number, and type for direct item URLs', () => {
-    expect(parseGitHubIssueOrPRLink('https://github.com/stablyai/orca/pull/123')).toEqual({
-      slug: { owner: 'stablyai', repo: 'orca' },
+    expect(parseGitHubIssueOrPRLink('https://github.com/Legacynnn/serper/pull/123')).toEqual({
+      slug: { owner: 'Legacynnn', repo: 'serper' },
       number: 123,
       type: 'pr'
     })
-    expect(parseGitHubIssueOrPRLink('https://github.com/stablyai/orca/issues/923')).toEqual({
-      slug: { owner: 'stablyai', repo: 'orca' },
+    expect(parseGitHubIssueOrPRLink('https://github.com/Legacynnn/serper/issues/923')).toEqual({
+      slug: { owner: 'Legacynnn', repo: 'serper' },
       number: 923,
       type: 'issue'
     })
@@ -98,8 +98,8 @@ describe('parseGitHubIssueOrPRLink', () => {
 
 describe('normalizeGitHubLinkQuery', () => {
   it('accepts full GitHub URLs whose slug differs from the selected repo slug', () => {
-    expect(normalizeGitHubLinkQuery('https://github.com/stablyai/orca/issues/923')).toEqual({
-      query: 'https://github.com/stablyai/orca/issues/923',
+    expect(normalizeGitHubLinkQuery('https://github.com/Legacynnn/serper/issues/923')).toEqual({
+      query: 'https://github.com/Legacynnn/serper/issues/923',
       directNumber: 923
     })
   })

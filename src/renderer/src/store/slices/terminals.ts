@@ -163,7 +163,7 @@ export type TerminalSlice = {
   tabBarOrderByWorktree: Record<string, string[]>
   workspaceSessionReady: boolean
   /** True only after hydrateWorkspaceSession ran from a real load of
-   *  orca-data.json. Guards the debounced session writer so that a crash
+   *  serper-data.json. Guards the debounced session writer so that a crash
    *  during early startup (fetchRepos / fetchAllWorktrees / session.get /
    *  hydrateWorkspaceSession itself) cannot cause an empty in-memory state
    *  to be serialized back over the user's good data on disk.
@@ -1568,7 +1568,7 @@ export const createTerminalSlice: StateCreator<AppState, [], [], TerminalSlice> 
           .map((worktree) => worktree.id)
       )
       // Why: SSH repos' worktrees are discovered at runtime via the relay, not
-      // persisted in orca-data.json. On restart, worktreesByRepo for SSH repos
+      // persisted in serper-data.json. On restart, worktreesByRepo for SSH repos
       // may still be empty when hydration runs (the SSH connection and worktree
       // fetch race with session hydration). Accept session worktree IDs whose
       // SSH-backed repo exists in the repos list — they will be populated once

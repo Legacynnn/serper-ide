@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { RpcDispatcher } from '../dispatcher'
 import type { RpcRequest } from '../core'
-import type { OrcaRuntimeService } from '../../orca-runtime'
+import type { SerperRuntimeService } from '../../serper-runtime'
 import { REPO_METHODS } from './repo'
 
 function makeRequest(method: string, params?: unknown): RpcRequest {
@@ -15,7 +15,7 @@ describe('repo RPC methods', () => {
       createRepo: vi.fn().mockResolvedValue({
         repo: { id: 'repo-1', path: '/srv/projects/new-app', kind: 'git' }
       })
-    } as unknown as OrcaRuntimeService
+    } as unknown as SerperRuntimeService
     const dispatcher = new RpcDispatcher({ runtime, methods: REPO_METHODS })
 
     const response = await dispatcher.dispatch(
@@ -38,26 +38,26 @@ describe('repo RPC methods', () => {
       getRuntimeId: () => 'test-runtime',
       cloneRepo: vi.fn().mockResolvedValue({
         id: 'repo-1',
-        path: '/srv/projects/orca',
+        path: '/srv/projects/serper',
         kind: 'git'
       })
-    } as unknown as OrcaRuntimeService
+    } as unknown as SerperRuntimeService
     const dispatcher = new RpcDispatcher({ runtime, methods: REPO_METHODS })
 
     const response = await dispatcher.dispatch(
       makeRequest('repo.clone', {
-        url: 'https://github.com/example/orca.git',
+        url: 'https://github.com/example/serper.git',
         destination: '/srv/projects'
       })
     )
 
     expect(runtime.cloneRepo).toHaveBeenCalledWith(
-      'https://github.com/example/orca.git',
+      'https://github.com/example/serper.git',
       '/srv/projects'
     )
     expect(response).toMatchObject({
       ok: true,
-      result: { repo: { id: 'repo-1', path: '/srv/projects/orca' } }
+      result: { repo: { id: 'repo-1', path: '/srv/projects/serper' } }
     })
   })
 
@@ -73,11 +73,11 @@ describe('repo RPC methods', () => {
         localContent: null,
         sharedContent: 'Fix {{artifact_url}}',
         effectiveContent: 'Fix {{artifact_url}}',
-        localFilePath: '/srv/repo/.orca/issue-command',
+        localFilePath: '/srv/repo/.serper/issue-command',
         source: 'shared'
       }),
       writeRepoIssueCommand: vi.fn().mockResolvedValue({ ok: true })
-    } as unknown as OrcaRuntimeService
+    } as unknown as SerperRuntimeService
     const dispatcher = new RpcDispatcher({ runtime, methods: REPO_METHODS })
 
     await dispatcher.dispatch(makeRequest('repo.hooksCheck', { repo: 'repo-1' }))

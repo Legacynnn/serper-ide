@@ -201,7 +201,7 @@ async function fetchIssueDetails(
     const full = mapIssueToWorkItem(issueRaw, projectRef.path)
     // Why: omit repoId from the returned shape — the renderer stamps
     // it from the dialog's caller (TaskPage / picker) so the main
-    // process doesn't need to know Orca's Repo.id.
+    // process doesn't need to know Serper's Repo.id.
     const { repoId: _repoId, ...rest } = full
     return rest
   })()

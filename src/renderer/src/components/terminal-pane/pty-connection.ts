@@ -323,7 +323,7 @@ export function connectPanePty(
   // underneath. See POST_REPLAY_MODE_RESET in layout-serialization.ts.
   const onBell = (): void => {
     // Why: restored Claude Code sessions have been observed to emit a real
-    // standalone BEL some time after daemon snapshot reattach, even when Orca
+    // standalone BEL some time after daemon snapshot reattach, even when Serper
     // did not just forward focus/control input. Treat the BEL as authoritative
     // PTY output here; any product-side suppression should be an explicit UX
     // decision higher up, not a transport-layer guess.
@@ -516,15 +516,15 @@ export function connectPanePty(
     // signals; title changes can race normal "done" states and make agents
     // look like they vanished as soon as they finished responding.
   }
-  // Why: inject ORCA_PANE_KEY so global Claude/Codex hooks can attribute their
-  // callbacks to the correct Orca pane without resolving worktrees from cwd.
+  // Why: inject SERPER_PANE_KEY so global Claude/Codex hooks can attribute their
+  // callbacks to the correct Serper pane without resolving worktrees from cwd.
   // The key matches the `${tabId}:${leafId}` composite used for cacheTimerByKey
-  // and agentStatusByPaneKey. Treat it as opaque outside Orca.
+  // and agentStatusByPaneKey. Treat it as opaque outside Serper.
   const paneEnv = {
     ...paneStartup?.env,
-    ORCA_PANE_KEY: cacheKey,
-    ORCA_TAB_ID: deps.tabId,
-    ORCA_WORKTREE_ID: deps.worktreeId
+    SERPER_PANE_KEY: cacheKey,
+    SERPER_TAB_ID: deps.tabId,
+    SERPER_WORKTREE_ID: deps.worktreeId
   }
 
   // Why: remote repos route PTY spawn through the SSH provider. Resolve the

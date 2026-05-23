@@ -704,7 +704,7 @@ export default function TerminalPane({
   })
 
   useEffect(() => {
-    if (!(globalThis as { __ORCA_WEB_CLIENT__?: boolean }).__ORCA_WEB_CLIENT__) {
+    if (!(globalThis as { __SERPER_WEB_CLIENT__?: boolean }).__SERPER_WEB_CLIENT__) {
       return
     }
     const manager = managerRef.current
@@ -1392,9 +1392,9 @@ export default function TerminalPane({
     // users still see its output while typing elsewhere. Hiding on `isActive`
     // blanked the previously focused pane and exposed the white group body.
     display: isVisible ? 'flex' : 'none',
-    ['--orca-terminal-divider-color' as string]:
+    ['--serper-terminal-divider-color' as string]:
       effectiveAppearance?.dividerColor ?? DEFAULT_TERMINAL_DIVIDER_DARK,
-    ['--orca-terminal-divider-color-strong' as string]: normalizeColor(
+    ['--serper-terminal-divider-color-strong' as string]: normalizeColor(
       effectiveAppearance?.dividerColor,
       DEFAULT_TERMINAL_DIVIDER_DARK
     )

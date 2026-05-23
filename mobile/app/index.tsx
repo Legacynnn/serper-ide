@@ -36,7 +36,7 @@ import { classifyConnection } from '../src/transport/connection-health'
 import { subscribeToDesktopNotifications } from '../src/notifications/mobile-notifications'
 import type { ConnectionState, HostProfile } from '../src/transport/types'
 import { triggerMediumImpact } from '../src/platform/haptics'
-import { OrcaLogo } from '../src/components/OrcaLogo'
+import { SerperLogo } from '../src/components/SerperLogo'
 import { StatusDot } from '../src/components/StatusDot'
 import { TextInputModal } from '../src/components/TextInputModal'
 import { ActionSheetModal, type ActionSheetAction } from '../src/components/ActionSheetModal'
@@ -294,7 +294,7 @@ export default function HomeScreen() {
       void loadHosts().then((h) => {
         if (!stale) setHosts(h)
       })
-      void AsyncStorage.getItem('orca:last-visited-worktree').then((raw) => {
+      void AsyncStorage.getItem('serper:last-visited-worktree').then((raw) => {
         if (stale || !raw) return
         try {
           setLastVisited(JSON.parse(raw))
@@ -530,9 +530,9 @@ export default function HomeScreen() {
       <View style={styles.topBar}>
         <View style={styles.brandLockup}>
           <View style={styles.logoMark}>
-            <OrcaLogo size={18} />
+            <SerperLogo size={18} />
           </View>
-          <Text style={styles.brandName}>Orca</Text>
+          <Text style={styles.brandName}>Serper</Text>
         </View>
         <Pressable
           style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}
@@ -548,7 +548,7 @@ export default function HomeScreen() {
           <View style={styles.emptyHero}>
             <Text style={styles.emptyTitle}>Connect your desktop</Text>
             <Text style={styles.emptyBody}>
-              Pair with Orca on your computer to check on your agents, jump into any terminal, and
+              Pair with Serper on your computer to check on your agents, jump into any terminal, and
               drive work from your phone.
             </Text>
             <Pressable style={styles.primaryButton} onPress={() => router.push('/pair-scan')}>
@@ -911,7 +911,7 @@ function CardGap() {
 
 const ONBOARDING_STEPS = [
   {
-    title: 'Open Orca desktop',
+    title: 'Open Serper desktop',
     desc: 'Go to Settings → Mobile and generate a pairing QR code.'
   },
   {

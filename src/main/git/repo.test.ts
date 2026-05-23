@@ -50,7 +50,7 @@ describe('searchBaseRefs (widened glob)', () => {
   let tmpDir: string
 
   beforeEach(() => {
-    tmpDir = mkdtempSync(path.join(tmpdir(), 'orca-repo-test-'))
+    tmpDir = mkdtempSync(path.join(tmpdir(), 'serper-repo-test-'))
     initRepo(tmpDir)
   })
 
@@ -260,7 +260,7 @@ describe('getDefaultBaseRef (regression — unchanged behavior)', () => {
   let tmpDir: string
 
   beforeEach(() => {
-    tmpDir = mkdtempSync(path.join(tmpdir(), 'orca-repo-test-'))
+    tmpDir = mkdtempSync(path.join(tmpdir(), 'serper-repo-test-'))
     initRepo(tmpDir)
   })
 
@@ -307,7 +307,7 @@ describe('getRemoteCount', () => {
   let tmpDir: string
 
   beforeEach(() => {
-    tmpDir = mkdtempSync(path.join(tmpdir(), 'orca-repo-test-'))
+    tmpDir = mkdtempSync(path.join(tmpdir(), 'serper-repo-test-'))
     initRepo(tmpDir)
   })
 

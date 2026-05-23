@@ -1,4 +1,4 @@
-// Why: this stylesheet targets the *exported* PDF document, not the live Orca
+// Why: this stylesheet targets the *exported* PDF document, not the live Serper
 // pane. In-app CSS assumes sticky UI chrome, hover affordances, and app-shell
 // spacing that would look wrong when flattened to paper. Keeping export CSS
 // separate also means a future UI refactor can move live classes without
@@ -17,62 +17,62 @@ html, body {
   line-height: 1.6;
 }
 
-.orca-export-root {
+.serper-export-root {
   padding: 0;
   max-width: 100%;
 }
 
-.orca-export-root h1,
-.orca-export-root h2,
-.orca-export-root h3,
-.orca-export-root h4,
-.orca-export-root h5,
-.orca-export-root h6 {
+.serper-export-root h1,
+.serper-export-root h2,
+.serper-export-root h3,
+.serper-export-root h4,
+.serper-export-root h5,
+.serper-export-root h6 {
   font-weight: 600;
   line-height: 1.25;
   margin-top: 1.5em;
   margin-bottom: 0.5em;
 }
 
-.orca-export-root h1 { font-size: 1.9em; }
-.orca-export-root h2 { font-size: 1.5em; }
-.orca-export-root h3 { font-size: 1.25em; }
-.orca-export-root h4 { font-size: 1em; }
+.serper-export-root h1 { font-size: 1.9em; }
+.serper-export-root h2 { font-size: 1.5em; }
+.serper-export-root h3 { font-size: 1.25em; }
+.serper-export-root h4 { font-size: 1em; }
 
-.orca-export-root p,
-.orca-export-root blockquote,
-.orca-export-root ul,
-.orca-export-root ol,
-.orca-export-root pre,
-.orca-export-root table {
+.serper-export-root p,
+.serper-export-root blockquote,
+.serper-export-root ul,
+.serper-export-root ol,
+.serper-export-root pre,
+.serper-export-root table {
   margin-top: 0;
   margin-bottom: 1em;
 }
 
-.orca-export-root a {
+.serper-export-root a {
   color: #0969da;
   text-decoration: underline;
 }
 
-.orca-export-root blockquote {
+.serper-export-root blockquote {
   padding: 0 1em;
   color: #57606a;
   border-left: 0.25em solid #d0d7de;
 }
 
-.orca-export-root code,
-.orca-export-root pre {
+.serper-export-root code,
+.serper-export-root pre {
   font-family: "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   font-size: 0.9em;
 }
 
-.orca-export-root code {
+.serper-export-root code {
   background: #f6f8fa;
   padding: 0.2em 0.4em;
   border-radius: 4px;
 }
 
-.orca-export-root pre {
+.serper-export-root pre {
   background: #f6f8fa;
   padding: 12px 16px;
   border-radius: 6px;
@@ -81,43 +81,43 @@ html, body {
   word-break: break-word;
 }
 
-.orca-export-root pre code {
+.serper-export-root pre code {
   background: transparent;
   padding: 0;
   border-radius: 0;
   font-size: inherit;
 }
 
-.orca-export-root table {
+.serper-export-root table {
   border-collapse: collapse;
   width: 100%;
 }
 
-.orca-export-root th,
-.orca-export-root td {
+.serper-export-root th,
+.serper-export-root td {
   border: 1px solid #d0d7de;
   padding: 6px 12px;
   text-align: left;
 }
 
-.orca-export-root th { background: #f6f8fa; }
+.serper-export-root th { background: #f6f8fa; }
 
-.orca-export-root img,
-.orca-export-root svg {
+.serper-export-root img,
+.serper-export-root svg {
   max-width: 100%;
   height: auto;
 }
 
-.orca-export-root ul,
-.orca-export-root ol { padding-left: 2em; }
+.serper-export-root ul,
+.serper-export-root ol { padding-left: 2em; }
 
-.orca-export-root li { margin: 0.25em 0; }
+.serper-export-root li { margin: 0.25em 0; }
 
-.orca-export-root input[type="checkbox"] {
+.serper-export-root input[type="checkbox"] {
   margin-right: 0.4em;
 }
 
-.orca-export-root hr {
+.serper-export-root hr {
   border: 0;
   border-top: 1px solid #d0d7de;
   margin: 1.5em 0;
@@ -130,7 +130,7 @@ html, body {
 .code-block-copy-btn,
 .markdown-preview-search,
 .rich-markdown-toolbar,
-[data-orca-export-hide="true"] {
+[data-serper-export-hide="true"] {
   display: none !important;
 }
 

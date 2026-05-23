@@ -29,7 +29,7 @@ vi.mock('fs', () => ({
 
 vi.mock('electron', () => ({
   app: {
-    getPath: vi.fn(() => '/tmp/orca-user-data')
+    getPath: vi.fn(() => '/tmp/serper-user-data')
   }
 }))
 
@@ -140,15 +140,15 @@ describe('LocalPtyProvider', () => {
       expect(spawnCall[2].env.CUSTOM_VAR).toBe('custom-value')
     })
 
-    it('does not inherit parent Orca pane identity when caller omits pane env', async () => {
+    it('does not inherit parent Serper pane identity when caller omits pane env', async () => {
       const saved = {
-        ORCA_PANE_KEY: process.env.ORCA_PANE_KEY,
-        ORCA_TAB_ID: process.env.ORCA_TAB_ID,
-        ORCA_WORKTREE_ID: process.env.ORCA_WORKTREE_ID
+        SERPER_PANE_KEY: process.env.SERPER_PANE_KEY,
+        SERPER_TAB_ID: process.env.SERPER_TAB_ID,
+        SERPER_WORKTREE_ID: process.env.SERPER_WORKTREE_ID
       }
-      process.env.ORCA_PANE_KEY = 'parent-tab:parent-leaf'
-      process.env.ORCA_TAB_ID = 'parent-tab'
-      process.env.ORCA_WORKTREE_ID = 'parent-worktree'
+      process.env.SERPER_PANE_KEY = 'parent-tab:parent-leaf'
+      process.env.SERPER_TAB_ID = 'parent-tab'
+      process.env.SERPER_WORKTREE_ID = 'parent-worktree'
 
       try {
         await provider.spawn({ cols: 80, rows: 24 })
@@ -163,29 +163,29 @@ describe('LocalPtyProvider', () => {
       }
 
       const spawnCall = spawnMock.mock.calls.at(-1)!
-      expect(spawnCall[2].env.ORCA_PANE_KEY).toBeUndefined()
-      expect(spawnCall[2].env.ORCA_TAB_ID).toBeUndefined()
-      expect(spawnCall[2].env.ORCA_WORKTREE_ID).toBeUndefined()
+      expect(spawnCall[2].env.SERPER_PANE_KEY).toBeUndefined()
+      expect(spawnCall[2].env.SERPER_TAB_ID).toBeUndefined()
+      expect(spawnCall[2].env.SERPER_WORKTREE_ID).toBeUndefined()
     })
 
-    it('preserves explicit child Orca pane identity over parent env', async () => {
+    it('preserves explicit child Serper pane identity over parent env', async () => {
       const saved = {
-        ORCA_PANE_KEY: process.env.ORCA_PANE_KEY,
-        ORCA_TAB_ID: process.env.ORCA_TAB_ID,
-        ORCA_WORKTREE_ID: process.env.ORCA_WORKTREE_ID
+        SERPER_PANE_KEY: process.env.SERPER_PANE_KEY,
+        SERPER_TAB_ID: process.env.SERPER_TAB_ID,
+        SERPER_WORKTREE_ID: process.env.SERPER_WORKTREE_ID
       }
-      process.env.ORCA_PANE_KEY = 'parent-tab:parent-leaf'
-      process.env.ORCA_TAB_ID = 'parent-tab'
-      process.env.ORCA_WORKTREE_ID = 'parent-worktree'
+      process.env.SERPER_PANE_KEY = 'parent-tab:parent-leaf'
+      process.env.SERPER_TAB_ID = 'parent-tab'
+      process.env.SERPER_WORKTREE_ID = 'parent-worktree'
 
       try {
         await provider.spawn({
           cols: 80,
           rows: 24,
           env: {
-            ORCA_PANE_KEY: 'child-tab:child-leaf',
-            ORCA_TAB_ID: 'child-tab',
-            ORCA_WORKTREE_ID: 'child-worktree'
+            SERPER_PANE_KEY: 'child-tab:child-leaf',
+            SERPER_TAB_ID: 'child-tab',
+            SERPER_WORKTREE_ID: 'child-worktree'
           }
         })
       } finally {
@@ -199,9 +199,9 @@ describe('LocalPtyProvider', () => {
       }
 
       const spawnCall = spawnMock.mock.calls.at(-1)!
-      expect(spawnCall[2].env.ORCA_PANE_KEY).toBe('child-tab:child-leaf')
-      expect(spawnCall[2].env.ORCA_TAB_ID).toBe('child-tab')
-      expect(spawnCall[2].env.ORCA_WORKTREE_ID).toBe('child-worktree')
+      expect(spawnCall[2].env.SERPER_PANE_KEY).toBe('child-tab:child-leaf')
+      expect(spawnCall[2].env.SERPER_TAB_ID).toBe('child-tab')
+      expect(spawnCall[2].env.SERPER_WORKTREE_ID).toBe('child-worktree')
     })
 
     it('combines HOMEDRIVE and HOMEPATH for Windows default cwd', async () => {
@@ -213,7 +213,7 @@ describe('LocalPtyProvider', () => {
       Object.defineProperty(process, 'platform', { value: 'win32' })
       delete process.env.USERPROFILE
       process.env.HOMEDRIVE = 'D:'
-      process.env.HOMEPATH = '\\Users\\orca'
+      process.env.HOMEPATH = '\\Users\\serper'
 
       try {
         await provider.spawn({ cols: 80, rows: 24 })
@@ -241,7 +241,7 @@ describe('LocalPtyProvider', () => {
       expect(spawnMock).toHaveBeenCalledWith(
         expect.any(String),
         expect.any(Array),
-        expect.objectContaining({ cwd: 'D:\\Users\\orca' })
+        expect.objectContaining({ cwd: 'D:\\Users\\serper' })
       )
     })
   })

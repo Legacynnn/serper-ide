@@ -514,7 +514,7 @@ export function NewWorktreeModal({
                       {setupSource && (
                         <View style={styles.sourceBadge}>
                           <Text style={styles.sourceBadgeText}>
-                            {setupSource === 'orca.yaml' ? 'ORCA.YAML' : 'HOOKS'}
+                            {setupSource === 'serper.yaml' ? 'SERPER.YAML' : 'HOOKS'}
                           </Text>
                         </View>
                       )}

@@ -455,8 +455,8 @@ const AddRepoDialog = React.memo(function AddRepoDialog() {
               <DialogTitle>Add a project</DialogTitle>
               <DialogDescription>
                 {repos.length === 0
-                  ? 'Add a project to get started with Orca.'
-                  : 'Add another project to manage with Orca.'}
+                  ? 'Add a project to get started with Serper.'
+                  : 'Add another project to manage with Serper.'}
               </DialogDescription>
             </DialogHeader>
 
@@ -506,7 +506,7 @@ const AddRepoDialog = React.memo(function AddRepoDialog() {
             </div>
 
             {/* Secondary link rather than a fourth card — create-from-scratch
-               is a less common path than importing. See orca#763. */}
+               is a less common path than importing. See serper#763. */}
             <div className="flex items-center justify-center pt-1">
               <button
                 type="button"

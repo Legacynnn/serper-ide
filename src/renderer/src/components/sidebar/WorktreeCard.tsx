@@ -61,7 +61,7 @@ function formatSparseDirectoryPreview(directories: string[]): string {
 }
 
 function isWebClient(): boolean {
-  return Boolean((window as unknown as { __ORCA_WEB_CLIENT__?: boolean }).__ORCA_WEB_CLIENT__)
+  return Boolean((window as unknown as { __SERPER_WEB_CLIENT__?: boolean }).__SERPER_WEB_CLIENT__)
 }
 
 // Why: the sidebar badge has two visual modes — the colored dot when no

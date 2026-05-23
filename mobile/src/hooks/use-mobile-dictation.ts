@@ -6,7 +6,7 @@ import {
   requestMicrophonePermissionsAsync,
   tearDown,
   toggleRecording
-} from '@orca/expo-two-way-audio'
+} from '@serper/expo-two-way-audio'
 import type { RpcClient } from '../transport/rpc-client'
 
 type DictationStatus = 'idle' | 'starting' | 'recording' | 'processing' | 'error'

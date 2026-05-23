@@ -14,7 +14,7 @@ export function parseWebPairingInput(input: string): WebPairingOffer | null {
   }
 
   try {
-    if (trimmed.startsWith('orca://pair')) {
+    if (trimmed.startsWith('serper://pair')) {
       const hashIndex = trimmed.indexOf('#')
       if (hashIndex === -1) {
         return null
@@ -40,7 +40,7 @@ export function readPairingInputFromLocation(location: Location): string | null 
   if (!hash) {
     return null
   }
-  if (hash.startsWith('orca://pair')) {
+  if (hash.startsWith('serper://pair')) {
     return hash
   }
   const hashParams = new URLSearchParams(hash)

@@ -15,7 +15,7 @@ vi.mock('electron', () => ({
     setApplicationMenu: setApplicationMenuMock
   },
   app: {
-    name: 'Orca'
+    name: 'Serper'
   }
 }))
 
@@ -127,7 +127,7 @@ describe('registerAppMenu', () => {
     // Why: Check for Updates lives under the app-name menu on macOS and
     // under Help on Windows/Linux. The click behavior must be identical
     // either way.
-    const parentLabel = isMac ? 'Orca' : 'Help'
+    const parentLabel = isMac ? 'Serper' : 'Help'
     const item = getSubmenu(getTemplate(), parentLabel).find(
       (entry) => entry.label === 'Check for Updates...'
     )
@@ -164,10 +164,10 @@ describe('registerAppMenu', () => {
     registerAppMenu(buildMenuOptions())
 
     const template = getTemplate()
-    // Why: no redundant app-named "Orca" menu should exist on non-mac — the
+    // Why: no redundant app-named "Serper" menu should exist on non-mac — the
     // app-menu contents (Settings, Exit, Check for Updates, About) have been
     // redistributed so users see them in File / Help instead.
-    expect(template.find((item) => item.label === 'Orca')).toBeUndefined()
+    expect(template.find((item) => item.label === 'Serper')).toBeUndefined()
 
     const fileLabels = getSubmenu(template, 'File').map((item) => item.label)
     expect(fileLabels).toEqual(expect.arrayContaining(['Export as PDF...', 'Settings', 'Exit']))
@@ -182,7 +182,7 @@ describe('registerAppMenu', () => {
     registerAppMenu(buildMenuOptions())
 
     const template = getTemplate()
-    const appSubmenu = getSubmenu(template, 'Orca')
+    const appSubmenu = getSubmenu(template, 'Serper')
     const appLabels = appSubmenu.map((item) => item.label)
     expect(appLabels).toEqual(expect.arrayContaining(['Check for Updates...', 'Settings']))
     // Why: on macOS File should NOT duplicate Settings/Exit — those live in

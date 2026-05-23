@@ -3,16 +3,20 @@ import { getDefaultCloneParent } from './clone-defaults'
 
 describe('getDefaultCloneParent', () => {
   it('strips a POSIX workspaces suffix', () => {
-    expect(getDefaultCloneParent('/Users/mvanhorn/orca/workspaces')).toBe('/Users/mvanhorn/orca')
+    expect(getDefaultCloneParent('/Users/mvanhorn/serper/workspaces')).toBe(
+      '/Users/mvanhorn/serper'
+    )
   })
 
   it('strips a POSIX workspaces suffix with a trailing slash', () => {
-    expect(getDefaultCloneParent('/Users/mvanhorn/orca/workspaces/')).toBe('/Users/mvanhorn/orca')
+    expect(getDefaultCloneParent('/Users/mvanhorn/serper/workspaces/')).toBe(
+      '/Users/mvanhorn/serper'
+    )
   })
 
   it('strips a Windows workspaces suffix', () => {
-    expect(getDefaultCloneParent('C:\\Users\\mvanhorn\\orca\\workspaces')).toBe(
-      'C:\\Users\\mvanhorn\\orca'
+    expect(getDefaultCloneParent('C:\\Users\\mvanhorn\\serper\\workspaces')).toBe(
+      'C:\\Users\\mvanhorn\\serper'
     )
   })
 
@@ -37,12 +41,12 @@ describe('getDefaultCloneParent', () => {
   })
 
   it('strips repeated trailing separators before matching the suffix', () => {
-    expect(getDefaultCloneParent('D:\\orca\\workspaces\\\\')).toBe('D:\\orca')
+    expect(getDefaultCloneParent('D:\\serper\\workspaces\\\\')).toBe('D:\\serper')
   })
 
   it('does not strip a similar-looking final segment', () => {
-    expect(getDefaultCloneParent('/Users/mvanhorn/orca/project-workspaces')).toBe(
-      '/Users/mvanhorn/orca/project-workspaces'
+    expect(getDefaultCloneParent('/Users/mvanhorn/serper/project-workspaces')).toBe(
+      '/Users/mvanhorn/serper/project-workspaces'
     )
   })
 })

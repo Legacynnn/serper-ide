@@ -1,5 +1,5 @@
 /**
- * E2E tests for the "Create Workspace" flow in Orca.
+ * E2E tests for the "Create Workspace" flow in Serper.
  *
  * Why: the old 'create-worktree' modal was replaced by the composer modal
  * (`activeModal === 'new-workspace-composer'`) in #710. A prior version of
@@ -20,7 +20,7 @@
  */
 
 import type { ConsoleMessage } from '@stablyai/playwright-test'
-import { test, expect } from './helpers/orca-app'
+import { test, expect } from './helpers/serper-app'
 import {
   waitForSessionReady,
   waitForActiveWorktree,
@@ -30,20 +30,20 @@ import {
 } from './helpers/store'
 
 test.describe('Create Workspace', () => {
-  test.beforeEach(async ({ orcaPage }) => {
-    await waitForSessionReady(orcaPage)
-    await waitForActiveWorktree(orcaPage)
+  test.beforeEach(async ({ serperPage }) => {
+    await waitForSessionReady(serperPage)
+    await waitForActiveWorktree(serperPage)
   })
 
-  test('creates a worktree through the composer UI and activates it', async ({ orcaPage }) => {
-    const worktreeIdBefore = await getActiveWorktreeId(orcaPage)
+  test('creates a worktree through the composer UI and activates it', async ({ serperPage }) => {
+    const worktreeIdBefore = await getActiveWorktreeId(serperPage)
 
     // Capture render errors for the #1186 guard. React logs "Objects are not
     // valid as a React child" via console.error before throwing the
     // minified-production error #31; capture both paths so the test fails
     // loudly whether the build is dev or prod.
     const pageErrors: Error[] = []
-    orcaPage.on('pageerror', (err) => {
+    serperPage.on('pageerror', (err) => {
       pageErrors.push(err)
     })
     const consoleErrors: string[] = []
@@ -52,7 +52,7 @@ test.describe('Create Workspace', () => {
         consoleErrors.push(msg.text())
       }
     }
-    orcaPage.on('console', onConsole)
+    serperPage.on('console', onConsole)
 
     const workspaceName = `e2e-create-${Date.now()}`
 
@@ -60,11 +60,11 @@ test.describe('Create Workspace', () => {
       // 1. Open the composer. Using the store setter (not clicking the
       // sidebar affordance) keeps the spec stable under sidebar refactors;
       // the modal open path itself is not what #1186 broke.
-      await orcaPage.evaluate(() => {
+      await serperPage.evaluate(() => {
         window.__store?.getState().openModal('new-workspace-composer')
       })
 
-      const dialog = orcaPage.getByRole('dialog', { name: /Create Workspace/i })
+      const dialog = serperPage.getByRole('dialog', { name: /Create Workspace/i })
       await expect(dialog).toBeVisible()
 
       // Wait for the composer to settle. The card fires several async effects
@@ -78,14 +78,14 @@ test.describe('Create Workspace', () => {
       // inside the open modal's React tree — the console/pageerror sweep
       // below is what catches #1186-class regressions now that the
       // StartFromField trigger no longer exists (#1191).
-      await orcaPage.evaluate(async () => {
+      await serperPage.evaluate(async () => {
         const repoId = Object.values(window.__store!.getState().worktreesByRepo).flat()[0]?.repoId
         if (!repoId) {
           return
         }
         await window.api.repos.getBaseRefDefault({ repoId })
       })
-      await orcaPage.waitForTimeout(100)
+      await serperPage.waitForTimeout(100)
 
       // 3. Type the workspace name into the unified smart-name input.
       // The composer's default mode is 'smart'; its placeholder advertises
@@ -110,7 +110,7 @@ test.describe('Create Workspace', () => {
 
       // 6. The new worktree must actually exist on disk and in the store.
       await expect
-        .poll(async () => worktreeExists(orcaPage, workspaceName), {
+        .poll(async () => worktreeExists(serperPage, workspaceName), {
           timeout: 10_000,
           message: `Worktree "${workspaceName}" did not appear in the store`
         })
@@ -121,7 +121,7 @@ test.describe('Create Workspace', () => {
       await expect
         .poll(
           async () => {
-            const id = await getActiveWorktreeId(orcaPage)
+            const id = await getActiveWorktreeId(serperPage)
             return id !== null && id !== worktreeIdBefore
           },
           { timeout: 10_000, message: 'New worktree did not become the active worktree' }
@@ -131,7 +131,7 @@ test.describe('Create Workspace', () => {
       // 8. A terminal tab must auto-create for the new worktree. This is
       // the downstream signal that `activateAndRevealWorktree` actually
       // fired, not just that the store row exists.
-      await ensureTerminalVisible(orcaPage)
+      await ensureTerminalVisible(serperPage)
 
       // Final render-error sweep. Any render crash during the flow (whether
       // it tore down the modal or bubbled past it) shows up here.
@@ -143,9 +143,9 @@ test.describe('Create Workspace', () => {
       )
       expect(reactChildErrors, `React render error: ${reactChildErrors.join(', ')}`).toEqual([])
     } finally {
-      orcaPage.off('console', onConsole)
+      serperPage.off('console', onConsole)
       // Best-effort close if the test failed mid-flow and left the modal open.
-      await orcaPage
+      await serperPage
         .evaluate(() => {
           window.__store?.getState().closeModal()
         })

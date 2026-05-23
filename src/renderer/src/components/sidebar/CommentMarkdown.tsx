@@ -13,7 +13,7 @@ type MarkdownPlugins = NonNullable<React.ComponentProps<typeof Markdown>['rehype
 // block-level wrappers that add unwanted margins and only keep inline
 // formatting (bold, italic, code, links) plus compact lists and line breaks.
 // Using react-markdown (already a project dependency) lets AI agents write
-// markdown via `orca worktree set --comment` and have it render nicely.
+// markdown via `serper worktree set --comment` and have it render nicely.
 
 const compactComponents: Components = {
   // Strip <p> wrappers to avoid double margins in the tight card layout.

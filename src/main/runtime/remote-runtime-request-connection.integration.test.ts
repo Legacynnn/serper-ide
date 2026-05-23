@@ -6,12 +6,12 @@ import { getDefaultRepoHookSettings } from '../../shared/constants'
 import type { Repo } from '../../shared/types'
 import { parsePairingCode } from '../../shared/pairing'
 import { RemoteRuntimeRequestConnection } from '../../shared/remote-runtime-request-connection'
-import type { OrcaRuntimeService } from './orca-runtime'
-import { OrcaRuntimeRpcServer } from './runtime-rpc'
+import type { SerperRuntimeService } from './serper-runtime'
+import { SerperRuntimeRpcServer } from './runtime-rpc'
 
 describe('remote runtime request connection integration', () => {
   it('fetches repos through the real E2EE WebSocket runtime', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-request-'))
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-runtime-request-'))
     const repoPath = join(userDataPath, 'repo')
     const repos: Repo[] = [
       {
@@ -32,8 +32,8 @@ describe('remote runtime request connection integration', () => {
       cancelMobileDictationForConnection: () => {},
       onClientDisconnected: () => {},
       listRepos: () => repos
-    } as unknown as OrcaRuntimeService
-    const server = new OrcaRuntimeRpcServer({
+    } as unknown as SerperRuntimeService
+    const server = new SerperRuntimeRpcServer({
       runtime,
       userDataPath,
       enableWebSocket: true,

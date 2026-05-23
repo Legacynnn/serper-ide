@@ -56,15 +56,15 @@ vi.mock('./SshDisconnectedDialog', () => ({
 
 vi.mock('./WorktreeContextMenu', () => ({
   default: ({ children }: { children: ReactNode }) => <>{children}</>,
-  CLOSE_ALL_CONTEXT_MENUS_EVENT: 'orca:test-close-context-menus',
-  WORKTREE_CONTEXT_MENU_SCOPE_ATTR: 'data-orca-context-menu-scope'
+  CLOSE_ALL_CONTEXT_MENUS_EVENT: 'serper:test-close-context-menus',
+  WORKTREE_CONTEXT_MENU_SCOPE_ATTR: 'data-serper-context-menu-scope'
 }))
 
 function makeRepo(): Repo {
   return {
     id: 'repo-1',
     path: '/repo',
-    displayName: 'orca',
+    displayName: 'serper',
     badgeColor: '#999999',
     addedAt: 1
   }
@@ -99,7 +99,7 @@ function makeHostedReview(overrides: Partial<HostedReviewInfo> = {}): HostedRevi
     number: 456,
     title: 'Fix stale GH PR',
     state: 'open',
-    url: 'https://github.com/acme/orca/pull/456',
+    url: 'https://github.com/acme/serper/pull/456',
     status: 'success',
     updatedAt: '2026-05-17T00:00:00.000Z',
     mergeable: 'MERGEABLE',

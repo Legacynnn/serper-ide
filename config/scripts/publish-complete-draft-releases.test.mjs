@@ -82,7 +82,7 @@ describe('publishCompleteDraftReleases', () => {
     const log = vi.fn()
 
     const result = await publishCompleteDraftReleases({
-      repo: 'stablyai/orca',
+      repo: 'Legacynnn/serper',
       token: 'token',
       fetchImpl,
       verifyReleaseAssets,
@@ -99,7 +99,7 @@ describe('publishCompleteDraftReleases', () => {
       ]
     })
     expect(fetchImpl).toHaveBeenLastCalledWith(
-      'https://api.github.com/repos/stablyai/orca/releases/7',
+      'https://api.github.com/repos/Legacynnn/serper/releases/7',
       expect.objectContaining({
         method: 'PATCH',
         body: JSON.stringify({ draft: false, prerelease: true })
@@ -110,7 +110,7 @@ describe('publishCompleteDraftReleases', () => {
 
 describe('writeGithubOutputs', () => {
   it('writes count outputs for workflow conditions', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'orca-release-outputs-'))
+    const dir = mkdtempSync(join(tmpdir(), 'serper-release-outputs-'))
     const outputPath = join(dir, 'output')
     try {
       writeGithubOutputs(

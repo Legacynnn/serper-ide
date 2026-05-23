@@ -18,7 +18,7 @@
  * (dnd-kit reorder); in those cases a DOM assertion still follows.
  */
 
-import { test, expect } from './helpers/orca-app'
+import { test, expect } from './helpers/serper-app'
 import type { Page } from '@stablyai/playwright-test'
 import {
   waitForSessionReady,
@@ -56,10 +56,10 @@ async function getDomActiveTabId(page: Page): Promise<string | null> {
 }
 
 test.describe('Tabs', () => {
-  test.beforeEach(async ({ orcaPage }) => {
-    await waitForSessionReady(orcaPage)
-    await waitForActiveWorktree(orcaPage)
-    await ensureTerminalVisible(orcaPage)
+  test.beforeEach(async ({ serperPage }) => {
+    await waitForSessionReady(serperPage)
+    await waitForActiveWorktree(serperPage)
+    await ensureTerminalVisible(serperPage)
   })
 
   /**
@@ -71,13 +71,13 @@ test.describe('Tabs', () => {
    * a tab-bar render regression. Clicking the real "+" button and then "New
    * Terminal" drives the same code path a user takes.
    */
-  test('clicking "+" then "New Terminal" creates a new terminal tab', async ({ orcaPage }) => {
-    const tabsBefore = await countRenderedTabs(orcaPage)
+  test('clicking "+" then "New Terminal" creates a new terminal tab', async ({ serperPage }) => {
+    const tabsBefore = await countRenderedTabs(serperPage)
 
-    await orcaPage.getByRole('button', { name: 'New tab' }).click()
+    await serperPage.getByRole('button', { name: 'New tab' }).click()
     // Why: the "+" dropdown uses Radix <DropdownMenuItem>, which exposes the
     // label text as the accessible name once the menu is open.
-    await orcaPage
+    await serperPage
       .getByRole('menuitem', { name: /New Terminal/i })
       .first()
       .click()
@@ -85,7 +85,7 @@ test.describe('Tabs', () => {
     // Final assertion is on the rendered tab count — the tab bar itself must
     // gain an element, not just the store.
     await expect
-      .poll(() => countRenderedTabs(orcaPage), {
+      .poll(() => countRenderedTabs(serperPage), {
         timeout: 5_000,
         message: 'Clicking + → New Terminal did not render a new tab in the tab bar'
       })
@@ -96,20 +96,20 @@ test.describe('Tabs', () => {
    * User Prompt:
    * - New tab works
    */
-  test('Cmd/Ctrl+T creates a new terminal tab', async ({ orcaPage }) => {
+  test('Cmd/Ctrl+T creates a new terminal tab', async ({ serperPage }) => {
     const isMac = process.platform === 'darwin'
     const mod = isMac ? 'Meta' : 'Control'
-    const tabsBefore = await countRenderedTabs(orcaPage)
+    const tabsBefore = await countRenderedTabs(serperPage)
 
     // Why: focus body first so the window-level keydown handler on Terminal.tsx
     // actually sees the event. Without focus the key may be eaten by an
     // unrelated input (e.g. a stale search field from a previous test).
-    await orcaPage.evaluate(() => document.body.focus())
-    await orcaPage.keyboard.press(`${mod}+t`)
+    await serperPage.evaluate(() => document.body.focus())
+    await serperPage.keyboard.press(`${mod}+t`)
 
     // DOM-level count increased — confirms a new tab actually rendered.
     await expect
-      .poll(() => countRenderedTabs(orcaPage), {
+      .poll(() => countRenderedTabs(serperPage), {
         timeout: 5_000,
         message: `${mod}+T did not add a tab to the tab bar`
       })
@@ -119,15 +119,15 @@ test.describe('Tabs', () => {
     // the active surface behind the strip; we rely on the store flag here only
     // to disambiguate terminal vs. editor vs. browser — the fact that *some*
     // tab is active is already proved by the DOM assertion below).
-    const activeType = await getActiveTabType(orcaPage)
+    const activeType = await getActiveTabType(serperPage)
     expect(activeType).toBe('terminal')
 
     // The DOM must have exactly one active tab and it must match the store's
     // activeTabId — this is the load-bearing check that the render layer and
     // the state layer agree on what is selected.
-    const storeActiveId = await getActiveTabId(orcaPage)
+    const storeActiveId = await getActiveTabId(serperPage)
     expect(storeActiveId).not.toBeNull()
-    await expect.poll(() => getDomActiveTabId(orcaPage), { timeout: 3_000 }).toBe(storeActiveId)
+    await expect.poll(() => getDomActiveTabId(serperPage), { timeout: 3_000 }).toBe(storeActiveId)
   })
 
   /**
@@ -140,39 +140,39 @@ test.describe('Tabs', () => {
    * checks DOM `data-active` to prove the selection actually paints onto the
    * right tab element.
    */
-  test('Cmd/Ctrl+Shift+] and Cmd/Ctrl+Shift+[ switch between tabs', async ({ orcaPage }) => {
-    const worktreeId = (await getActiveWorktreeId(orcaPage))!
+  test('Cmd/Ctrl+Shift+] and Cmd/Ctrl+Shift+[ switch between tabs', async ({ serperPage }) => {
+    const worktreeId = (await getActiveWorktreeId(serperPage))!
 
     // Ensure we have at least 2 tabs — use the real "+" flow so a render
     // regression would fail setup before we even start the cycle check.
-    if ((await countRenderedTabs(orcaPage)) < 2) {
-      await orcaPage.getByRole('button', { name: 'New tab' }).click()
-      await orcaPage
+    if ((await countRenderedTabs(serperPage)) < 2) {
+      await serperPage.getByRole('button', { name: 'New tab' }).click()
+      await serperPage
         .getByRole('menuitem', { name: /New Terminal/i })
         .first()
         .click()
       await expect
-        .poll(() => countRenderedTabs(orcaPage), { timeout: 5_000 })
+        .poll(() => countRenderedTabs(serperPage), { timeout: 5_000 })
         .toBeGreaterThanOrEqual(2)
     }
 
-    const firstTabId = await getActiveTabId(orcaPage)
-    const orderedTabs = await getWorktreeTabs(orcaPage, worktreeId)
+    const firstTabId = await getActiveTabId(serperPage)
+    const orderedTabs = await getWorktreeTabs(serperPage, worktreeId)
     const secondTabId = orderedTabs.find((tab) => tab.id !== firstTabId)?.id
     expect(secondTabId).toBeTruthy()
 
-    await orcaPage.evaluate((tabId) => {
+    await serperPage.evaluate((tabId) => {
       window.__store?.getState().setActiveTab(tabId)
     }, secondTabId)
 
     // DOM assertion — the second tab must actually show the active indicator.
-    await expect.poll(() => getDomActiveTabId(orcaPage), { timeout: 3_000 }).toBe(secondTabId)
+    await expect.poll(() => getDomActiveTabId(serperPage), { timeout: 3_000 }).toBe(secondTabId)
 
     // Switch back.
-    await orcaPage.evaluate((tabId) => {
+    await serperPage.evaluate((tabId) => {
       window.__store?.getState().setActiveTab(tabId)
     }, firstTabId)
-    await expect.poll(() => getDomActiveTabId(orcaPage), { timeout: 3_000 }).toBe(firstTabId)
+    await expect.poll(() => getDomActiveTabId(serperPage), { timeout: 3_000 }).toBe(firstTabId)
   })
 
   /**
@@ -188,26 +188,26 @@ test.describe('Tabs', () => {
    * a real test: a pure store round-trip would not catch a regression where
    * the tab strip stopped re-rendering in the store's new order.
    */
-  test('dragging a tab to a new position reorders it', async ({ orcaPage }) => {
-    const worktreeId = (await getActiveWorktreeId(orcaPage))!
+  test('dragging a tab to a new position reorders it', async ({ serperPage }) => {
+    const worktreeId = (await getActiveWorktreeId(serperPage))!
 
-    if ((await countRenderedTabs(orcaPage)) < 2) {
-      await orcaPage.getByRole('button', { name: 'New tab' }).click()
-      await orcaPage
+    if ((await countRenderedTabs(serperPage)) < 2) {
+      await serperPage.getByRole('button', { name: 'New tab' }).click()
+      await serperPage
         .getByRole('menuitem', { name: /New Terminal/i })
         .first()
         .click()
       await expect
-        .poll(() => countRenderedTabs(orcaPage), { timeout: 5_000 })
+        .poll(() => countRenderedTabs(serperPage), { timeout: 5_000 })
         .toBeGreaterThanOrEqual(2)
     }
 
-    const domOrderBefore = await orcaPage.$$eval(SORTABLE_TAB, (nodes) =>
+    const domOrderBefore = await serperPage.$$eval(SORTABLE_TAB, (nodes) =>
       nodes.map((n) => (n as HTMLElement).dataset.tabId ?? '')
     )
     expect(domOrderBefore.length).toBeGreaterThanOrEqual(2)
 
-    await orcaPage.evaluate((targetWorktreeId) => {
+    await serperPage.evaluate((targetWorktreeId) => {
       const store = window.__store
       if (!store) {
         return
@@ -245,7 +245,7 @@ test.describe('Tabs', () => {
     await expect
       .poll(
         async () =>
-          orcaPage.$$eval(SORTABLE_TAB, (nodes) =>
+          serperPage.$$eval(SORTABLE_TAB, (nodes) =>
             nodes.map((n) => (n as HTMLElement).dataset.tabId ?? '')
           ),
         { timeout: 3_000, message: 'Tab bar DOM order did not reflect the reorder' }
@@ -263,15 +263,15 @@ test.describe('Tabs', () => {
    * the load-bearing check — it fails if the shortcut walks the right store
    * id but the tab bar stops painting the active indicator on that tab.
    */
-  test('Cmd/Ctrl+Shift+[ walks tabs in drag-reordered order', async ({ orcaPage }) => {
+  test('Cmd/Ctrl+Shift+[ walks tabs in drag-reordered order', async ({ serperPage }) => {
     const isMac = process.platform === 'darwin'
     const mod = isMac ? 'Meta' : 'Control'
-    const worktreeId = (await getActiveWorktreeId(orcaPage))!
+    const worktreeId = (await getActiveWorktreeId(serperPage))!
 
     // Ensure at least 3 terminal tabs so the order cycle is non-trivial.
     // Why store-driven: we only need >=3 tabs to exist; the "+" flow is
     // already exercised by other tests in this file.
-    await orcaPage.evaluate((targetWorktreeId) => {
+    await serperPage.evaluate((targetWorktreeId) => {
       const store = window.__store
       if (!store) {
         return
@@ -283,16 +283,16 @@ test.describe('Tabs', () => {
       }
     }, worktreeId)
     await expect
-      .poll(async () => (await getWorktreeTabs(orcaPage, worktreeId)).length, { timeout: 5_000 })
+      .poll(async () => (await getWorktreeTabs(serperPage, worktreeId)).length, { timeout: 5_000 })
       .toBeGreaterThanOrEqual(3)
 
-    const initialOrder = await getTabBarOrder(orcaPage, worktreeId)
+    const initialOrder = await getTabBarOrder(serperPage, worktreeId)
     expect(initialOrder.length).toBeGreaterThanOrEqual(3)
     const [a, b, c] = initialOrder
 
     // Reorder via the same store call drag/drop uses: move the first tab to
     // the end so the visible order becomes [b, c, a].
-    await orcaPage.evaluate((targetWorktreeId) => {
+    await serperPage.evaluate((targetWorktreeId) => {
       const store = window.__store
       if (!store) {
         return
@@ -310,23 +310,23 @@ test.describe('Tabs', () => {
       state.reorderUnifiedTabs(activeGroup.id, [...rest, first])
     }, worktreeId)
     await expect
-      .poll(async () => getTabBarOrder(orcaPage, worktreeId), { timeout: 3_000 })
+      .poll(async () => getTabBarOrder(serperPage, worktreeId), { timeout: 3_000 })
       .toEqual([b, c, a])
 
     // Activate the last tab in the new visible order, then walk left twice.
     // Expected cycle: a → c → b (i.e. walks the *new* order in reverse).
-    await orcaPage.evaluate((tabId) => {
+    await serperPage.evaluate((tabId) => {
       window.__store?.getState().setActiveTab(tabId)
     }, a)
-    await expect.poll(() => getDomActiveTabId(orcaPage), { timeout: 3_000 }).toBe(a)
+    await expect.poll(() => getDomActiveTabId(serperPage), { timeout: 3_000 }).toBe(a)
 
-    await orcaPage.keyboard.press(`${mod}+Shift+BracketLeft`)
-    await expect.poll(() => getDomActiveTabId(orcaPage), { timeout: 3_000 }).toBe(c)
-    await expect(tabLocator(orcaPage, c)).toHaveAttribute('data-active', 'true')
+    await serperPage.keyboard.press(`${mod}+Shift+BracketLeft`)
+    await expect.poll(() => getDomActiveTabId(serperPage), { timeout: 3_000 }).toBe(c)
+    await expect(tabLocator(serperPage, c)).toHaveAttribute('data-active', 'true')
 
-    await orcaPage.keyboard.press(`${mod}+Shift+BracketLeft`)
-    await expect.poll(() => getDomActiveTabId(orcaPage), { timeout: 3_000 }).toBe(b)
-    await expect(tabLocator(orcaPage, b)).toHaveAttribute('data-active', 'true')
+    await serperPage.keyboard.press(`${mod}+Shift+BracketLeft`)
+    await expect.poll(() => getDomActiveTabId(serperPage), { timeout: 3_000 }).toBe(b)
+    await expect(tabLocator(serperPage, b)).toHaveAttribute('data-active', 'true')
   })
 
   /**
@@ -339,11 +339,11 @@ test.describe('Tabs', () => {
    * so the test fails if the store cleared the tab but the DOM didn't
    * re-render.
    */
-  test('closing a tab removes it from the tab bar', async ({ orcaPage }) => {
-    const worktreeId = (await getActiveWorktreeId(orcaPage))!
+  test('closing a tab removes it from the tab bar', async ({ serperPage }) => {
+    const worktreeId = (await getActiveWorktreeId(serperPage))!
 
     // Need a second tab so we can close one without deactivating the worktree.
-    await orcaPage.evaluate((targetWorktreeId) => {
+    await serperPage.evaluate((targetWorktreeId) => {
       const store = window.__store
       if (!store) {
         return
@@ -354,13 +354,13 @@ test.describe('Tabs', () => {
       }
     }, worktreeId)
     await expect
-      .poll(() => countRenderedTabs(orcaPage), { timeout: 5_000 })
+      .poll(() => countRenderedTabs(serperPage), { timeout: 5_000 })
       .toBeGreaterThanOrEqual(2)
 
-    const tabsBefore = await countRenderedTabs(orcaPage)
-    const activeId = await getActiveTabId(orcaPage)
+    const tabsBefore = await countRenderedTabs(serperPage)
+    const activeId = await getActiveTabId(serperPage)
     expect(activeId).not.toBeNull()
-    const activeTab = tabLocator(orcaPage, activeId!)
+    const activeTab = tabLocator(serperPage, activeId!)
     // Why: hover the tab first so the close button reveals its hover style.
     // The button is interactive regardless but hovering matches real user
     // behaviour and keeps click coordinates stable.
@@ -368,7 +368,7 @@ test.describe('Tabs', () => {
     await activeTab.getByRole('button', { name: /^Close tab /i }).click()
 
     await expect
-      .poll(() => countRenderedTabs(orcaPage), {
+      .poll(() => countRenderedTabs(serperPage), {
         timeout: 5_000,
         message: 'Clicking close did not remove the tab element from the DOM'
       })
@@ -383,10 +383,10 @@ test.describe('Tabs', () => {
    * the tab bar re-paints the active indicator after a close — a store-only
    * check would pass even if the indicator failed to shift.
    */
-  test('closing the active tab activates a neighbor tab', async ({ orcaPage }) => {
-    const worktreeId = (await getActiveWorktreeId(orcaPage))!
+  test('closing the active tab activates a neighbor tab', async ({ serperPage }) => {
+    const worktreeId = (await getActiveWorktreeId(serperPage))!
 
-    await orcaPage.evaluate((targetWorktreeId) => {
+    await serperPage.evaluate((targetWorktreeId) => {
       const store = window.__store
       if (!store) {
         return
@@ -397,23 +397,23 @@ test.describe('Tabs', () => {
       }
     }, worktreeId)
     await expect
-      .poll(() => countRenderedTabs(orcaPage), { timeout: 5_000 })
+      .poll(() => countRenderedTabs(serperPage), { timeout: 5_000 })
       .toBeGreaterThanOrEqual(2)
 
-    const activeTabBefore = await getActiveTabId(orcaPage)
+    const activeTabBefore = await getActiveTabId(serperPage)
     expect(activeTabBefore).not.toBeNull()
 
-    const activeTab = tabLocator(orcaPage, activeTabBefore!)
+    const activeTab = tabLocator(serperPage, activeTabBefore!)
     await activeTab.hover()
     await activeTab.getByRole('button', { name: /^Close tab /i }).click()
 
     // Final DOM assertion: some *other* tab element now carries data-active.
     await expect
-      .poll(() => getDomActiveTabId(orcaPage), {
+      .poll(() => getDomActiveTabId(serperPage), {
         timeout: 5_000,
         message: 'After closing the active tab, no neighbor tab took over the active indicator'
       })
       .not.toBe(activeTabBefore)
-    await expect.poll(() => getDomActiveTabId(orcaPage), { timeout: 5_000 }).not.toBeNull()
+    await expect.poll(() => getDomActiveTabId(serperPage), { timeout: 5_000 }).not.toBeNull()
   })
 })

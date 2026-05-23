@@ -23,7 +23,7 @@ async function saveClipboardImageBufferAsTempFile(
   buffer: Buffer,
   args?: SaveClipboardImageAsTempFileArgs
 ): Promise<string> {
-  const fileName = `orca-paste-${Date.now()}-${randomUUID()}.png`
+  const fileName = `serper-paste-${Date.now()}-${randomUUID()}.png`
 
   if (args?.connectionId) {
     const provider = requireSshFilesystemProvider(args.connectionId)

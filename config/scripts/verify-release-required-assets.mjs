@@ -10,18 +10,18 @@ export function getRequiredReleaseAssetNames(tag) {
     'latest-linux.yml',
     'latest-mac.yml',
     'latest.yml',
-    'orca-linux.AppImage',
-    `orca-ide_${version}_amd64.deb`,
-    'orca-windows-setup.exe',
-    'orca-windows-setup.exe.blockmap',
-    `Orca-${version}-mac.zip`,
-    `Orca-${version}-mac.zip.blockmap`,
-    `Orca-${version}-arm64-mac.zip`,
-    `Orca-${version}-arm64-mac.zip.blockmap`,
-    'orca-macos-x64.dmg',
-    'orca-macos-x64.dmg.blockmap',
-    'orca-macos-arm64.dmg',
-    'orca-macos-arm64.dmg.blockmap'
+    'serper-linux.AppImage',
+    `serper_${version}_amd64.deb`,
+    'serper-windows-setup.exe',
+    'serper-windows-setup.exe.blockmap',
+    `Serper-${version}-mac.zip`,
+    `Serper-${version}-mac.zip.blockmap`,
+    `Serper-${version}-arm64-mac.zip`,
+    `Serper-${version}-arm64-mac.zip.blockmap`,
+    'serper-macos-x64.dmg',
+    'serper-macos-x64.dmg.blockmap',
+    'serper-macos-arm64.dmg',
+    'serper-macos-arm64.dmg.blockmap'
   ]
 }
 
@@ -140,7 +140,7 @@ async function main() {
   if (!token) {
     throw new Error('GH_TOKEN or GITHUB_TOKEN must be set')
   }
-  const repo = process.env.GITHUB_REPOSITORY || 'stablyai/orca'
+  const repo = process.env.GITHUB_REPOSITORY || 'Legacynnn/serper'
   const result = await verifyRequiredReleaseAssets({ repo, tag, token })
   console.log(`Verified ${result.checked.length} required release assets for ${repo}@${tag}`)
 }

@@ -77,7 +77,7 @@ export function ThemePicker({
   return (
     <SearchableSetting
       title="Theme"
-      description="Choose how Orca looks in the app window."
+      description="Choose how Serper looks in the app window."
       keywords={['dark', 'light', 'system', 'vesper', 'blur']}
       className="space-y-3"
     >
@@ -104,7 +104,7 @@ export function ThemePicker({
               Restart required
             </p>
             <p className="text-xs text-muted-foreground">
-              Restart Orca to apply the window blur change.
+              Restart Serper to apply the window blur change.
             </p>
           </div>
           <Button

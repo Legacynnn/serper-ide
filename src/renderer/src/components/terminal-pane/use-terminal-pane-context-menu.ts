@@ -7,7 +7,7 @@ import type { TerminalQuickCommand } from '../../../../shared/types'
 import { sendTerminalQuickCommandToPane } from './terminal-quick-command-dispatch'
 import { splitWebRuntimeTerminal } from '@/runtime/web-runtime-session'
 
-const CLOSE_ALL_CONTEXT_MENUS_EVENT = 'orca-close-all-context-menus'
+const CLOSE_ALL_CONTEXT_MENUS_EVENT = 'serper-close-all-context-menus'
 
 type UseTerminalPaneContextMenuDeps = {
   managerRef: React.RefObject<PaneManager | null>

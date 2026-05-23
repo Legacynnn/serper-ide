@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
-import { OrcaRuntimeService } from './orca-runtime'
+import { SerperRuntimeService } from './serper-runtime'
 import type { Automation } from '../../shared/automations-types'
 import type { Repo } from '../../shared/types'
 
 const repo: Repo = {
   id: 'repo-1',
-  path: '/tmp/orca',
-  displayName: 'orca',
+  path: '/tmp/serper',
+  displayName: 'serper',
   badgeColor: 'blue',
   addedAt: 1,
   kind: 'git'
@@ -68,10 +68,10 @@ const existingAutomation = {
   updatedAt: 1
 } satisfies Automation
 
-describe('OrcaRuntimeService automation methods', () => {
+describe('SerperRuntimeService automation methods', () => {
   it('creates repo-scoped automations through the shared store', async () => {
     const store = makeStore()
-    const runtime = new OrcaRuntimeService(store as never)
+    const runtime = new SerperRuntimeService(store as never)
 
     const automation = await runtime.createAutomation({
       name: 'Daily review',
@@ -98,7 +98,7 @@ describe('OrcaRuntimeService automation methods', () => {
 
   it('updates and deletes existing automations through the shared store', async () => {
     const store = makeStore([existingAutomation])
-    const runtime = new OrcaRuntimeService(store as never)
+    const runtime = new SerperRuntimeService(store as never)
 
     const updated = await runtime.updateAutomation('auto-1', { enabled: false })
     const removed = runtime.deleteAutomation('auto-1')
@@ -116,7 +116,7 @@ describe('OrcaRuntimeService automation methods', () => {
 
   it('preserves explicit nullable fields in sparse automation updates', async () => {
     const store = makeStore([existingAutomation])
-    const runtime = new OrcaRuntimeService(store as never)
+    const runtime = new SerperRuntimeService(store as never)
 
     await runtime.updateAutomation('auto-1', { baseBranch: null })
 
@@ -127,11 +127,11 @@ describe('OrcaRuntimeService automation methods', () => {
     const existing = {
       ...existingAutomation,
       workspaceMode: 'existing',
-      workspaceId: 'repo-1::/tmp/orca-worktree',
+      workspaceId: 'repo-1::/tmp/serper-worktree',
       baseBranch: null
     } satisfies Automation
     const store = makeStore([existing])
-    const runtime = new OrcaRuntimeService(store as never)
+    const runtime = new SerperRuntimeService(store as never)
 
     await expect(runtime.updateAutomation('auto-1', { repo: 'repo-2' })).rejects.toThrow(
       'Repo updates for existing-workspace automation require workspaceMode new_per_run.'

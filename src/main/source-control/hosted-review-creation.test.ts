@@ -81,7 +81,7 @@ function resetMocks(): void {
 
 function mockGitHubProvider(): void {
   getProjectSlugMock.mockResolvedValue(null)
-  getRepoSlugMock.mockResolvedValue({ owner: 'acme', repo: 'orca' })
+  getRepoSlugMock.mockResolvedValue({ owner: 'acme', repo: 'serper' })
   getBitbucketRepoSlugMock.mockResolvedValue(null)
   getAzureDevOpsRepoSlugMock.mockResolvedValue(null)
   getGiteaRepoSlugMock.mockResolvedValue(null)
@@ -118,7 +118,7 @@ describe('createHostedReview', () => {
     createGitHubPullRequestMock.mockResolvedValue({
       ok: true,
       number: 12,
-      url: 'https://github.com/acme/orca/pull/12'
+      url: 'https://github.com/acme/serper/pull/12'
     })
   })
 
@@ -179,7 +179,7 @@ describe('createHostedReview', () => {
     ).resolves.toEqual({
       ok: true,
       number: 12,
-      url: 'https://github.com/acme/orca/pull/12'
+      url: 'https://github.com/acme/serper/pull/12'
     })
     expect(createGitHubPullRequestMock).toHaveBeenCalledOnce()
   })
@@ -190,7 +190,7 @@ describe('createHostedReview', () => {
       number: 31,
       title: 'Existing feature',
       state: 'open',
-      url: 'https://github.com/acme/orca/pull/31',
+      url: 'https://github.com/acme/serper/pull/31',
       status: 'pending',
       updatedAt: '2026-05-15T00:00:00.000Z',
       mergeable: 'UNKNOWN'
@@ -209,7 +209,7 @@ describe('createHostedReview', () => {
       error: 'A pull request already exists for this branch.',
       existingReview: {
         number: 31,
-        url: 'https://github.com/acme/orca/pull/31'
+        url: 'https://github.com/acme/serper/pull/31'
       }
     })
     expect(createGitHubPullRequestMock).not.toHaveBeenCalled()
@@ -306,7 +306,7 @@ describe('getHostedReviewCreationEligibility', () => {
   })
 
   it('blocks unsupported providers before GitHub authentication checks', async () => {
-    getProjectSlugMock.mockResolvedValue({ host: 'gitlab.com', path: 'acme/orca' })
+    getProjectSlugMock.mockResolvedValue({ host: 'gitlab.com', path: 'acme/serper' })
     getRepoSlugMock.mockResolvedValue(null)
 
     await expect(

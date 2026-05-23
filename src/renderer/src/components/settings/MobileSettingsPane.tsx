@@ -5,8 +5,8 @@ import { matchesSettingsSearch, type SettingsSearchEntry } from './settings-sear
 import { useAppStore } from '../../store'
 import { MobilePane, MOBILE_PANE_SEARCH_ENTRIES } from './MobilePane'
 
-const ORCA_IOS_APP_STORE_URL = 'https://apps.apple.com/app/orca-ide/id6766130217'
-const ORCA_ANDROID_RELEASE_URL = 'https://github.com/stablyai/orca/releases/tag/mobile-v0.0.8'
+const SERPER_IOS_APP_STORE_URL = 'https://apps.apple.com/app/orca-ide/id6766130217'
+const SERPER_ANDROID_RELEASE_URL = 'https://github.com/Legacynnn/serper/releases/tag/mobile-v0.0.8'
 
 const MOBILE_ENABLE_SEARCH_ENTRY: SettingsSearchEntry = {
   title: 'Mobile',
@@ -57,11 +57,11 @@ export function MobileSettingsPane({
             <div className="min-w-0 shrink space-y-1.5">
               <Label>Mobile</Label>
               <p className="text-xs text-muted-foreground">
-                Control Orca from your phone by scanning a QR code. Beta / early preview &mdash;
+                Control Serper from your phone by scanning a QR code. Beta / early preview &mdash;
                 expect bugs and breaking changes. Get the iOS app from the{' '}
                 <button
                   type="button"
-                  onClick={() => void window.api.shell.openUrl(ORCA_IOS_APP_STORE_URL)}
+                  onClick={() => void window.api.shell.openUrl(SERPER_IOS_APP_STORE_URL)}
                   className="cursor-pointer underline underline-offset-2 hover:text-foreground"
                 >
                   App Store
@@ -72,7 +72,7 @@ export function MobileSettingsPane({
                   // Why: Android is moving to Google Play soon, but until then
                   // link directly to the current mobile release tag instead of
                   // the noisy desktop-dominated releases index.
-                  onClick={() => void window.api.shell.openUrl(ORCA_ANDROID_RELEASE_URL)}
+                  onClick={() => void window.api.shell.openUrl(SERPER_ANDROID_RELEASE_URL)}
                   className="cursor-pointer underline underline-offset-2 hover:text-foreground"
                 >
                   GitHub Releases page

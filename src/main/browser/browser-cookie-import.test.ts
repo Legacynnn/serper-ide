@@ -21,7 +21,7 @@ describe('importCookiesFromFile', () => {
   let cookiesSetMock: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
-    tmpDir = mkdtempSync(join(tmpdir(), 'orca-cookie-test-'))
+    tmpDir = mkdtempSync(join(tmpdir(), 'serper-cookie-test-'))
     cookiesSetMock = vi.fn().mockResolvedValue(undefined)
     sessionFromPartitionMock.mockReset()
     sessionFromPartitionMock.mockReturnValue({

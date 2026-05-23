@@ -250,7 +250,7 @@ export default function FeatureWallModal(): JSX.Element | null {
         }}
       >
         <DialogHeader className="gap-1">
-          <DialogTitle>Explore some of Orca&apos;s features</DialogTitle>
+          <DialogTitle>Explore some of Serper&apos;s features</DialogTitle>
           <DialogDescription>
             <span className="block">Tasks, terminal, agents, browser, SSH, review, and more.</span>
             <span className="block">Reopen this any time from Help &gt; Feature tour.</span>
@@ -260,7 +260,7 @@ export default function FeatureWallModal(): JSX.Element | null {
         <div
           ref={gridRef}
           role="list"
-          aria-label="Explore some of Orca's features"
+          aria-label="Explore some of Serper's features"
           className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3"
         >
           {FEATURE_WALL_TILES.map((tile, index) => {

@@ -13,9 +13,9 @@ describe('parseGitLabIssueOrMRNumber', () => {
   })
 
   it('parses gitlab.com issue and MR URLs', () => {
-    expect(parseGitLabIssueOrMRNumber('https://gitlab.com/stablyai/orca/-/issues/923')).toBe(923)
+    expect(parseGitLabIssueOrMRNumber('https://gitlab.com/Legacynnn/serper/-/issues/923')).toBe(923)
     expect(
-      parseGitLabIssueOrMRNumber('https://gitlab.com/stablyai/orca/-/merge_requests/123')
+      parseGitLabIssueOrMRNumber('https://gitlab.com/Legacynnn/serper/-/merge_requests/123')
     ).toBe(123)
   })
 
@@ -30,8 +30,8 @@ describe('parseGitLabIssueOrMRNumber', () => {
   })
 
   it('rejects GitHub URLs (no /-/ separator)', () => {
-    expect(parseGitLabIssueOrMRNumber('https://github.com/stablyai/orca/issues/923')).toBeNull()
-    expect(parseGitLabIssueOrMRNumber('https://github.com/stablyai/orca/pull/123')).toBeNull()
+    expect(parseGitLabIssueOrMRNumber('https://github.com/Legacynnn/serper/issues/923')).toBeNull()
+    expect(parseGitLabIssueOrMRNumber('https://github.com/Legacynnn/serper/pull/123')).toBeNull()
   })
 
   it('rejects unparseable input', () => {
@@ -43,14 +43,14 @@ describe('parseGitLabIssueOrMRNumber', () => {
 
 describe('parseGitLabIssueOrMRLink', () => {
   it('extracts slug + number + type for issues and MRs', () => {
-    expect(parseGitLabIssueOrMRLink('https://gitlab.com/stablyai/orca/-/issues/923')).toEqual({
-      slug: { path: 'stablyai/orca' },
+    expect(parseGitLabIssueOrMRLink('https://gitlab.com/Legacynnn/serper/-/issues/923')).toEqual({
+      slug: { path: 'Legacynnn/serper' },
       number: 923,
       type: 'issue'
     })
     expect(
-      parseGitLabIssueOrMRLink('https://gitlab.com/stablyai/orca/-/merge_requests/77')
-    ).toEqual({ slug: { path: 'stablyai/orca' }, number: 77, type: 'mr' })
+      parseGitLabIssueOrMRLink('https://gitlab.com/Legacynnn/serper/-/merge_requests/77')
+    ).toEqual({ slug: { path: 'Legacynnn/serper' }, number: 77, type: 'mr' })
   })
 
   it('preserves full nested group paths in the slug', () => {
@@ -66,7 +66,7 @@ describe('parseGitLabIssueOrMRLink', () => {
   })
 
   it('returns null for non-GitLab URL shapes', () => {
-    expect(parseGitLabIssueOrMRLink('https://gitlab.com/stablyai/orca/issues/123')).toBeNull()
+    expect(parseGitLabIssueOrMRLink('https://gitlab.com/Legacynnn/serper/issues/123')).toBeNull()
   })
 })
 
@@ -76,8 +76,8 @@ describe('normalizeGitLabLinkQuery', () => {
   })
 
   it('routes a full URL to query + directNumber', () => {
-    expect(normalizeGitLabLinkQuery('https://gitlab.com/stablyai/orca/-/issues/923')).toEqual({
-      query: 'https://gitlab.com/stablyai/orca/-/issues/923',
+    expect(normalizeGitLabLinkQuery('https://gitlab.com/Legacynnn/serper/-/issues/923')).toEqual({
+      query: 'https://gitlab.com/Legacynnn/serper/-/issues/923',
       directNumber: 923
     })
   })

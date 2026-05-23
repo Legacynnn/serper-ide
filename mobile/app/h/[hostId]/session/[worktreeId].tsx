@@ -1690,7 +1690,7 @@ export default function SessionScreen() {
   useEffect(() => {
     if (hostId && worktreeId) {
       void AsyncStorage.setItem(
-        'orca:last-visited-worktree',
+        'serper:last-visited-worktree',
         JSON.stringify({ hostId, worktreeId })
       )
     }
@@ -1700,7 +1700,7 @@ export default function SessionScreen() {
     async (key: CustomKey) => {
       const updated = customKeys.filter((k) => k.id !== key.id)
       setCustomKeys(updated)
-      await AsyncStorage.setItem('orca:custom-accessory-keys', JSON.stringify(updated))
+      await AsyncStorage.setItem('serper:custom-accessory-keys', JSON.stringify(updated))
     },
     [customKeys]
   )

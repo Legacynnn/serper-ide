@@ -122,12 +122,12 @@ import type {
   AutomationUpdateInput
 } from '../shared/automations-types'
 import {
-  ORCA_EDITOR_SAVE_DIRTY_FILES_EVENT,
+  SERPER_EDITOR_SAVE_DIRTY_FILES_EVENT,
   type EditorSaveDirtyFilesDetail
 } from '../shared/editor-save-events'
 import {
-  ORCA_UPDATER_QUIT_AND_INSTALL_ABORTED_EVENT,
-  ORCA_UPDATER_QUIT_AND_INSTALL_STARTED_EVENT
+  SERPER_UPDATER_QUIT_AND_INSTALL_ABORTED_EVENT,
+  SERPER_UPDATER_QUIT_AND_INSTALL_STARTED_EVENT
 } from '../shared/updater-renderer-events'
 import { subscribeRuntimeEnvironmentFromPreload } from './runtime-environment-subscriptions'
 import type { RuntimeEnvironmentSubscriptionHandle } from './runtime-environment-subscriptions'
@@ -263,7 +263,7 @@ document.addEventListener(
   (e) => {
     // Let in-app drags (e.g. file explorer drag-to-move) through to React handlers
     // so they can set their own dropEffect. Only override for native OS file drops.
-    if (e.dataTransfer?.types.includes('text/x-orca-file-path')) {
+    if (e.dataTransfer?.types.includes('text/x-serper-file-path')) {
       return
     }
     e.preventDefault()
@@ -278,7 +278,7 @@ document.addEventListener(
   'drop',
   (e) => {
     // Let in-app drags (e.g. file explorer → terminal) through to React handlers
-    if (e.dataTransfer?.types.includes('text/x-orca-file-path')) {
+    if (e.dataTransfer?.types.includes('text/x-serper-file-path')) {
       return
     }
 
@@ -970,8 +970,8 @@ const api = {
       return () => ipcRenderer.removeListener('gh:workItemMutated', listener)
     },
 
-    checkOrcaStarred: (): Promise<boolean | null> => ipcRenderer.invoke('gh:checkOrcaStarred'),
-    starOrca: (): Promise<boolean> => ipcRenderer.invoke('gh:starOrca'),
+    checkSerperStarred: (): Promise<boolean | null> => ipcRenderer.invoke('gh:checkSerperStarred'),
+    starSerper: (): Promise<boolean> => ipcRenderer.invoke('gh:starSerper'),
 
     // Why: rate_limit is exempt from rate-limit accounting, but we still pass
     // `force` through so callers can bust the 30s in-process cache after a
@@ -1593,15 +1593,15 @@ const api = {
       return () => ipcRenderer.removeListener('browser:pane-focus', listener)
     },
 
-    onOpenLinkInOrcaTab: (
+    onOpenLinkInSerperTab: (
       callback: (event: { browserPageId: string; url: string }) => void
     ): (() => void) => {
       const listener = (
         _event: Electron.IpcRendererEvent,
         data: { browserPageId: string; url: string }
       ) => callback(data)
-      ipcRenderer.on('browser:open-link-in-orca-tab', listener)
-      return () => ipcRenderer.removeListener('browser:open-link-in-orca-tab', listener)
+      ipcRenderer.on('browser:open-link-in-serper-tab', listener)
+      return () => ipcRenderer.removeListener('browser:open-link-in-serper-tab', listener)
     },
 
     acceptDownload: (args: {
@@ -1763,7 +1763,7 @@ const api = {
       // close unless we mark the updater path explicitly, and #300 introduced
       // longer-lived editor dirty/autosave state that can otherwise veto the
       // restart even after the update payload has been downloaded.
-      window.dispatchEvent(new Event(ORCA_UPDATER_QUIT_AND_INSTALL_STARTED_EVENT))
+      window.dispatchEvent(new Event(SERPER_UPDATER_QUIT_AND_INSTALL_STARTED_EVENT))
 
       // Why: we wrap the save attempt in try/catch so that a save failure
       // (e.g., unsupported dirty files or a write error) never silently
@@ -1774,7 +1774,7 @@ const api = {
         await new Promise<void>((resolve, reject) => {
           let claimed = false
           window.dispatchEvent(
-            new CustomEvent<EditorSaveDirtyFilesDetail>(ORCA_EDITOR_SAVE_DIRTY_FILES_EVENT, {
+            new CustomEvent<EditorSaveDirtyFilesDetail>(SERPER_EDITOR_SAVE_DIRTY_FILES_EVENT, {
               detail: {
                 claim: () => {
                   claimed = true
@@ -1808,7 +1808,7 @@ const api = {
       try {
         return await ipcRenderer.invoke('updater:quitAndInstall')
       } catch (error) {
-        window.dispatchEvent(new Event(ORCA_UPDATER_QUIT_AND_INSTALL_ABORTED_EVENT))
+        window.dispatchEvent(new Event(SERPER_UPDATER_QUIT_AND_INSTALL_ABORTED_EVENT))
         throw error
       }
     },

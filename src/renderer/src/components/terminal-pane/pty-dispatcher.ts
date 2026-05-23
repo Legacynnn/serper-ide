@@ -283,7 +283,7 @@ export type IpcPtyTransportOptions = {
   env?: Record<string, string>
   command?: string
   connectionId?: string | null
-  /** Orca worktree identity for scoped shell history. */
+  /** Serper worktree identity for scoped shell history. */
   worktreeId?: string
   /** Why: closes the SIGKILL race documented in INVESTIGATION.md by letting
    *  main patch + sync-flush the (worktreeId, tabId, leafId → ptyId) binding

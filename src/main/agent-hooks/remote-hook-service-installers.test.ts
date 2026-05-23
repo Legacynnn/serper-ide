@@ -3,7 +3,7 @@ import type { SFTPWrapper } from 'ssh2'
 
 vi.mock('electron', () => ({
   app: {
-    getPath: () => '/tmp/orca-user-data'
+    getPath: () => '/tmp/serper-user-data'
   }
 }))
 
@@ -113,27 +113,27 @@ describe('remote hook service installers', () => {
     try {
       const installers = [
         {
-          path: '/home/dev/.orca/agent-hooks/claude-hook.sh',
+          path: '/home/dev/.serper/agent-hooks/claude-hook.sh',
           install: (sftp: SFTPWrapper) => new ClaudeHookService().installRemote(sftp, '/home/dev')
         },
         {
-          path: '/home/dev/.orca/agent-hooks/codex-hook.sh',
+          path: '/home/dev/.serper/agent-hooks/codex-hook.sh',
           install: (sftp: SFTPWrapper) => new CodexHookService().installRemote(sftp, '/home/dev')
         },
         {
-          path: '/home/dev/.orca/agent-hooks/gemini-hook.sh',
+          path: '/home/dev/.serper/agent-hooks/gemini-hook.sh',
           install: (sftp: SFTPWrapper) => new GeminiHookService().installRemote(sftp, '/home/dev')
         },
         {
-          path: '/home/dev/.orca/agent-hooks/cursor-hook.sh',
+          path: '/home/dev/.serper/agent-hooks/cursor-hook.sh',
           install: (sftp: SFTPWrapper) => new CursorHookService().installRemote(sftp, '/home/dev')
         },
         {
-          path: '/home/dev/.orca/agent-hooks/grok-hook.sh',
+          path: '/home/dev/.serper/agent-hooks/grok-hook.sh',
           install: (sftp: SFTPWrapper) => new GrokHookService().installRemote(sftp, '/home/dev')
         },
         {
-          path: '/home/dev/.orca/agent-hooks/copilot-hook.sh',
+          path: '/home/dev/.serper/agent-hooks/copilot-hook.sh',
           install: (sftp: SFTPWrapper) => new CopilotHookService().installRemote(sftp, '/home/dev')
         }
       ]
@@ -173,11 +173,11 @@ describe('remote hook service installers', () => {
       'Stop'
     ]) {
       const command = hooks.hooks[eventName]?.[0]?.hooks?.[0]?.command
-      expect(command).toContain('/home/dev/.orca/agent-hooks/codex-hook.sh')
+      expect(command).toContain('/home/dev/.serper/agent-hooks/codex-hook.sh')
       expect(command).toMatch(/^if \[ -x /)
     }
-    expect(fs.files.get('/home/dev/.orca/agent-hooks/codex-hook.sh')).toContain('#!/bin/sh')
-    expect(fs.modes.get('/home/dev/.orca/agent-hooks/codex-hook.sh')).toBe(0o755)
+    expect(fs.files.get('/home/dev/.serper/agent-hooks/codex-hook.sh')).toContain('#!/bin/sh')
+    expect(fs.modes.get('/home/dev/.serper/agent-hooks/codex-hook.sh')).toBe(0o755)
     const toml = fs.files.get('/home/dev/.codex/config.toml')
     expect(toml).toContain('/home/dev/.codex/hooks.json:permission_request:0:0')
     expect(toml).toContain('trusted_hash = "sha256:')
@@ -193,7 +193,7 @@ describe('remote hook service installers', () => {
     expect(status.managedHooksPresent).toBe(true)
     expect(status.detail).toContain('trust entries could not be written')
     expect(fs.files.get('/home/dev/.codex/hooks.json')).toContain('codex-hook.sh')
-    expect(fs.files.get('/home/dev/.orca/agent-hooks/codex-hook.sh')).toContain('#!/bin/sh')
+    expect(fs.files.get('/home/dev/.serper/agent-hooks/codex-hook.sh')).toContain('#!/bin/sh')
   })
 
   it('installs remote Gemini, Cursor, and Grok configs using their CLI-specific schemas', async () => {
@@ -210,7 +210,7 @@ describe('remote hook service installers', () => {
     }
     for (const eventName of ['BeforeAgent', 'AfterAgent', 'AfterTool', 'PreToolUse']) {
       const command = geminiConfig.hooks[eventName]?.[0]?.hooks?.[0]?.command
-      expect(command).toContain('/home/dev/.orca/agent-hooks/gemini-hook.sh')
+      expect(command).toContain('/home/dev/.serper/agent-hooks/gemini-hook.sh')
       expect(command).toMatch(/^if \[ -x /)
     }
 
@@ -230,11 +230,13 @@ describe('remote hook service installers', () => {
       'afterAgentResponse'
     ]) {
       const definition = cursorConfig.hooks[eventName]?.[0]
-      expect(definition?.command).toContain('/home/dev/.orca/agent-hooks/cursor-hook.sh')
+      expect(definition?.command).toContain('/home/dev/.serper/agent-hooks/cursor-hook.sh')
       expect(definition?.hooks).toBeUndefined()
     }
 
-    const grokConfig = JSON.parse(grok.fs.files.get('/home/dev/.grok/hooks/orca-status.json')!) as {
+    const grokConfig = JSON.parse(
+      grok.fs.files.get('/home/dev/.grok/hooks/serper-status.json')!
+    ) as {
       hooks: Record<string, { matcher?: string; hooks?: { command: string }[] }[]>
     }
     for (const eventName of [
@@ -249,7 +251,7 @@ describe('remote hook service installers', () => {
     ]) {
       const definition = grokConfig.hooks[eventName]?.[0]
       const command = definition?.hooks?.[0]?.command
-      expect(command).toContain('/home/dev/.orca/agent-hooks/grok-hook.sh')
+      expect(command).toContain('/home/dev/.serper/agent-hooks/grok-hook.sh')
       expect(command).toMatch(/^if \[ -x /)
     }
     expect(grokConfig.hooks.PreToolUse?.[0]?.matcher).toBe('*')
@@ -260,7 +262,7 @@ describe('remote hook service installers', () => {
     fs.dirs.add('/home/dev/.copilot')
     fs.dirs.add('/home/dev/.copilot/hooks')
     fs.files.set(
-      '/home/dev/.copilot/hooks/orca.json',
+      '/home/dev/.copilot/hooks/serper.json',
       JSON.stringify({
         version: 99,
         disableAllHooks: true,
@@ -271,8 +273,8 @@ describe('remote hook service installers', () => {
     const status = await new CopilotHookService().installRemote(sftp, '/home/dev/')
 
     expect(status.state).toBe('installed')
-    expect(status.configPath).toBe('/home/dev/.copilot/hooks/orca.json')
-    const config = JSON.parse(fs.files.get('/home/dev/.copilot/hooks/orca.json')!) as {
+    expect(status.configPath).toBe('/home/dev/.copilot/hooks/serper.json')
+    const config = JSON.parse(fs.files.get('/home/dev/.copilot/hooks/serper.json')!) as {
       version: number
       disableAllHooks?: boolean
       hooks: Record<string, { bash?: string; timeoutSec?: number }[]>
@@ -294,13 +296,13 @@ describe('remote hook service installers', () => {
       'Notification'
     ]) {
       const definition = config.hooks[eventName]?.[0]
-      expect(definition?.bash).toContain('/home/dev/.orca/agent-hooks/copilot-hook.sh')
-      expect(definition?.bash).toContain(`ORCA_COPILOT_HOOK_EVENT='${eventName}'`)
+      expect(definition?.bash).toContain('/home/dev/.serper/agent-hooks/copilot-hook.sh')
+      expect(definition?.bash).toContain(`SERPER_COPILOT_HOOK_EVENT='${eventName}'`)
       expect(definition?.timeoutSec).toBe(5)
     }
     expect(config.disableAllHooks).toBeUndefined()
-    expect(fs.files.get('/home/dev/.orca/agent-hooks/copilot-hook.sh')).toContain('#!/bin/sh')
-    expect(fs.modes.get('/home/dev/.orca/agent-hooks/copilot-hook.sh')).toBe(0o755)
+    expect(fs.files.get('/home/dev/.serper/agent-hooks/copilot-hook.sh')).toContain('#!/bin/sh')
+    expect(fs.modes.get('/home/dev/.serper/agent-hooks/copilot-hook.sh')).toBe(0o755)
   })
 
   it('installs remote Hermes plugin files and enables the plugin', async () => {
@@ -310,12 +312,12 @@ describe('remote hook service installers', () => {
 
     expect(status.state).toBe('installed')
     expect(status.configPath).toBe('/home/dev/.hermes/config.yaml')
-    expect(fs.files.get('/home/dev/.hermes/plugins/orca-status/plugin.yaml')).toContain(
+    expect(fs.files.get('/home/dev/.hermes/plugins/serper-status/plugin.yaml')).toContain(
       'pre_llm_call'
     )
-    expect(fs.files.get('/home/dev/.hermes/plugins/orca-status/__init__.py')).toContain(
+    expect(fs.files.get('/home/dev/.hermes/plugins/serper-status/__init__.py')).toContain(
       '/hook/hermes'
     )
-    expect(fs.files.get('/home/dev/.hermes/config.yaml')).toContain('orca-status')
+    expect(fs.files.get('/home/dev/.hermes/config.yaml')).toContain('serper-status')
   })
 })

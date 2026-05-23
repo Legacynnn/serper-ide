@@ -9,5 +9,5 @@
 // the substitution happens at compile time so a curious contributor cannot
 // spoof transmission with a shell export.
 
-declare const ORCA_BUILD_IDENTITY: 'stable' | 'rc' | null
-declare const ORCA_POSTHOG_WRITE_KEY: string | null
+declare const SERPER_BUILD_IDENTITY: 'stable' | 'rc' | null
+declare const SERPER_POSTHOG_WRITE_KEY: string | null

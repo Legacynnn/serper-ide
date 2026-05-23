@@ -73,16 +73,16 @@ function getManagedScript(target: 'local' | 'posix' = 'local'): string {
     return [
       '@echo off',
       'setlocal',
-      // Why: the endpoint file holds the *live* port/token for this Orca
-      // install. A PTY that survived an Orca restart has stale PORT/TOKEN
+      // Why: the endpoint file holds the *live* port/token for this Serper
+      // install. A PTY that survived an Serper restart has stale PORT/TOKEN
       // baked into its env from the old instance — loading `endpoint.cmd`
       // (`set KEY=VALUE` lines) via `call` refreshes them so the hook
       // reaches the current server. Falls through to PTY env if the file
-      // is missing (first run / pre-endpoint-file / running outside Orca).
-      'if defined ORCA_AGENT_HOOK_ENDPOINT if exist "%ORCA_AGENT_HOOK_ENDPOINT%" call "%ORCA_AGENT_HOOK_ENDPOINT%" 2>nul',
-      'if "%ORCA_AGENT_HOOK_PORT%"=="" exit /b 0',
-      'if "%ORCA_AGENT_HOOK_TOKEN%"=="" exit /b 0',
-      'if "%ORCA_PANE_KEY%"=="" exit /b 0',
+      // is missing (first run / pre-endpoint-file / running outside Serper).
+      'if defined SERPER_AGENT_HOOK_ENDPOINT if exist "%SERPER_AGENT_HOOK_ENDPOINT%" call "%SERPER_AGENT_HOOK_ENDPOINT%" 2>nul',
+      'if "%SERPER_AGENT_HOOK_PORT%"=="" exit /b 0',
+      'if "%SERPER_AGENT_HOOK_TOKEN%"=="" exit /b 0',
+      'if "%SERPER_PANE_KEY%"=="" exit /b 0',
       buildWindowsAgentHookPostCommand('claude'),
       'exit /b 0',
       ''
@@ -91,11 +91,11 @@ function getManagedScript(target: 'local' | 'posix' = 'local'): string {
 
   return [
     '#!/bin/sh',
-    // Why: the endpoint file holds the *live* port/token for this Orca
-    // install. PTYs that survive an Orca restart have stale PORT/TOKEN
+    // Why: the endpoint file holds the *live* port/token for this Serper
+    // install. PTYs that survive an Serper restart have stale PORT/TOKEN
     // baked into their env from the old instance — sourcing the file here
     // lets us reach the new server. Falls back to PTY env if the file is
-    // missing (first-run / pre-endpoint-file scripts / running outside Orca).
+    // missing (first-run / pre-endpoint-file scripts / running outside Serper).
     // Why: suppress stderr on the `.` builtin. A TOCTOU race (endpoint unlinked
     // between the `[ -r ]` test and the source) or a malformed line (e.g. CRLF
     // bled in from a cross-platform userData copy) would otherwise print a
@@ -105,10 +105,10 @@ function getManagedScript(target: 'local' | 'posix' = 'local'): string {
     // here is strictly better than leaking shell errors into the hook output.
     // `|| :` defends against an eventual `set -e` in an outer script context
     // (not present today) aborting the hook on a parse error.
-    'if [ -n "$ORCA_AGENT_HOOK_ENDPOINT" ] && [ -r "$ORCA_AGENT_HOOK_ENDPOINT" ]; then',
-    '  . "$ORCA_AGENT_HOOK_ENDPOINT" 2>/dev/null || :',
+    'if [ -n "$SERPER_AGENT_HOOK_ENDPOINT" ] && [ -r "$SERPER_AGENT_HOOK_ENDPOINT" ]; then',
+    '  . "$SERPER_AGENT_HOOK_ENDPOINT" 2>/dev/null || :',
     'fi',
-    'if [ -z "$ORCA_AGENT_HOOK_PORT" ] || [ -z "$ORCA_AGENT_HOOK_TOKEN" ] || [ -z "$ORCA_PANE_KEY" ]; then',
+    'if [ -z "$SERPER_AGENT_HOOK_PORT" ] || [ -z "$SERPER_AGENT_HOOK_TOKEN" ] || [ -z "$SERPER_PANE_KEY" ]; then',
     '  exit 0',
     'fi',
     'payload=$(cat)',
@@ -118,14 +118,14 @@ function getManagedScript(target: 'local' | 'posix' = 'local'): string {
     // Why: worktreeId embeds a filesystem path, so hand-building JSON in POSIX
     // shell is not safe once a path contains quotes or newlines. Post the raw
     // hook payload plus metadata as form fields and let the receiver parse it.
-    'curl -sS -X POST "http://127.0.0.1:${ORCA_AGENT_HOOK_PORT}/hook/claude" \\',
+    'curl -sS -X POST "http://127.0.0.1:${SERPER_AGENT_HOOK_PORT}/hook/claude" \\',
     '  -H "Content-Type: application/x-www-form-urlencoded" \\',
-    '  -H "X-Orca-Agent-Hook-Token: ${ORCA_AGENT_HOOK_TOKEN}" \\',
-    '  --data-urlencode "paneKey=${ORCA_PANE_KEY}" \\',
-    '  --data-urlencode "tabId=${ORCA_TAB_ID}" \\',
-    '  --data-urlencode "worktreeId=${ORCA_WORKTREE_ID}" \\',
-    '  --data-urlencode "env=${ORCA_AGENT_HOOK_ENV}" \\',
-    '  --data-urlencode "version=${ORCA_AGENT_HOOK_VERSION}" \\',
+    '  -H "X-Serper-Agent-Hook-Token: ${SERPER_AGENT_HOOK_TOKEN}" \\',
+    '  --data-urlencode "paneKey=${SERPER_PANE_KEY}" \\',
+    '  --data-urlencode "tabId=${SERPER_TAB_ID}" \\',
+    '  --data-urlencode "worktreeId=${SERPER_WORKTREE_ID}" \\',
+    '  --data-urlencode "env=${SERPER_AGENT_HOOK_ENV}" \\',
+    '  --data-urlencode "version=${SERPER_AGENT_HOOK_VERSION}" \\',
     '  --data-urlencode "payload=${payload}" >/dev/null 2>&1 || true',
     'exit 0',
     ''
@@ -222,7 +222,7 @@ export class ClaudeHookService {
     return this.getStatus()
   }
 
-  // Why: install Orca's managed Claude hooks on the remote box rather than
+  // Why: install Serper's managed Claude hooks on the remote box rather than
   // the local Mac/Linux machine. Caller passes the user's SFTP handle from
   // the SshConnection plus the resolved remote `$HOME` (used to compute
   // ~/.claude/settings.json on the target). POSIX-only by design — see
@@ -233,7 +233,7 @@ export class ClaudeHookService {
     // platform is gated by the relay's capability RPC at a higher layer; we
     // cannot detect it from `process.platform` here (that's the local box).
     const remoteConfigPath = `${remoteHome.replace(/\/$/, '')}/.claude/settings.json`
-    const remoteScriptPath = `${remoteHome.replace(/\/$/, '')}/.orca/agent-hooks/claude-hook.sh`
+    const remoteScriptPath = `${remoteHome.replace(/\/$/, '')}/.serper/agent-hooks/claude-hook.sh`
     // Why: SFTP reads/writes fail far more often than local fs (network drops,
     // EACCES on remote dirs, disk full, channel closed). Wrap the entire
     // install flow in try/catch so a transient I/O failure surfaces as a
@@ -276,7 +276,7 @@ export class ClaudeHookService {
       // order means a partial-failure mid-install at worst leaves the user
       // with a working script no settings.json points at (a no-op), instead
       // of broken settings.json.
-      // Why: SSH remotes use POSIX `.sh` hook paths even when Orca itself is
+      // Why: SSH remotes use POSIX `.sh` hook paths even when Serper itself is
       // running on Windows; never derive remote script syntax from local OS.
       await writeManagedScriptRemote(sftp, remoteScriptPath, getManagedScript('posix'))
       await writeHooksJsonRemote(sftp, remoteConfigPath, config)

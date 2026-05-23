@@ -9,7 +9,7 @@ import type {
   NotificationSoundDataResult
 } from '../../shared/types'
 import { getRepoIdFromWorktreeId } from '../../shared/worktree-id'
-import type { OrcaRuntimeService } from '../runtime/orca-runtime'
+import type { SerperRuntimeService } from '../runtime/serper-runtime'
 import { buildNotificationOptions } from './notification-options'
 
 const NOTIFICATION_COOLDOWN_MS = 5000
@@ -30,7 +30,7 @@ const NOTIFICATION_SOUND_MIME_BY_EXTENSION: ReadonlyMap<string, string> = new Ma
 // strong reference until the notification is clicked or closed.
 const activeNotifications = new Set<Notification>()
 
-export function registerNotificationHandlers(store: Store, runtime?: OrcaRuntimeService): void {
+export function registerNotificationHandlers(store: Store, runtime?: SerperRuntimeService): void {
   const recentNotifications = new Map<string, number>()
 
   ipcMain.removeHandler('notifications:openSystemSettings')
@@ -147,7 +147,7 @@ export function registerNotificationHandlers(store: Store, runtime?: OrcaRuntime
       // A timeout fallback guarantees the reference is eventually freed.
       setTimeout(release, 5 * 60 * 1000)
 
-      // Why: clicking a notification should bring Orca to the foreground and
+      // Why: clicking a notification should bring Serper to the foreground and
       // switch to the worktree that triggered it. We reuse the existing
       // ui:activateWorktree IPC channel that the renderer already handles
       // (setActiveRepo, setActiveView, setActiveWorktree, revealInSidebar).
@@ -264,8 +264,8 @@ export function triggerStartupNotificationRegistration(store: Store): void {
   store.updateUI({ notificationPermissionRequested: true })
 
   const notification = new Notification({
-    title: 'Orca is ready to notify you',
-    body: 'Allow notifications so Orca can alert you when agents finish or terminals need attention.'
+    title: 'Serper is ready to notify you',
+    body: 'Allow notifications so Serper can alert you when agents finish or terminals need attention.'
   })
 
   // Why: prevent GC from collecting the notification (and its click handler)
@@ -283,7 +283,7 @@ export function triggerStartupNotificationRegistration(store: Store): void {
   }
 
   // Why: clicking the startup notification should take the user to macOS
-  // Notification Settings so they can verify/enable notifications for Orca.
+  // Notification Settings so they can verify/enable notifications for Serper.
   // Without this, the notification reads like an actionable prompt ("Allow
   // notifications…") but clicking it does nothing, which is confusing.
   notification.on('click', () => {

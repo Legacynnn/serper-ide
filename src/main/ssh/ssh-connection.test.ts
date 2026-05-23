@@ -110,7 +110,7 @@ function createSystemCommandChannel(): EventEmitter & {
   channel.stderr = new EventEmitter()
   channel.close = vi.fn()
   queueMicrotask(() => {
-    channel.emit('data', Buffer.from('ORCA-SYSTEM-SSH-OK'))
+    channel.emit('data', Buffer.from('SERPER-SYSTEM-SSH-OK'))
     channel.emit('close', 0)
   })
   return channel
@@ -277,7 +277,7 @@ describe('SshConnection', () => {
     expect(clientInstances).toHaveLength(0)
     expect(spawnSystemSshCommandMock).toHaveBeenCalledWith(
       expect.objectContaining({ configHost: 'fdpass-host' }),
-      'printf ORCA-SYSTEM-SSH-OK'
+      'printf SERPER-SYSTEM-SSH-OK'
     )
   })
 })
@@ -289,7 +289,7 @@ describe('shouldUseSystemSshTransport', () => {
   })
 
   it('allows an environment override for e2e coverage', () => {
-    vi.stubEnv('ORCA_SSH_FORCE_SYSTEM_TRANSPORT', '1')
+    vi.stubEnv('SERPER_SSH_FORCE_SYSTEM_TRANSPORT', '1')
     expect(shouldUseSystemSshTransport(createTarget(), null)).toBe(true)
   })
 })

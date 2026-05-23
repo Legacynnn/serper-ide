@@ -14,7 +14,7 @@
  * skipped on the other platform since they'd never fire there at runtime.
  */
 
-import { test, expect } from './helpers/orca-app'
+import { test, expect } from './helpers/serper-app'
 import type { ElectronApplication, Page } from '@stablyai/playwright-test'
 import {
   discoverActivePtyId,
@@ -202,95 +202,95 @@ const splitHorizontalChord = isMac ? `${mod}+Shift+d` : 'Alt+Shift+d'
 // effects and corrupt assertions.
 test.describe.configure({ mode: 'serial' })
 test.describe('Terminal Shortcuts', () => {
-  test.beforeEach(async ({ orcaPage }) => {
-    await waitForSessionReady(orcaPage)
-    await waitForActiveWorktree(orcaPage)
-    await ensureTerminalVisible(orcaPage)
-    const hasPaneManager = await waitForActiveTerminalManager(orcaPage, 30_000)
+  test.beforeEach(async ({ serperPage }) => {
+    await waitForSessionReady(serperPage)
+    await waitForActiveWorktree(serperPage)
+    await ensureTerminalVisible(serperPage)
+    const hasPaneManager = await waitForActiveTerminalManager(serperPage, 30_000)
       .then(() => true)
       .catch(() => false)
     test.skip(
       !hasPaneManager,
       'Electron automation in this environment never mounts the live TerminalPane manager.'
     )
-    await waitForPaneCount(orcaPage, 1, 30_000)
+    await waitForPaneCount(serperPage, 1, 30_000)
   })
 
   test('all terminal chords reach the PTY or fire their action', async ({
-    orcaPage,
+    serperPage,
     electronApp
   }) => {
     await installMainProcessPtyWriteSpy(electronApp)
 
     // Seed the buffer so Cmd+K has something to clear.
-    const ptyId = await discoverActivePtyId(orcaPage)
+    const ptyId = await discoverActivePtyId(serperPage)
     const marker = `SHORTCUT_TEST_${Date.now()}`
-    await execInTerminal(orcaPage, ptyId, `echo ${marker}`)
-    await waitForTerminalOutput(orcaPage, marker)
+    await execInTerminal(serperPage, ptyId, `echo ${marker}`)
+    await waitForTerminalOutput(serperPage, marker)
 
     // --- send-input chords (platform-agnostic) ---
 
     // Alt+←/→ → readline backward-word / forward-word (\eb / \ef).
-    await pressAndExpectWrite(orcaPage, electronApp, 'Alt+ArrowLeft', '\x1bb')
-    await pressAndExpectWrite(orcaPage, electronApp, 'Alt+ArrowRight', '\x1bf')
+    await pressAndExpectWrite(serperPage, electronApp, 'Alt+ArrowLeft', '\x1bb')
+    await pressAndExpectWrite(serperPage, electronApp, 'Alt+ArrowRight', '\x1bf')
 
     // Ctrl+←/→ on non-mac → readline backward-word / forward-word (\eb / \ef).
     // Mac-gated: Ctrl+Arrow on macOS is reserved for Mission Control / Spaces.
     if (!isMac) {
-      await pressAndExpectWrite(orcaPage, electronApp, 'Control+ArrowLeft', '\x1bb')
-      await pressAndExpectWrite(orcaPage, electronApp, 'Control+ArrowRight', '\x1bf')
+      await pressAndExpectWrite(serperPage, electronApp, 'Control+ArrowLeft', '\x1bb')
+      await pressAndExpectWrite(serperPage, electronApp, 'Control+ArrowRight', '\x1bf')
     }
 
     // Alt+Backspace → Esc+DEL (readline backward-kill-word).
-    await pressAndExpectWrite(orcaPage, electronApp, 'Alt+Backspace', '\x1b\x7f')
+    await pressAndExpectWrite(serperPage, electronApp, 'Alt+Backspace', '\x1b\x7f')
 
     // Ctrl+Backspace → \x17 (unix-word-rubout).
-    await pressAndExpectWrite(orcaPage, electronApp, 'Control+Backspace', '\x17')
+    await pressAndExpectWrite(serperPage, electronApp, 'Control+Backspace', '\x17')
 
     // Shift+Enter → CSI-u so agents can distinguish from plain Enter.
-    await pressAndExpectWrite(orcaPage, electronApp, 'Shift+Enter', '\x1b[13;2u')
+    await pressAndExpectWrite(serperPage, electronApp, 'Shift+Enter', '\x1b[13;2u')
 
     // --- send-input chords (macOS-only) ---
 
     if (isMac) {
       // Cmd+←/→ → Ctrl+A / Ctrl+E (beginning/end of line).
-      await pressAndExpectWrite(orcaPage, electronApp, 'Meta+ArrowLeft', '\x01')
-      await pressAndExpectWrite(orcaPage, electronApp, 'Meta+ArrowRight', '\x05')
+      await pressAndExpectWrite(serperPage, electronApp, 'Meta+ArrowLeft', '\x01')
+      await pressAndExpectWrite(serperPage, electronApp, 'Meta+ArrowRight', '\x05')
 
       // Cmd+Backspace → Ctrl+U (kill line). Cmd+Delete → Ctrl+K (kill to EOL).
-      await pressAndExpectWrite(orcaPage, electronApp, 'Meta+Backspace', '\x15')
-      await pressAndExpectWrite(orcaPage, electronApp, 'Meta+Delete', '\x0b')
+      await pressAndExpectWrite(serperPage, electronApp, 'Meta+Backspace', '\x15')
+      await pressAndExpectWrite(serperPage, electronApp, 'Meta+Delete', '\x0b')
     }
 
     // --- action chords (no PTY byte; assert via visible effect) ---
 
     // Cmd/Ctrl+K clears the pane.
-    await focusActiveTerminal(orcaPage)
-    await orcaPage.keyboard.press(`${mod}+k`)
+    await focusActiveTerminal(serperPage)
+    await serperPage.keyboard.press(`${mod}+k`)
     await expect
-      .poll(async () => (await getTerminalContent(orcaPage)).includes(marker), {
+      .poll(async () => (await getTerminalContent(serperPage)).includes(marker), {
         timeout: 5_000,
         message: 'Cmd+K did not clear the terminal buffer'
       })
       .toBe(false)
 
     // Split vertically (chord varies by platform — see splitVerticalChord).
-    const panesBeforeSplit = await countVisibleTerminalPanes(orcaPage)
-    await focusActiveTerminal(orcaPage)
-    await orcaPage.keyboard.press(splitVerticalChord)
-    await waitForPaneCount(orcaPage, panesBeforeSplit + 1)
+    const panesBeforeSplit = await countVisibleTerminalPanes(serperPage)
+    await focusActiveTerminal(serperPage)
+    await serperPage.keyboard.press(splitVerticalChord)
+    await waitForPaneCount(serperPage, panesBeforeSplit + 1)
 
     // Cmd/Ctrl+] and Cmd/Ctrl+[ cycle focus (no pane-count change).
-    await focusActiveTerminal(orcaPage)
-    await orcaPage.keyboard.press(`${mod}+BracketRight`)
-    await focusActiveTerminal(orcaPage)
-    await orcaPage.keyboard.press(`${mod}+BracketLeft`)
-    expect(await countVisibleTerminalPanes(orcaPage)).toBe(panesBeforeSplit + 1)
+    await focusActiveTerminal(serperPage)
+    await serperPage.keyboard.press(`${mod}+BracketRight`)
+    await focusActiveTerminal(serperPage)
+    await serperPage.keyboard.press(`${mod}+BracketLeft`)
+    expect(await countVisibleTerminalPanes(serperPage)).toBe(panesBeforeSplit + 1)
 
     // Cmd/Ctrl+Shift+Enter toggles expand on the active pane. Requires >1 pane,
     // so it runs while the vertical split from above is still open.
     const readExpanded = async (): Promise<boolean> =>
-      orcaPage.evaluate(() => {
+      serperPage.evaluate(() => {
         const state = window.__store?.getState()
         const tabId = state?.activeTabId
         if (!state || !tabId) {
@@ -299,13 +299,13 @@ test.describe('Terminal Shortcuts', () => {
         return state.expandedPaneByTabId[tabId] === true
       })
     expect(await readExpanded()).toBe(false)
-    await focusActiveTerminal(orcaPage)
-    await orcaPage.keyboard.press(`${mod}+Shift+Enter`)
+    await focusActiveTerminal(serperPage)
+    await serperPage.keyboard.press(`${mod}+Shift+Enter`)
     await expect
       .poll(readExpanded, { timeout: 3_000, message: 'Cmd+Shift+Enter did not expand pane' })
       .toBe(true)
-    await focusActiveTerminal(orcaPage)
-    await orcaPage.keyboard.press(`${mod}+Shift+Enter`)
+    await focusActiveTerminal(serperPage)
+    await serperPage.keyboard.press(`${mod}+Shift+Enter`)
     await expect
       .poll(readExpanded, { timeout: 3_000, message: 'Cmd+Shift+Enter did not collapse pane' })
       .toBe(false)
@@ -316,46 +316,46 @@ test.describe('Terminal Shortcuts', () => {
     // proc.process lags the spawn), which surfaces a confirmation dialog
     // instead of closing immediately. Confirm it if it appears — the test
     // only needs to prove the chord routed to the close handler.
-    await focusActiveTerminal(orcaPage)
-    await orcaPage.keyboard.press(`${mod}+w`)
-    await confirmCloseDialogIfShown(orcaPage)
-    await waitForPaneCount(orcaPage, panesBeforeSplit)
+    await focusActiveTerminal(serperPage)
+    await serperPage.keyboard.press(`${mod}+w`)
+    await confirmCloseDialogIfShown(serperPage)
+    await waitForPaneCount(serperPage, panesBeforeSplit)
 
     // Split horizontally (chord varies by platform — see splitHorizontalChord).
-    const panesBeforeHSplit = await countVisibleTerminalPanes(orcaPage)
-    await focusActiveTerminal(orcaPage)
-    await orcaPage.keyboard.press(splitHorizontalChord)
-    await waitForPaneCount(orcaPage, panesBeforeHSplit + 1)
-    await focusActiveTerminal(orcaPage)
-    await orcaPage.keyboard.press(`${mod}+w`)
-    await confirmCloseDialogIfShown(orcaPage)
-    await waitForPaneCount(orcaPage, panesBeforeHSplit)
+    const panesBeforeHSplit = await countVisibleTerminalPanes(serperPage)
+    await focusActiveTerminal(serperPage)
+    await serperPage.keyboard.press(splitHorizontalChord)
+    await waitForPaneCount(serperPage, panesBeforeHSplit + 1)
+    await focusActiveTerminal(serperPage)
+    await serperPage.keyboard.press(`${mod}+w`)
+    await confirmCloseDialogIfShown(serperPage)
+    await waitForPaneCount(serperPage, panesBeforeHSplit)
 
     // Cmd/Ctrl+F toggles the search overlay.
-    await focusActiveTerminal(orcaPage)
-    await orcaPage.keyboard.press(`${mod}+f`)
-    const searchInput = orcaPage.locator('[data-terminal-search-root] input').first()
+    await focusActiveTerminal(serperPage)
+    await serperPage.keyboard.press(`${mod}+f`)
+    const searchInput = serperPage.locator('[data-terminal-search-root] input').first()
     // Why: Escape is handled by TerminalSearch's React onKeyDown, which only
     // fires when focus is inside the overlay. The overlay auto-focuses its
     // input via a useEffect, but Playwright can press Escape before that
     // effect runs and the keystroke goes to the xterm textarea instead.
     // Wait for the input to actually be focused before pressing Escape.
     await expect(searchInput).toBeFocused({ timeout: 3_000 })
-    await orcaPage.keyboard.press('Escape')
-    await expect(orcaPage.locator('[data-terminal-search-root]').first()).toBeHidden({
+    await serperPage.keyboard.press('Escape')
+    await expect(serperPage.locator('[data-terminal-search-root]').first()).toBeHidden({
       timeout: 3_000
     })
   })
 
   test('Shift with Russian layout text reaches the PTY as Cyrillic under kitty keyboard reporting', async ({
-    orcaPage,
+    serperPage,
     electronApp
   }) => {
     await installMainProcessPtyWriteSpy(electronApp)
-    await enableKittyKeyboardReporting(orcaPage, 31)
+    await enableKittyKeyboardReporting(serperPage, 31)
     await clearPtyWriteLog(electronApp)
 
-    const dispatch = await pressShiftedRussianLayoutKey(orcaPage)
+    const dispatch = await pressShiftedRussianLayoutKey(serperPage)
 
     expect(dispatch).toEqual({
       keydownDefaultPrevented: false,

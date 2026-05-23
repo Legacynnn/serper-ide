@@ -80,7 +80,7 @@ function bestEffortRestrictWindowsPath(targetPath: string): void {
       }
     )
   } catch {
-    // Why: credential-file hardening should not prevent Orca from starting on
+    // Why: credential-file hardening should not prevent Serper from starting on
     // Windows machines where icacls is unavailable or locked down differently.
   }
 }

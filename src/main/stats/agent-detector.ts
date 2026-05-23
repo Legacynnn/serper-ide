@@ -21,7 +21,7 @@ type PtyRecord = {
 /**
  * Lightweight normalization to detect whether a PTY data chunk contains
  * meaningful (non-ANSI, non-OSC) output. Mirrors the regex passes in
- * orca-runtime.ts normalizeTerminalChunk but avoids importing the runtime.
+ * serper-runtime.ts normalizeTerminalChunk but avoids importing the runtime.
  */
 function hasMeaningfulContent(chunk: string): boolean {
   const stripped = chunk
@@ -66,7 +66,7 @@ export class AgentDetector {
   }
 
   /**
-   * Called on every PTY data chunk (from orca-runtime.ts onPtyData).
+   * Called on every PTY data chunk (from serper-runtime.ts onPtyData).
    * Receives raw data BEFORE normalization, since normalizeTerminalChunk
    * strips OSC sequences that we need for agent detection.
    */
@@ -135,7 +135,7 @@ export class AgentDetector {
   }
 
   /**
-   * Called when a PTY process exits (from orca-runtime.ts onPtyExit).
+   * Called when a PTY process exits (from serper-runtime.ts onPtyExit).
    */
   onExit(ptyId: string): void {
     const record = this.ptys.get(ptyId)

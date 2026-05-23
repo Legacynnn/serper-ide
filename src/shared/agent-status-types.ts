@@ -1,5 +1,5 @@
 // ─── Explicit agent status (reported via native agent hooks → IPC) ──────────
-// These types define the normalized status that Orca receives from Claude,
+// These types define the normalized status that Serper receives from Claude,
 // Codex, and other explicit integrations. Agent state is hook-reported only —
 // we do not infer status from terminal titles anywhere in the data flow.
 
@@ -131,7 +131,7 @@ export type AgentStatusIpcPayload = ParsedAgentStatusPayload & {
   tabId?: string
   worktreeId?: string
   /** Identifies the SSH connection the event arrived on, or null for local.
-   *  Stamped only on the remote-ingest path (Orca's `ingestRemote`); the
+   *  Stamped only on the remote-ingest path (Serper's `ingestRemote`); the
    *  HTTP path always sets null because it cannot know which mux a request
    *  came from. See docs/design/agent-status-over-ssh.md §5. */
   connectionId: string | null

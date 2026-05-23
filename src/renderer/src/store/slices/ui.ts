@@ -5,7 +5,7 @@ import { findPrevLiveWorktreeHistoryIndex } from './worktree-nav-history'
 import type {
   ChangelogData,
   CustomPet,
-  PersistedTrustedOrcaHooks,
+  PersistedTrustedSerperHooks,
   PersistedUIState,
   StatusBarItem,
   TaskProvider,
@@ -41,7 +41,7 @@ import {
   normalizeWorkspaceStatuses
 } from '../../../../shared/workspace-statuses'
 import { normalizeKagiSessionLink } from '../../../../shared/browser-url'
-import type { OrcaHookScriptKind } from '../../lib/orca-hook-trust'
+import type { SerperHookScriptKind } from '../../lib/serper-hook-trust'
 import { DEFAULT_PET_ID, isBundledPetId } from '../../components/pet/pet-models'
 import { revokeCustomPetBlobUrl } from '../../components/pet/pet-blob-cache'
 import { isGitRepoKind } from '../../../../shared/repo-kind'
@@ -119,11 +119,11 @@ const VALID_LINEAR_PRESETS = new Set<NonNullable<TaskResumeState['linearPreset']
   'completed'
 ])
 
-function filterTrustedOrcaHooksToValidRepos(
-  trust: PersistedTrustedOrcaHooks,
+function filterTrustedSerperHooksToValidRepos(
+  trust: PersistedTrustedSerperHooks,
   validRepoIds: Set<string>
-): PersistedTrustedOrcaHooks {
-  const next: PersistedTrustedOrcaHooks = {}
+): PersistedTrustedSerperHooks {
+  const next: PersistedTrustedSerperHooks = {}
   for (const [repoId, entry] of Object.entries(trust)) {
     if (validRepoIds.has(repoId)) {
       next[repoId] = entry
@@ -403,7 +403,7 @@ export type UISlice = {
     | 'feature-wall'
     | 'feature-tips'
     | 'new-workspace-composer'
-    | 'confirm-orca-yaml-hooks'
+    | 'confirm-serper-yaml-hooks'
   modalData: Record<string, unknown>
   openModal: (modal: UISlice['activeModal'], data?: Record<string, unknown>) => void
   closeModal: () => void
@@ -412,14 +412,14 @@ export type UISlice = {
   featureTourNudgeVisible: boolean
   showFeatureTourNudge: () => void
   dismissFeatureTourNudge: () => void
-  trustedOrcaHooks: PersistedTrustedOrcaHooks
-  markOrcaHookScriptConfirmed: (
+  trustedSerperHooks: PersistedTrustedSerperHooks
+  markSerperHookScriptConfirmed: (
     repoId: string,
-    kind: OrcaHookScriptKind,
+    kind: SerperHookScriptKind,
     contentHash: string
   ) => void
-  markOrcaHookRepoAlwaysTrusted: (repoId: string) => void
-  clearOrcaHookTrustForRepo: (repoId: string) => void
+  markSerperHookRepoAlwaysTrusted: (repoId: string) => void
+  clearSerperHookTrustForRepo: (repoId: string) => void
   groupBy: 'none' | 'workspace-status' | 'repo' | 'pr-status'
   setGroupBy: (g: UISlice['groupBy']) => void
   sortBy: 'name' | 'smart' | 'recent' | 'repo'
@@ -793,10 +793,10 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (set, get)
   },
   dismissFeatureTourNudge: () => set({ featureTourNudgeVisible: false }),
 
-  trustedOrcaHooks: {},
-  markOrcaHookScriptConfirmed: (repoId, kind, contentHash) =>
+  trustedSerperHooks: {},
+  markSerperHookScriptConfirmed: (repoId, kind, contentHash) =>
     set((s) => {
-      const existing = s.trustedOrcaHooks[repoId]
+      const existing = s.trustedSerperHooks[repoId]
       const currentEntry = existing?.[kind]
       if (currentEntry?.contentHash === contentHash) {
         return s
@@ -805,35 +805,35 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (set, get)
         ...existing,
         [kind]: { contentHash, approvedAt: Date.now() }
       }
-      const next = { ...s.trustedOrcaHooks, [repoId]: nextRepo }
-      window.api.ui.set({ trustedOrcaHooks: next }).catch(console.error)
-      return { trustedOrcaHooks: next }
+      const next = { ...s.trustedSerperHooks, [repoId]: nextRepo }
+      window.api.ui.set({ trustedSerperHooks: next }).catch(console.error)
+      return { trustedSerperHooks: next }
     }),
-  markOrcaHookRepoAlwaysTrusted: (repoId) =>
+  markSerperHookRepoAlwaysTrusted: (repoId) =>
     set((s) => {
-      const existing = s.trustedOrcaHooks[repoId]
+      const existing = s.trustedSerperHooks[repoId]
       if (existing?.all) {
         return s
       }
       const next = {
-        ...s.trustedOrcaHooks,
+        ...s.trustedSerperHooks,
         [repoId]: {
           ...existing,
           all: { approvedAt: Date.now() }
         }
       }
-      window.api.ui.set({ trustedOrcaHooks: next }).catch(console.error)
-      return { trustedOrcaHooks: next }
+      window.api.ui.set({ trustedSerperHooks: next }).catch(console.error)
+      return { trustedSerperHooks: next }
     }),
-  clearOrcaHookTrustForRepo: (repoId) =>
+  clearSerperHookTrustForRepo: (repoId) =>
     set((s) => {
-      if (!(repoId in s.trustedOrcaHooks)) {
+      if (!(repoId in s.trustedSerperHooks)) {
         return s
       }
-      const next = { ...s.trustedOrcaHooks }
+      const next = { ...s.trustedSerperHooks }
       delete next[repoId]
-      window.api.ui.set({ trustedOrcaHooks: next }).catch(console.error)
-      return { trustedOrcaHooks: next }
+      window.api.ui.set({ trustedSerperHooks: next }).catch(console.error)
+      return { trustedSerperHooks: next }
     }),
 
   groupBy: 'repo',
@@ -1084,8 +1084,8 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (set, get)
         browserKagiSessionLink: normalizeKagiSessionLink(ui.browserKagiSessionLink ?? ''),
         taskResumeState: sanitizeTaskResumeState(ui.taskResumeState),
         featureTipsSeenIds: normalizeFeatureTipIds(ui.featureTipsSeenIds),
-        trustedOrcaHooks: filterTrustedOrcaHooksToValidRepos(
-          ui.trustedOrcaHooks ?? {},
+        trustedSerperHooks: filterTrustedSerperHooksToValidRepos(
+          ui.trustedSerperHooks ?? {},
           validRepoIds
         ),
         // Why: restore visited-row acks alongside the persisted hook entries

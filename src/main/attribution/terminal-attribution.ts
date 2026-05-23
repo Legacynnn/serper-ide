@@ -4,22 +4,22 @@ to the env injection code makes the attribution behavior auditable as one unit
 instead of scattering generated shell fragments across files. */
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
-import { ORCA_GIT_COMMIT_TRAILER } from '../../shared/orca-attribution'
+import { SERPER_GIT_COMMIT_TRAILER } from '../../shared/serper-attribution'
 
-const ATTRIBUTION_ROOT_DIR = 'orca-terminal-attribution'
+const ATTRIBUTION_ROOT_DIR = 'serper-terminal-attribution'
 const ATTRIBUTION_SHIM_VERSION = '6'
-const ORCA_PRODUCT_URL = 'https://github.com/stablyai/orca'
-const ORCA_GH_FOOTER = `Made with [Orca](${ORCA_PRODUCT_URL}) 🐋`
+const SERPER_PRODUCT_URL = 'https://github.com/Legacynnn/serper'
+const SERPER_GH_FOOTER = `Made with [Serper](${SERPER_PRODUCT_URL}) 🐋`
 const SHELL_DOLLAR = '$'
 const POWERSHELL_TICK = '`'
 const ATTRIBUTION_ENV_KEYS = [
-  'ORCA_ENABLE_GIT_ATTRIBUTION',
-  'ORCA_GIT_COMMIT_TRAILER',
-  'ORCA_GH_PR_FOOTER',
-  'ORCA_GH_ISSUE_FOOTER',
-  'ORCA_ATTRIBUTION_SHIM_DIR',
-  'ORCA_REAL_GIT',
-  'ORCA_REAL_GH'
+  'SERPER_ENABLE_GIT_ATTRIBUTION',
+  'SERPER_GIT_COMMIT_TRAILER',
+  'SERPER_GH_PR_FOOTER',
+  'SERPER_GH_ISSUE_FOOTER',
+  'SERPER_ATTRIBUTION_SHIM_DIR',
+  'SERPER_REAL_GIT',
+  'SERPER_REAL_GH'
 ] as const
 
 const writtenRoots = new Set<string>()
@@ -48,7 +48,7 @@ export function applyTerminalAttributionEnv(
   const pathDelimiter = process.platform === 'win32' ? ';' : ':'
   const basePath = baseEnv.PATH ?? process.env.PATH ?? ''
   // Why: resolve real Windows commands before prepending shims so cmd wrappers
-  // cannot recursively point ORCA_REAL_* at themselves.
+  // cannot recursively point SERPER_REAL_* at themselves.
   const resolvedGit =
     process.platform === 'win32' ? resolveWindowsExecutable('git', basePath) : null
   const resolvedGh = process.platform === 'win32' ? resolveWindowsExecutable('gh', basePath) : null
@@ -70,23 +70,23 @@ export function applyTerminalAttributionEnv(
     })
     .join(pathDelimiter)
 
-  // Why: these wrappers should affect only Orca-managed PTYs. Prepending the
-  // shim directory here keeps the attribution behavior scoped to Orca's live
+  // Why: these wrappers should affect only Serper-managed PTYs. Prepending the
+  // shim directory here keeps the attribution behavior scoped to Serper's live
   // terminal environment instead of mutating global git/gh config or the
   // user's external shell PATH.
   baseEnv.PATH = [...prependDirs, cleanedBasePath].filter(Boolean).join(pathDelimiter)
-  baseEnv.ORCA_ENABLE_GIT_ATTRIBUTION = '1'
-  baseEnv.ORCA_GIT_COMMIT_TRAILER = ORCA_GIT_COMMIT_TRAILER
-  baseEnv.ORCA_GH_PR_FOOTER = ORCA_GH_FOOTER
-  baseEnv.ORCA_GH_ISSUE_FOOTER = ORCA_GH_FOOTER
-  baseEnv.ORCA_ATTRIBUTION_SHIM_DIR = posixDir
+  baseEnv.SERPER_ENABLE_GIT_ATTRIBUTION = '1'
+  baseEnv.SERPER_GIT_COMMIT_TRAILER = SERPER_GIT_COMMIT_TRAILER
+  baseEnv.SERPER_GH_PR_FOOTER = SERPER_GH_FOOTER
+  baseEnv.SERPER_GH_ISSUE_FOOTER = SERPER_GH_FOOTER
+  baseEnv.SERPER_ATTRIBUTION_SHIM_DIR = posixDir
 
   if (process.platform === 'win32') {
     if (resolvedGit) {
-      baseEnv.ORCA_REAL_GIT = resolvedGit
+      baseEnv.SERPER_REAL_GIT = resolvedGit
     }
     if (resolvedGh) {
-      baseEnv.ORCA_REAL_GH = resolvedGh
+      baseEnv.SERPER_REAL_GH = resolvedGh
     }
   }
 }
@@ -109,7 +109,7 @@ function stripAttributionPathEntries(pathValue: string, pathDelimiter: string): 
     .split(pathDelimiter)
     .filter((entry) => {
       const normalized = entry.replace(/\\/g, '/').toLowerCase()
-      return !normalized.includes('/orca-terminal-attribution/')
+      return !normalized.includes('/serper-terminal-attribution/')
     })
     .join(pathDelimiter)
 }
@@ -193,7 +193,7 @@ clean_path() {
   IFS=':' read -r -a entries <<<"$current_path"
   for entry in "${SHELL_DOLLAR}{entries[@]}"; do
     case "$entry" in
-      "$script_dir"|*/orca-terminal-attribution/posix|*/orca-terminal-attribution/win32|*\\orca-terminal-attribution\\posix|*\\orca-terminal-attribution\\win32)
+      "$script_dir"|*/serper-terminal-attribution/posix|*/serper-terminal-attribution/win32|*\\serper-terminal-attribution\\posix|*\\serper-terminal-attribution\\win32)
         ;;
       *)
         cleaned+=("$entry")
@@ -208,7 +208,7 @@ const POSIX_GIT_WRAPPER = `${POSIX_COMMON}
 real_path="$(clean_path)"
 real_git="$(PATH="$real_path" command -v git || true)"
 if [[ -z "$real_git" ]]; then
-  echo "Orca attribution wrapper could not locate git on PATH." >&2
+  echo "Serper attribution wrapper could not locate git on PATH." >&2
   exit 127
 fi
 
@@ -235,7 +235,7 @@ is_commit_command() {
   return 1
 }
 
-if [[ "\${ORCA_ENABLE_GIT_ATTRIBUTION:-0}" != "1" || "\${ORCA_ATTRIBUTION_BYPASS:-0}" == "1" ]] || ! is_commit_command "$@"; then
+if [[ "\${SERPER_ENABLE_GIT_ATTRIBUTION:-0}" != "1" || "\${SERPER_ATTRIBUTION_BYPASS:-0}" == "1" ]] || ! is_commit_command "$@"; then
   PATH="$real_path" exec "$real_git" "$@"
 fi
 
@@ -247,7 +247,7 @@ for arg in "$@"; do
   esac
 done
 
-trailer="\${ORCA_GIT_COMMIT_TRAILER:-Co-authored-by: Orca <help@stably.ai>}"
+trailer="\${SERPER_GIT_COMMIT_TRAILER:-Co-authored-by: Serper <help@stably.ai>}"
 
 has_explicit_commit_message() {
   local arg
@@ -428,14 +428,14 @@ fi
 # Why: commit-msg hooks and commit signing must see the final message. Only
 # commands that already provide a noninteractive message get attribution; editor
 # based commits pass through unchanged instead of being amended after success.
-ORCA_ATTRIBUTION_BYPASS=1 PATH="$real_path" exec "$real_git" "${SHELL_DOLLAR}{attributed_args[@]}"
+SERPER_ATTRIBUTION_BYPASS=1 PATH="$real_path" exec "$real_git" "${SHELL_DOLLAR}{attributed_args[@]}"
 `
 
 const POSIX_GH_WRAPPER = `${POSIX_COMMON}
 real_path="$(clean_path)"
 real_gh="$(PATH="$real_path" command -v gh || true)"
 if [[ -z "$real_gh" ]]; then
-  echo "Orca attribution wrapper could not locate gh on PATH." >&2
+  echo "Serper attribution wrapper could not locate gh on PATH." >&2
   exit 127
 fi
 
@@ -526,12 +526,12 @@ has_passthrough_create_args() {
   return 1
 }
 
-if [[ "\${ORCA_ENABLE_GIT_ATTRIBUTION:-0}" != "1" || "\${ORCA_ATTRIBUTION_BYPASS:-0}" == "1" ]]; then
+if [[ "\${SERPER_ENABLE_GIT_ATTRIBUTION:-0}" != "1" || "\${SERPER_ATTRIBUTION_BYPASS:-0}" == "1" ]]; then
   PATH="$real_path" exec "$real_gh" "$@"
 fi
 
 if [[ "\${1:-}" == "pr" && "\${2:-}" == "create" ]]; then
-  footer="\${ORCA_GH_PR_FOOTER:-Made with [Orca](https://github.com/stablyai/orca) 🐋}"
+  footer="\${SERPER_GH_PR_FOOTER:-Made with [Serper](https://github.com/Legacynnn/serper) 🐋}"
   if has_passthrough_create_args "$@"; then
     PATH="$real_path" exec "$real_gh" "$@"
   fi
@@ -565,7 +565,7 @@ if [[ "\${1:-}" == "pr" && "\${2:-}" == "create" ]]; then
 fi
 
 if [[ "\${1:-}" == "issue" && "\${2:-}" == "create" ]]; then
-  footer="\${ORCA_GH_ISSUE_FOOTER:-Made with [Orca](https://github.com/stablyai/orca) 🐋}"
+  footer="\${SERPER_GH_ISSUE_FOOTER:-Made with [Serper](https://github.com/Legacynnn/serper) 🐋}"
   if has_passthrough_create_args "$@"; then
     PATH="$real_path" exec "$real_gh" "$@"
   fi
@@ -603,50 +603,50 @@ PATH="$real_path" exec "$real_gh" "$@"
 
 const WIN32_GIT_CMD_WRAPPER = String.raw`@echo off
 setlocal
-if not "%ORCA_ENABLE_GIT_ATTRIBUTION%"=="1" goto run
-if "%ORCA_ATTRIBUTION_BYPASS%"=="1" goto run
-call :orca_is_git_commit %*
+if not "%SERPER_ENABLE_GIT_ATTRIBUTION%"=="1" goto run
+if "%SERPER_ATTRIBUTION_BYPASS%"=="1" goto run
+call :serper_is_git_commit %*
 if errorlevel 1 goto run
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0git-wrapper.ps1" %*
 exit /b %ERRORLEVEL%
 :run
-if defined ORCA_REAL_GIT (
-  "%ORCA_REAL_GIT%" %*
+if defined SERPER_REAL_GIT (
+  "%SERPER_REAL_GIT%" %*
 ) else (
-  echo Orca attribution wrapper could not locate git on PATH. 1>&2
+  echo Serper attribution wrapper could not locate git on PATH. 1>&2
   exit /b 127
 )
 exit /b %ERRORLEVEL%
 
-:orca_is_git_commit
+:serper_is_git_commit
 if "%~1"=="" exit /b 1
 if /I "%~1"=="commit" exit /b 0
-set "orca_git_arg=%~1"
-if /I "%orca_git_arg%"=="-c" goto skip_two
-if /I "%orca_git_arg%"=="--config" goto skip_two
-if /I "%orca_git_arg%"=="-C" goto skip_two
-if /I "%orca_git_arg%"=="--git-dir" goto skip_two
-if /I "%orca_git_arg%"=="--work-tree" goto skip_two
-if /I "%orca_git_arg%"=="--namespace" goto skip_two
-if /I "%orca_git_arg:~0,9%"=="--config=" goto skip_one
-if /I "%orca_git_arg:~0,10%"=="--git-dir=" goto skip_one
-if /I "%orca_git_arg:~0,12%"=="--work-tree=" goto skip_one
-if /I "%orca_git_arg:~0,12%"=="--namespace=" goto skip_one
-if "%orca_git_arg:~0,1%"=="-" goto skip_one
+set "serper_git_arg=%~1"
+if /I "%serper_git_arg%"=="-c" goto skip_two
+if /I "%serper_git_arg%"=="--config" goto skip_two
+if /I "%serper_git_arg%"=="-C" goto skip_two
+if /I "%serper_git_arg%"=="--git-dir" goto skip_two
+if /I "%serper_git_arg%"=="--work-tree" goto skip_two
+if /I "%serper_git_arg%"=="--namespace" goto skip_two
+if /I "%serper_git_arg:~0,9%"=="--config=" goto skip_one
+if /I "%serper_git_arg:~0,10%"=="--git-dir=" goto skip_one
+if /I "%serper_git_arg:~0,12%"=="--work-tree=" goto skip_one
+if /I "%serper_git_arg:~0,12%"=="--namespace=" goto skip_one
+if "%serper_git_arg:~0,1%"=="-" goto skip_one
 exit /b 1
 :skip_two
 shift
 shift
-goto orca_is_git_commit
+goto serper_is_git_commit
 :skip_one
 shift
-goto orca_is_git_commit
+goto serper_is_git_commit
 `
 
 const WIN32_GH_CMD_WRAPPER = String.raw`@echo off
 setlocal
-if not "%ORCA_ENABLE_GIT_ATTRIBUTION%"=="1" goto run
-if "%ORCA_ATTRIBUTION_BYPASS%"=="1" goto run
+if not "%SERPER_ENABLE_GIT_ATTRIBUTION%"=="1" goto run
+if "%SERPER_ATTRIBUTION_BYPASS%"=="1" goto run
 if /I "%~1"=="pr" if /I "%~2"=="create" goto wrap
 if /I "%~1"=="issue" if /I "%~2"=="create" goto wrap
 goto run
@@ -654,18 +654,18 @@ goto run
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0gh-wrapper.ps1" %*
 exit /b %ERRORLEVEL%
 :run
-if defined ORCA_REAL_GH (
-  "%ORCA_REAL_GH%" %*
+if defined SERPER_REAL_GH (
+  "%SERPER_REAL_GH%" %*
 ) else (
-  echo Orca attribution wrapper could not locate gh on PATH. 1>&2
+  echo Serper attribution wrapper could not locate gh on PATH. 1>&2
   exit /b 127
 )
 exit /b %ERRORLEVEL%
 `
 
 const WIN32_GIT_PS_WRAPPER = String.raw`$ErrorActionPreference = 'Stop'
-$realGit = if ($env:ORCA_REAL_GIT) { $env:ORCA_REAL_GIT } else { 'git' }
-$trailer = if ($env:ORCA_GIT_COMMIT_TRAILER) { $env:ORCA_GIT_COMMIT_TRAILER } else { 'Co-authored-by: Orca <help@stably.ai>' }
+$realGit = if ($env:SERPER_REAL_GIT) { $env:SERPER_REAL_GIT } else { 'git' }
+$trailer = if ($env:SERPER_GIT_COMMIT_TRAILER) { $env:SERPER_GIT_COMMIT_TRAILER } else { 'Co-authored-by: Serper <help@stably.ai>' }
 
 if ($args -contains '--dry-run') {
   & $realGit @args
@@ -845,7 +845,7 @@ if (-not $replacedFileMessage) {
 
 # Why: commit-msg hooks and signing should validate the final message. Editor
 # commits pass through unchanged rather than being amended after success.
-$env:ORCA_ATTRIBUTION_BYPASS = '1'
+$env:SERPER_ATTRIBUTION_BYPASS = '1'
 try {
   $attributedArgArray = $attributedArgs.ToArray()
   & $realGit @attributedArgArray
@@ -858,7 +858,7 @@ try {
 `
 
 const WIN32_GH_PS_WRAPPER = String.raw`$ErrorActionPreference = 'Stop'
-$realGh = if ($env:ORCA_REAL_GH) { $env:ORCA_REAL_GH } else { 'gh' }
+$realGh = if ($env:SERPER_REAL_GH) { $env:SERPER_REAL_GH } else { 'gh' }
 
 function Test-NonInteractiveCreateArgs {
   param([string[]]$CommandArgs)
@@ -940,7 +940,7 @@ if ($isPrCreate) {
     if ($LASTEXITCODE -ne 0) {
       $body = $null
     }
-    $footer = if ($env:ORCA_GH_PR_FOOTER) { $env:ORCA_GH_PR_FOOTER } else { 'Made with [Orca](https://github.com/stablyai/orca) 🐋' }
+    $footer = if ($env:SERPER_GH_PR_FOOTER) { $env:SERPER_GH_PR_FOOTER } else { 'Made with [Serper](https://github.com/Legacynnn/serper) 🐋' }
     if ($null -ne $body -and $body -notmatch [Regex]::Escape($footer)) {
       $tmpFile = [System.IO.Path]::GetTempFileName()
       try {
@@ -971,7 +971,7 @@ if ($isIssueCreate) {
     if ($LASTEXITCODE -ne 0) {
       $body = $null
     }
-    $footer = if ($env:ORCA_GH_ISSUE_FOOTER) { $env:ORCA_GH_ISSUE_FOOTER } else { 'Made with [Orca](https://github.com/stablyai/orca) 🐋' }
+    $footer = if ($env:SERPER_GH_ISSUE_FOOTER) { $env:SERPER_GH_ISSUE_FOOTER } else { 'Made with [Serper](https://github.com/Legacynnn/serper) 🐋' }
     if ($null -ne $body -and $body -notmatch [Regex]::Escape($footer)) {
       $tmpFile = [System.IO.Path]::GetTempFileName()
       try {

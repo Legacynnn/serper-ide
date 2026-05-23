@@ -115,7 +115,7 @@ export function GeneralPane({ settings, updateSettings }: GeneralPaneProps): Rea
 
   useEffect(() => {
     let cancelled = false
-    void window.api.gh.checkOrcaStarred().then((result) => {
+    void window.api.gh.checkSerperStarred().then((result) => {
       if (cancelled) {
         return
       }
@@ -135,7 +135,7 @@ export function GeneralPane({ settings, updateSettings }: GeneralPaneProps): Rea
       return
     }
     setStarState('starring')
-    const ok = await window.api.gh.starOrca()
+    const ok = await window.api.gh.starSerper()
     if (!ok) {
       setStarState('error')
       return
@@ -452,7 +452,7 @@ export function GeneralPane({ settings, updateSettings }: GeneralPaneProps): Rea
       <section key="editor" className="space-y-4">
         <div className="space-y-1">
           <h3 className="text-sm font-semibold">Editor</h3>
-          <p className="text-xs text-muted-foreground">Configure how Orca persists file edits.</p>
+          <p className="text-xs text-muted-foreground">Configure how Serper persists file edits.</p>
         </div>
 
         <SearchableSetting
@@ -489,14 +489,14 @@ export function GeneralPane({ settings, updateSettings }: GeneralPaneProps): Rea
 
         <SearchableSetting
           title="Auto Save Delay"
-          description="How long Orca waits after your last edit before saving automatically."
+          description="How long Serper waits after your last edit before saving automatically."
           keywords={['autosave', 'delay', 'milliseconds']}
           className="flex items-center justify-between gap-4 px-1 py-2"
         >
           <div className="space-y-0.5">
             <Label>Auto Save Delay</Label>
             <p className="text-xs text-muted-foreground">
-              How long Orca waits after your last edit before saving automatically. First launch
+              How long Serper waits after your last edit before saving automatically. First launch
               defaults to {DEFAULT_EDITOR_AUTO_SAVE_DELAY_MS} ms.
             </p>
           </div>
@@ -753,7 +753,7 @@ export function GeneralPane({ settings, updateSettings }: GeneralPaneProps): Rea
 
         <SearchableSetting
           title="Check for Updates"
-          description="Check for app updates and install a newer Orca version."
+          description="Check for app updates and install a newer Serper version."
           keywords={['update', 'version', 'release notes', 'download']}
           className="space-y-3"
         >
@@ -814,7 +814,7 @@ export function GeneralPane({ settings, updateSettings }: GeneralPaneProps): Rea
                 <a
                   href={
                     updateStatus.releaseUrl ??
-                    `https://github.com/stablyai/orca/releases/tag/v${updateStatus.version}`
+                    `https://github.com/Legacynnn/serper/releases/tag/v${updateStatus.version}`
                   }
                   target="_blank"
                   rel="noopener noreferrer"
@@ -833,7 +833,7 @@ export function GeneralPane({ settings, updateSettings }: GeneralPaneProps): Rea
                 <a
                   href={
                     updateStatus.releaseUrl ??
-                    `https://github.com/stablyai/orca/releases/tag/v${updateStatus.version}`
+                    `https://github.com/Legacynnn/serper/releases/tag/v${updateStatus.version}`
                   }
                   target="_blank"
                   rel="noopener noreferrer"
@@ -912,7 +912,7 @@ function SupportSection({
           {hasPrecedingSections ? <Separator /> : null}
           <div className="space-y-4">
             <div className="space-y-1">
-              <h3 className="text-sm font-semibold">Support Orca</h3>
+              <h3 className="text-sm font-semibold">Support Serper</h3>
             </div>
             {state === 'loading' ? <SupportRowSkeleton /> : null}
             {state !== 'loading' && state !== 'hidden' ? (
@@ -942,19 +942,19 @@ function SupportRow({
   onStarClick: () => void | Promise<void>
 }): React.JSX.Element {
   // Why: the left-hand label is the setting's identity and must not change
-  // when the user clicks — the row should still read "Star Orca on GitHub"
+  // when the user clicks — the row should still read "Star Serper on GitHub"
   // afterwards. The right-hand control is what changes: before starring it
   // is a button; after a successful star we swap in a small inline "Thanks"
   // confirmation so the row keeps the same shape without showing a stale,
   // disabled button.
   return (
     <SearchableSetting
-      title="Star Orca on GitHub"
+      title="Star Serper on GitHub"
       description="Support the project with a GitHub star via the gh CLI."
       keywords={['star', 'github', 'support', 'feedback', 'like']}
       className="flex items-center justify-between gap-4 px-1 py-2"
     >
-      <Label>Star Orca on GitHub</Label>
+      <Label>Star Serper on GitHub</Label>
       {state === 'starred' ? (
         <SupportRowThanks />
       ) : (

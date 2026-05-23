@@ -29,10 +29,10 @@ describe('resolveWindowsShellLaunchArgs', () => {
     const command = Buffer.from(result.shellArgs[3] ?? '', 'base64').toString('utf16le')
     const outputEncodingIndex = command.indexOf('[Console]::OutputEncoding')
     const opencodeRestoreIndex = command.indexOf(
-      '$env:OPENCODE_CONFIG_DIR = $env:ORCA_OPENCODE_CONFIG_DIR'
+      '$env:OPENCODE_CONFIG_DIR = $env:SERPER_OPENCODE_CONFIG_DIR'
     )
     const piRestoreIndex = command.indexOf(
-      '$env:PI_CODING_AGENT_DIR = $env:ORCA_PI_CODING_AGENT_DIR'
+      '$env:PI_CODING_AGENT_DIR = $env:SERPER_PI_CODING_AGENT_DIR'
     )
     const promptIndex = command.indexOf('function Global:prompt')
 

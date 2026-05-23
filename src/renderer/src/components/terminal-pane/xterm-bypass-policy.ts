@@ -68,7 +68,7 @@ export function shouldBypassXtermKeyboardEvent(
     : event.ctrlKey && !event.metaKey
 
   if (event.defaultPrevented && platformModifierHeld) {
-    // Why: window-level Orca shortcuts may have already handled the chord but
+    // Why: window-level Serper shortcuts may have already handled the chord but
     // not stopped propagation. Match VS Code by preventing xterm's kitty
     // encoder from also sending that app shortcut to the shell.
     return true
@@ -89,7 +89,7 @@ export function shouldBypassXtermKeyboardEvent(
 
   if (isMac) {
     // Narrow Ghostty rule to Cmd+C only: Ghostty bubbles every Cmd chord on
-    // macOS, but Orca's window-level handlers (keyboard-handlers.ts,
+    // macOS, but Serper's window-level handlers (keyboard-handlers.ts,
     // TerminalPane.tsx Cmd+V interception) already swallow every Cmd chord
     // that does something meaningful before xterm sees it. Cmd+C is the one
     // chord that was never intercepted, so it's the only real-world breakage.

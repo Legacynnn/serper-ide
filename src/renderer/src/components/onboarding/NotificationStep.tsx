@@ -41,7 +41,7 @@ export function NotificationStep({
     },
     {
       key: 'notifyWhenFocused',
-      title: 'Notify even when Orca is focused',
+      title: 'Notify even when Serper is focused',
       description: "Show notifications while you're already in the app."
     }
   ]

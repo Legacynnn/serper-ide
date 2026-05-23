@@ -84,9 +84,9 @@ export function GitPane({
         <div className="space-y-0.5">
           <Label>Refresh Local Base Ref</Label>
           <p className="text-xs text-muted-foreground">
-            When enabled, Orca updates your local <code>main</code> or <code>master</code> before
+            When enabled, Serper updates your local <code>main</code> or <code>master</code> before
             creating a worktree. This helps AI tools and diffs compare your branch against the
-            latest base branch. Orca only does this when it is safe.
+            latest base branch. Serper only does this when it is safe.
           </p>
         </div>
         <button
@@ -127,21 +127,30 @@ export function GitPane({
       </SearchableSetting>
     ) : null,
     matchesSettingsSearch(searchQuery, {
-      title: 'Orca Attribution',
-      description: 'Add Orca attribution to commits, PRs, and issues.',
-      keywords: ['github', 'gh', 'pr', 'issue', 'co-author', 'coauthored', 'attribution', 'orca']
+      title: 'Serper Attribution',
+      description: 'Add Serper attribution to commits, PRs, and issues.',
+      keywords: ['github', 'gh', 'pr', 'issue', 'co-author', 'coauthored', 'attribution', 'serper']
     }) ? (
       <SearchableSetting
         key="github-attribution"
-        title="Orca Attribution"
-        description="Add Orca attribution to commits, PRs, and issues."
-        keywords={['github', 'gh', 'pr', 'issue', 'co-author', 'coauthored', 'attribution', 'orca']}
+        title="Serper Attribution"
+        description="Add Serper attribution to commits, PRs, and issues."
+        keywords={[
+          'github',
+          'gh',
+          'pr',
+          'issue',
+          'co-author',
+          'coauthored',
+          'attribution',
+          'serper'
+        ]}
         className="flex items-center justify-between gap-4 px-1 py-2"
       >
         <div className="space-y-0.5">
-          <Label>Orca Attribution</Label>
+          <Label>Serper Attribution</Label>
           <p className="text-xs text-muted-foreground">
-            Add Orca attribution to commits, PRs, and issues.
+            Add Serper attribution to commits, PRs, and issues.
           </p>
         </div>
         <button

@@ -18,7 +18,7 @@ Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
 
-public static class OrcaDesktopWin32 {
+public static class SerperDesktopWin32 {
     [StructLayout(LayoutKind.Sequential)]
     public struct RECT {
         public int Left;
@@ -95,32 +95,32 @@ $MouseEvents = @{
     Wheel = 0x0800
 }
 
-function Write-OrcaJson($Payload) {
+function Write-SerperJson($Payload) {
     $Payload | ConvertTo-Json -Depth 100 -Compress
 }
 
-function New-OrcaFrame([double]$X, [double]$Y, [double]$Width, [double]$Height) {
+function New-SerperFrame([double]$X, [double]$Y, [double]$Width, [double]$Height) {
     if ($Width -le 0 -or $Height -le 0) { return $null }
     [pscustomobject]@{ x = $X; y = $Y; width = $Width; height = $Height }
 }
 
-function Read-OrcaOperation([string]$Path) {
+function Read-SerperOperation([string]$Path) {
     Get-Content -Raw -Encoding UTF8 -Path $Path | ConvertFrom-Json
 }
 
-function ConvertTo-OrcaLParam([int]$X, [int]$Y) {
+function ConvertTo-SerperLParam([int]$X, [int]$Y) {
     [IntPtr]((($Y -band 0xffff) -shl 16) -bor ($X -band 0xffff))
 }
 
-function ConvertTo-OrcaWheelParam([int]$Delta) {
+function ConvertTo-SerperWheelParam([int]$Delta) {
     [IntPtr](($Delta -band 0xffff) -shl 16)
 }
 
-function Get-OrcaWindowProcesses {
+function Get-SerperWindowProcesses {
     @(Get-Process | Where-Object { $_.MainWindowHandle -ne 0 } | Sort-Object ProcessName, Id)
 }
 
-function Find-OrcaProcess([string]$Query) {
+function Find-SerperProcess([string]$Query) {
     $needle = ""
     if ($null -ne $Query) { $needle = $Query.Trim() }
     if ([string]::IsNullOrWhiteSpace($needle)) { throw 'appNotFound("")' }
@@ -129,11 +129,11 @@ function Find-OrcaProcess([string]$Query) {
     }
 
     $parsedProcessId = 0
-    $processes = Get-OrcaWindowProcesses
+    $processes = Get-SerperWindowProcesses
     if ([int]::TryParse($needle, [ref]$parsedProcessId)) {
         $match = $processes | Where-Object { $_.Id -eq $parsedProcessId } | Select-Object -First 1
         if ($null -ne $match) {
-            Assert-OrcaProcessAllowed $match
+            Assert-SerperProcessAllowed $match
             return $match
         }
     }
@@ -150,14 +150,14 @@ function Find-OrcaProcess([string]$Query) {
         $_.MainWindowTitle -ilike "*$needle*"
     } | Select-Object -First 1
     if ($null -ne $match) {
-        Assert-OrcaProcessAllowed $match
+        Assert-SerperProcessAllowed $match
         return $match
     }
 
     throw "appNotFound(`"$Query`")"
 }
 
-function Assert-OrcaProcessAllowed($Process) {
+function Assert-SerperProcessAllowed($Process) {
     $values = @($Process.ProcessName, $Process.MainWindowTitle) | ForEach-Object { ([string]$_).ToLowerInvariant() }
     foreach ($fragment in $BlockedAppFragments) {
         foreach ($value in $values) {
@@ -168,91 +168,91 @@ function Assert-OrcaProcessAllowed($Process) {
     }
 }
 
-function Get-OrcaRootElement($Process) {
+function Get-SerperRootElement($Process) {
     if ($Process.MainWindowHandle -eq 0) {
         throw "No top-level UI Automation window is available for $($Process.ProcessName)."
     }
     [Windows.Automation.AutomationElement]::FromHandle([IntPtr]$Process.MainWindowHandle)
 }
 
-function Get-OrcaWindowFrame($Process, $RootElement) {
-    $rect = New-Object OrcaDesktopWin32+RECT
-    if ([OrcaDesktopWin32]::GetWindowRect([IntPtr]$Process.MainWindowHandle, [ref]$rect)) {
-        return New-OrcaFrame $rect.Left $rect.Top ($rect.Right - $rect.Left) ($rect.Bottom - $rect.Top)
+function Get-SerperWindowFrame($Process, $RootElement) {
+    $rect = New-Object SerperDesktopWin32+RECT
+    if ([SerperDesktopWin32]::GetWindowRect([IntPtr]$Process.MainWindowHandle, [ref]$rect)) {
+        return New-SerperFrame $rect.Left $rect.Top ($rect.Right - $rect.Left) ($rect.Bottom - $rect.Top)
     }
 
     try {
         $bounds = $RootElement.Current.BoundingRectangle
         if (-not $bounds.IsEmpty) {
-            return New-OrcaFrame $bounds.X $bounds.Y $bounds.Width $bounds.Height
+            return New-SerperFrame $bounds.X $bounds.Y $bounds.Width $bounds.Height
         }
     } catch {}
     $null
 }
 
-function Get-OrcaWindowId($Process) {
+function Get-SerperWindowId($Process) {
     [int64]$Process.MainWindowHandle
 }
 
-function Get-OrcaAppName($Process) {
+function Get-SerperAppName($Process) {
     if ($Process.ProcessName -eq "ApplicationFrameHost" -and -not [string]::IsNullOrWhiteSpace($Process.MainWindowTitle)) {
         return [string]$Process.MainWindowTitle
     }
     [string]$Process.ProcessName
 }
 
-function New-OrcaAppRecord($Process) {
+function New-SerperAppRecord($Process) {
     [pscustomobject]@{
-        name = Get-OrcaAppName $Process
+        name = Get-SerperAppName $Process
         bundleIdentifier = $Process.ProcessName
         bundleId = $Process.ProcessName
         pid = [int]$Process.Id
     }
 }
 
-function Assert-OrcaWindowTarget($Process, $WindowId, $WindowIndex) {
+function Assert-SerperWindowTarget($Process, $WindowId, $WindowIndex) {
     if ($null -ne $WindowIndex -and [int]$WindowIndex -ne 0) {
         throw "windowNotFound(`"$WindowIndex`")"
     }
-    if ($null -ne $WindowId -and [int64]$WindowId -ne (Get-OrcaWindowId $Process)) {
+    if ($null -ne $WindowId -and [int64]$WindowId -ne (Get-SerperWindowId $Process)) {
         throw "windowNotFound(`"$WindowId`")"
     }
 }
 
-function Restore-OrcaWindow($Process) {
+function Restore-SerperWindow($Process) {
     if ($Process.MainWindowHandle -eq 0) { return }
-    [void][OrcaDesktopWin32]::ShowWindow([IntPtr]$Process.MainWindowHandle, 9)
-    [void][OrcaDesktopWin32]::SetForegroundWindow([IntPtr]$Process.MainWindowHandle)
+    [void][SerperDesktopWin32]::ShowWindow([IntPtr]$Process.MainWindowHandle, 9)
+    [void][SerperDesktopWin32]::SetForegroundWindow([IntPtr]$Process.MainWindowHandle)
 }
 
-function Assert-OrcaKeyboardFocus([IntPtr]$WindowHandle, $Operation) {
+function Assert-SerperKeyboardFocus([IntPtr]$WindowHandle, $Operation) {
     if ([bool]$Operation.restoreWindow) { return }
-    if ([OrcaDesktopWin32]::GetForegroundWindow() -eq $WindowHandle) { return }
+    if ([SerperDesktopWin32]::GetForegroundWindow() -eq $WindowHandle) { return }
     throw "window_not_focused: keyboard input requires the target window to be focused; retry with --restore-window"
 }
 
-function Get-OrcaElementFrame($Element, $WindowFrame) {
+function Get-SerperElementFrame($Element, $WindowFrame) {
     try {
         $bounds = $Element.Current.BoundingRectangle
         if ($bounds.IsEmpty) { return $null }
         if ($null -eq $WindowFrame) {
-            return New-OrcaFrame $bounds.X $bounds.Y $bounds.Width $bounds.Height
+            return New-SerperFrame $bounds.X $bounds.Y $bounds.Width $bounds.Height
         }
-        New-OrcaFrame ($bounds.X - $WindowFrame.x) ($bounds.Y - $WindowFrame.y) $bounds.Width $bounds.Height
+        New-SerperFrame ($bounds.X - $WindowFrame.x) ($bounds.Y - $WindowFrame.y) $bounds.Width $bounds.Height
     } catch {
         $null
     }
 }
 
-function Get-OrcaProperty($Element, [string]$Name) {
+function Get-SerperProperty($Element, [string]$Name) {
     try { [string]$Element.Current.$Name } catch { "" }
 }
 
-function Get-OrcaRuntimeId($Element) {
+function Get-SerperRuntimeId($Element) {
     try { @($Element.GetRuntimeId()) } catch { @() }
 }
 
-function Get-OrcaValueText($Element) {
+function Get-SerperValueText($Element) {
     try {
         if ($Element.Current.IsPassword) { return "[redacted]" }
         $pattern = $Element.GetCurrentPattern([Windows.Automation.ValuePattern]::Pattern)
@@ -265,7 +265,7 @@ function Get-OrcaValueText($Element) {
     }
 }
 
-function Get-OrcaActions($Element) {
+function Get-SerperActions($Element) {
     $actions = New-Object System.Collections.Generic.List[string]
     foreach ($pattern in $Element.GetSupportedPatterns()) {
         $name = [string]$pattern.ProgrammaticName
@@ -278,18 +278,18 @@ function Get-OrcaActions($Element) {
     @($actions | Select-Object -Unique)
 }
 
-function Get-OrcaMeaningfulActions($Actions) {
+function Get-SerperMeaningfulActions($Actions) {
     $noisy = @("Invoke", "ScrollToVisible", "ShowMenu")
     @($Actions | Where-Object { $noisy -notcontains $_ })
 }
 
-function Format-OrcaSnapshotText([string]$Text) {
+function Format-SerperSnapshotText([string]$Text) {
     if ([string]::IsNullOrWhiteSpace($Text)) { return "" }
     (($Text -replace "\s+", " ").Trim())
 }
 
-function Format-OrcaValueSegment([string]$RoleKey, [string]$Title, [string]$Value) {
-    $clean = Format-OrcaSnapshotText $Value
+function Format-SerperValueSegment([string]$RoleKey, [string]$Title, [string]$Value) {
+    $clean = Format-SerperSnapshotText $Value
     if ([string]::IsNullOrWhiteSpace($clean) -or $clean -eq $Title) { return "" }
     if ($RoleKey -eq "heading" -and $clean -match "^\d+$") { return "" }
     if ($RoleKey -in @("text", "edit", "document", "scroll bar", "progress bar")) {
@@ -298,8 +298,8 @@ function Format-OrcaValueSegment([string]$RoleKey, [string]$Title, [string]$Valu
     ", Value: $clean"
 }
 
-function Test-OrcaSuppressChildren([string]$RoleKey, [string]$Title, [string]$Value, [string]$Summary) {
-    $hasCompactLabel = -not [string]::IsNullOrWhiteSpace($Title) -or -not [string]::IsNullOrWhiteSpace((Format-OrcaSnapshotText $Value)) -or -not [string]::IsNullOrWhiteSpace((Format-OrcaSnapshotText $Summary))
+function Test-SerperSuppressChildren([string]$RoleKey, [string]$Title, [string]$Value, [string]$Summary) {
+    $hasCompactLabel = -not [string]::IsNullOrWhiteSpace($Title) -or -not [string]::IsNullOrWhiteSpace((Format-SerperSnapshotText $Value)) -or -not [string]::IsNullOrWhiteSpace((Format-SerperSnapshotText $Summary))
     $hasCompactLabel -and $RoleKey -in @(
         "button",
         "check box",
@@ -313,15 +313,15 @@ function Test-OrcaSuppressChildren([string]$RoleKey, [string]$Title, [string]$Va
     )
 }
 
-function Get-OrcaTextSnippets($Element, [int]$Limit = 6, [int]$MaxDepth = 3) {
+function Get-SerperTextSnippets($Element, [int]$Limit = 6, [int]$MaxDepth = 3) {
     $values = New-Object System.Collections.Generic.List[string]
     $seen = New-Object System.Collections.Generic.HashSet[string]
 
-    function Visit-OrcaText($Node, [int]$Depth) {
+    function Visit-SerperText($Node, [int]$Depth) {
         if ($values.Count -ge $Limit -or $Depth -gt $MaxDepth) { return }
         $role = try { [string]$Node.Current.LocalizedControlType } catch { "" }
         if ($role -match "text|link|label") {
-            foreach ($raw in @((Get-OrcaProperty $Node "Name"), (Get-OrcaValueText $Node))) {
+            foreach ($raw in @((Get-SerperProperty $Node "Name"), (Get-SerperValueText $Node))) {
                 $value = (($raw -replace "\s+", " ").Trim())
                 if (-not [string]::IsNullOrWhiteSpace($value) -and $seen.Add($value)) {
                     if ($value.Length -gt 80) { $value = $value.Substring(0, 80) + "..." }
@@ -333,58 +333,58 @@ function Get-OrcaTextSnippets($Element, [int]$Limit = 6, [int]$MaxDepth = 3) {
         try {
             $children = $Node.FindAll([Windows.Automation.TreeScope]::Children, [Windows.Automation.Condition]::TrueCondition)
             for ($i = 0; $i -lt $children.Count; $i++) {
-                Visit-OrcaText $children.Item($i) ($Depth + 1)
+                Visit-SerperText $children.Item($i) ($Depth + 1)
                 if ($values.Count -ge $Limit) { return }
             }
         } catch {}
     }
 
-    Visit-OrcaText $Element 0
+    Visit-SerperText $Element 0
     @($values.ToArray())
 }
 
-function Test-OrcaPlainTextSubtree($Element, [int]$MaxDepth = 4) {
-    $script:sawOrcaText = $false
+function Test-SerperPlainTextSubtree($Element, [int]$MaxDepth = 4) {
+    $script:sawSerperText = $false
     $allowed = @("pane", "group", "custom", "unknown", "text", "link", "image")
 
-    function Visit-OrcaPlainText($Node, [int]$Depth) {
+    function Visit-SerperPlainText($Node, [int]$Depth) {
         if ($Depth -gt $MaxDepth) { return $false }
         $role = try { [string]$Node.Current.LocalizedControlType } catch { "" }
         $roleKey = $role.ToLowerInvariant()
         if ($allowed -notcontains $roleKey) { return $false }
-        if ($roleKey -match "text|link") { $script:sawOrcaText = $true }
-        if (@(Get-OrcaMeaningfulActions @(Get-OrcaActions $Node)).Count -gt 0) { return $false }
+        if ($roleKey -match "text|link") { $script:sawSerperText = $true }
+        if (@(Get-SerperMeaningfulActions @(Get-SerperActions $Node)).Count -gt 0) { return $false }
         try {
             $children = $Node.FindAll([Windows.Automation.TreeScope]::Children, [Windows.Automation.Condition]::TrueCondition)
             for ($i = 0; $i -lt $children.Count; $i++) {
-                if (-not (Visit-OrcaPlainText $children.Item($i) ($Depth + 1))) { return $false }
+                if (-not (Visit-SerperPlainText $children.Item($i) ($Depth + 1))) { return $false }
             }
         } catch {}
         return $true
     }
 
-    (Visit-OrcaPlainText $Element 0) -and $script:sawOrcaText
+    (Visit-SerperPlainText $Element 0) -and $script:sawSerperText
 }
 
-function New-OrcaElementRecord($Element, [int]$Index, $WindowFrame) {
+function New-SerperElementRecord($Element, [int]$Index, $WindowFrame) {
     $controlType = try { [string]$Element.Current.ControlType.ProgrammaticName } catch { "" }
     $nativeWindowHandle = try { [int64]$Element.Current.NativeWindowHandle } catch { 0 }
     [pscustomobject]@{
         index = $Index
-        runtimeId = @(Get-OrcaRuntimeId $Element)
-        automationId = Get-OrcaProperty $Element "AutomationId"
-        name = Get-OrcaProperty $Element "Name"
+        runtimeId = @(Get-SerperRuntimeId $Element)
+        automationId = Get-SerperProperty $Element "AutomationId"
+        name = Get-SerperProperty $Element "Name"
         controlType = $controlType
-        localizedControlType = Get-OrcaProperty $Element "LocalizedControlType"
-        className = Get-OrcaProperty $Element "ClassName"
-        value = Get-OrcaValueText $Element
+        localizedControlType = Get-SerperProperty $Element "LocalizedControlType"
+        className = Get-SerperProperty $Element "ClassName"
+        value = Get-SerperValueText $Element
         nativeWindowHandle = $nativeWindowHandle
-        frame = Get-OrcaElementFrame $Element $WindowFrame
-        actions = @(Get-OrcaActions $Element)
+        frame = Get-SerperElementFrame $Element $WindowFrame
+        actions = @(Get-SerperActions $Element)
     }
 }
 
-function Render-OrcaTree($RootElement, $WindowFrame) {
+function Render-SerperTree($RootElement, $WindowFrame) {
     $records = New-Object System.Collections.Generic.List[object]
     $lines = New-Object System.Collections.Generic.List[string]
     $seen = New-Object System.Collections.Generic.HashSet[string]
@@ -395,7 +395,7 @@ function Render-OrcaTree($RootElement, $WindowFrame) {
         maxDepthReached = $false
     }
 
-    function Visit-OrcaNode($Node, [int]$Depth) {
+    function Visit-SerperNode($Node, [int]$Depth) {
         if ($records.Count -ge $MaxNodes -or $Depth -gt $MaxDepth) {
             $truncation.truncated = $true
             if ($Depth -gt $MaxDepth) { $truncation.maxDepthReached = $true }
@@ -404,37 +404,37 @@ function Render-OrcaTree($RootElement, $WindowFrame) {
         $identity = try { (@($Node.GetRuntimeId()) -join ".") } catch { [Guid]::NewGuid().ToString() }
         if (-not $seen.Add($identity)) { return }
 
-        $record = New-OrcaElementRecord $Node $records.Count $WindowFrame
+        $record = New-SerperElementRecord $Node $records.Count $WindowFrame
         $children = @()
         try {
             $children = @($Node.FindAll([Windows.Automation.TreeScope]::Children, [Windows.Automation.Condition]::TrueCondition))
         } catch {}
-        $meaningfulActions = @(Get-OrcaMeaningfulActions $record.actions)
+        $meaningfulActions = @(Get-SerperMeaningfulActions $record.actions)
         $title = if ([string]::IsNullOrWhiteSpace($record.name)) { $record.automationId } else { $record.name }
         $role = if ([string]::IsNullOrWhiteSpace($record.localizedControlType)) { $record.controlType } else { $record.localizedControlType }
         $roleKey = $role.ToLowerInvariant()
-        $snippets = @(Get-OrcaTextSnippets $Node 8 4)
+        $snippets = @(Get-SerperTextSnippets $Node 8 4)
         $genericSummary = $null
-        if (($roleKey -in @("pane", "group", "custom", "unknown")) -and [string]::IsNullOrWhiteSpace($title) -and [string]::IsNullOrWhiteSpace($record.value) -and $snippets.Count -ge 2 -and (Test-OrcaPlainTextSubtree $Node)) {
+        if (($roleKey -in @("pane", "group", "custom", "unknown")) -and [string]::IsNullOrWhiteSpace($title) -and [string]::IsNullOrWhiteSpace($record.value) -and $snippets.Count -ge 2 -and (Test-SerperPlainTextSubtree $Node)) {
             $genericSummary = ($snippets -join " ")
         }
         if (($roleKey -in @("pane", "group", "custom", "unknown")) -and [string]::IsNullOrWhiteSpace($title) -and [string]::IsNullOrWhiteSpace($record.value) -and $meaningfulActions.Count -eq 0 -and $null -eq $genericSummary -and $children.Count -le 1) {
             for ($i = 0; $i -lt $children.Count; $i++) {
-                Visit-OrcaNode $children.Item($i) $Depth
+                Visit-SerperNode $children.Item($i) $Depth
             }
             return
         }
 
         $records.Add($record)
 
-        $line = "$($record.index) $role $(Format-OrcaSnapshotText $title)".TrimEnd()
-        $line += Format-OrcaValueSegment $roleKey $title $record.value
+        $line = "$($record.index) $role $(Format-SerperSnapshotText $title)".TrimEnd()
+        $line += Format-SerperValueSegment $roleKey $title $record.value
         if (-not [string]::IsNullOrWhiteSpace($genericSummary) -and $genericSummary -ne $title) {
-            $line += ", Text: " + (Format-OrcaSnapshotText $genericSummary)
+            $line += ", Text: " + (Format-SerperSnapshotText $genericSummary)
         } elseif ($roleKey -in @("row", "data item", "list item")) {
-            $rowSummary = @((Get-OrcaTextSnippets $Node 6 3)) -join " "
+            $rowSummary = @((Get-SerperTextSnippets $Node 6 3)) -join " "
             if (-not [string]::IsNullOrWhiteSpace($rowSummary) -and $rowSummary -ne $title) {
-                $line += ", Text: " + (Format-OrcaSnapshotText $rowSummary)
+                $line += ", Text: " + (Format-SerperSnapshotText $rowSummary)
             }
         }
         if ($meaningfulActions.Count -gt 0) {
@@ -442,17 +442,17 @@ function Render-OrcaTree($RootElement, $WindowFrame) {
         }
         $lines.Add(("`t" * $Depth) + $line)
 
-        if (-not [string]::IsNullOrWhiteSpace($genericSummary) -or (Test-OrcaSuppressChildren $roleKey $title $record.value $genericSummary)) { return }
+        if (-not [string]::IsNullOrWhiteSpace($genericSummary) -or (Test-SerperSuppressChildren $roleKey $title $record.value $genericSummary)) { return }
         for ($i = 0; $i -lt $children.Count; $i++) {
-            Visit-OrcaNode $children.Item($i) ($Depth + 1)
+            Visit-SerperNode $children.Item($i) ($Depth + 1)
         }
     }
 
-    Visit-OrcaNode $RootElement 0
+    Visit-SerperNode $RootElement 0
     [pscustomobject]@{ elements = @($records.ToArray()); lines = @($lines.ToArray()); truncation = $truncation }
 }
 
-function Get-OrcaScreenshot([bool]$IncludeScreenshot, $WindowFrame) {
+function Get-SerperScreenshot([bool]$IncludeScreenshot, $WindowFrame) {
     if (-not $IncludeScreenshot -or $null -eq $WindowFrame) { return $null }
     try {
         $width = [int][Math]::Max(1, [Math]::Round($WindowFrame.width))
@@ -472,21 +472,21 @@ function Get-OrcaScreenshot([bool]$IncludeScreenshot, $WindowFrame) {
     }
 }
 
-function New-OrcaSnapshot([string]$Query, [bool]$IncludeScreenshot, $WindowId = $null, $WindowIndex = $null, [bool]$RestoreWindow = $false) {
-    $process = Find-OrcaProcess $Query
-    if ($RestoreWindow) { Restore-OrcaWindow $process }
-    Assert-OrcaWindowTarget $process $WindowId $WindowIndex
-    $root = Get-OrcaRootElement $process
-    $windowFrame = Get-OrcaWindowFrame $process $root
-    $tree = Render-OrcaTree $root $windowFrame
+function New-SerperSnapshot([string]$Query, [bool]$IncludeScreenshot, $WindowId = $null, $WindowIndex = $null, [bool]$RestoreWindow = $false) {
+    $process = Find-SerperProcess $Query
+    if ($RestoreWindow) { Restore-SerperWindow $process }
+    Assert-SerperWindowTarget $process $WindowId $WindowIndex
+    $root = Get-SerperRootElement $process
+    $windowFrame = Get-SerperWindowFrame $process $root
+    $tree = Render-SerperTree $root $windowFrame
 
     [pscustomobject]@{
         snapshotId = [guid]::NewGuid().ToString()
-        app = New-OrcaAppRecord $process
+        app = New-SerperAppRecord $process
         windowTitle = $process.MainWindowTitle
-        windowId = Get-OrcaWindowId $process
+        windowId = Get-SerperWindowId $process
         windowBounds = $windowFrame
-        screenshotPngBase64 = Get-OrcaScreenshot $IncludeScreenshot $windowFrame
+        screenshotPngBase64 = Get-SerperScreenshot $IncludeScreenshot $windowFrame
         coordinateSpace = "window"
         truncation = $tree.truncation
         treeLines = @($tree.lines)
@@ -497,16 +497,16 @@ function New-OrcaSnapshot([string]$Query, [bool]$IncludeScreenshot, $WindowId = 
     }
 }
 
-function Get-OrcaAppList {
-    @(Get-OrcaWindowProcesses | ForEach-Object {
-        New-OrcaAppRecord $_
+function Get-SerperAppList {
+    @(Get-SerperWindowProcesses | ForEach-Object {
+        New-SerperAppRecord $_
     })
 }
 
-function Get-OrcaWindowList([string]$Query) {
-    $process = Find-OrcaProcess $Query
-    $root = Get-OrcaRootElement $process
-    $windowFrame = Get-OrcaWindowFrame $process $root
+function Get-SerperWindowList([string]$Query) {
+    $process = Find-SerperProcess $Query
+    $root = Get-SerperRootElement $process
+    $windowFrame = Get-SerperWindowFrame $process $root
     $x = $null
     $y = $null
     $width = 0
@@ -517,13 +517,13 @@ function Get-OrcaWindowList([string]$Query) {
         $width = [int][Math]::Max(0, [Math]::Round($windowFrame.width))
         $height = [int][Math]::Max(0, [Math]::Round($windowFrame.height))
     }
-    $app = New-OrcaAppRecord $process
+    $app = New-SerperAppRecord $process
     [pscustomobject]@{
         app = $app
         windows = @([pscustomobject]@{
             index = 0
             app = $app
-            id = Get-OrcaWindowId $process
+            id = Get-SerperWindowId $process
             title = $process.MainWindowTitle
             x = $x
             y = $y
@@ -532,15 +532,15 @@ function Get-OrcaWindowList([string]$Query) {
             isMinimized = $false
             isOffscreen = $false
             screenIndex = $null
-            platform = [pscustomobject]@{ backend = "uia"; nativeWindowHandle = Get-OrcaWindowId $process }
+            platform = [pscustomobject]@{ backend = "uia"; nativeWindowHandle = Get-SerperWindowId $process }
         })
     }
 }
 
-function Get-OrcaHandshake {
+function Get-SerperHandshake {
     [pscustomobject]@{
         platform = "win32"
-        provider = "orca-computer-use-windows"
+        provider = "serper-computer-use-windows"
         providerVersion = "1.0.0"
         protocolVersion = 1
         supports = [pscustomobject]@{
@@ -563,7 +563,7 @@ function Get-OrcaHandshake {
     }
 }
 
-function Test-OrcaSameRuntimeId($Left, $Right) {
+function Test-SerperSameRuntimeId($Left, $Right) {
     if ($null -eq $Left -or $null -eq $Right -or $Left.Count -ne $Right.Count) { return $false }
     for ($i = 0; $i -lt $Left.Count; $i++) {
         if ([int]$Left[$i] -ne [int]$Right[$i]) { return $false }
@@ -571,7 +571,7 @@ function Test-OrcaSameRuntimeId($Left, $Right) {
     $true
 }
 
-function Find-OrcaElement($RootElement, $Record) {
+function Find-SerperElement($RootElement, $Record) {
     if ($null -eq $Record) { return $null }
     if ($Record.index -eq 0) { return $RootElement }
 
@@ -579,7 +579,7 @@ function Find-OrcaElement($RootElement, $Record) {
         $descendants = $RootElement.FindAll([Windows.Automation.TreeScope]::Descendants, [Windows.Automation.Condition]::TrueCondition)
         for ($i = 0; $i -lt $descendants.Count; $i++) {
             $candidate = $descendants.Item($i)
-            if (Test-OrcaSameRuntimeId @($candidate.GetRuntimeId()) @($Record.runtimeId)) {
+            if (Test-SerperSameRuntimeId @($candidate.GetRuntimeId()) @($Record.runtimeId)) {
                 return $candidate
             }
         }
@@ -587,7 +587,7 @@ function Find-OrcaElement($RootElement, $Record) {
     $null
 }
 
-function Invoke-OrcaPrimaryAction($Element) {
+function Invoke-SerperPrimaryAction($Element) {
     foreach ($pattern in @(
         [Windows.Automation.InvokePattern]::Pattern,
         [Windows.Automation.SelectionItemPattern]::Pattern,
@@ -603,7 +603,7 @@ function Invoke-OrcaPrimaryAction($Element) {
     $false
 }
 
-function Invoke-OrcaNamedAction($Element, [string]$Action) {
+function Invoke-SerperNamedAction($Element, [string]$Action) {
     $wanted = ""
     if ($null -ne $Action) { $wanted = $Action.Trim().ToLowerInvariant() }
     switch ($wanted) {
@@ -628,7 +628,7 @@ function Invoke-OrcaNamedAction($Element, [string]$Action) {
     }
 }
 
-function Set-OrcaElementValue($Element, [string]$Value) {
+function Set-SerperElementValue($Element, [string]$Value) {
     try {
         $pattern = $Element.GetCurrentPattern([Windows.Automation.ValuePattern]::Pattern)
         if (-not $pattern.Current.IsReadOnly) {
@@ -639,7 +639,7 @@ function Set-OrcaElementValue($Element, [string]$Value) {
     $false
 }
 
-function Get-OrcaScreenPoint($Operation, $WindowFrame) {
+function Get-SerperScreenPoint($Operation, $WindowFrame) {
     if ($null -ne $Operation.element) {
         throw "stale element frame; run get-app-state again and use a fresh element index"
     }
@@ -649,7 +649,7 @@ function Get-OrcaScreenPoint($Operation, $WindowFrame) {
     }
 }
 
-function Get-OrcaElementScreenPoint($Element) {
+function Get-SerperElementScreenPoint($Element) {
     if ($null -eq $Element) { return $null }
     try {
         $rect = $Element.Current.BoundingRectangle
@@ -663,9 +663,9 @@ function Get-OrcaElementScreenPoint($Element) {
     $null
 }
 
-function Send-OrcaMouseClick([IntPtr]$WindowHandle, [int]$ScreenX, [int]$ScreenY, [string]$Button, [int]$Count) {
-    [void][OrcaDesktopWin32]::SetForegroundWindow($WindowHandle)
-    [void][OrcaDesktopWin32]::SetCursorPos($ScreenX, $ScreenY)
+function Send-SerperMouseClick([IntPtr]$WindowHandle, [int]$ScreenX, [int]$ScreenY, [string]$Button, [int]$Count) {
+    [void][SerperDesktopWin32]::SetForegroundWindow($WindowHandle)
+    [void][SerperDesktopWin32]::SetCursorPos($ScreenX, $ScreenY)
     $down = $MouseEvents.LeftDown
     $up = $MouseEvents.LeftUp
     if ($Button -eq "right") {
@@ -677,46 +677,46 @@ function Send-OrcaMouseClick([IntPtr]$WindowHandle, [int]$ScreenX, [int]$ScreenY
     }
 
     for ($i = 0; $i -lt [Math]::Max(1, $Count); $i++) {
-        [OrcaDesktopWin32]::mouse_event($down, 0, 0, 0, [UIntPtr]::Zero)
+        [SerperDesktopWin32]::mouse_event($down, 0, 0, 0, [UIntPtr]::Zero)
         Start-Sleep -Milliseconds 35
-        [OrcaDesktopWin32]::mouse_event($up, 0, 0, 0, [UIntPtr]::Zero)
+        [SerperDesktopWin32]::mouse_event($up, 0, 0, 0, [UIntPtr]::Zero)
     }
 }
 
-function Send-OrcaDrag([IntPtr]$WindowHandle, $From, $To) {
-    [void][OrcaDesktopWin32]::SetForegroundWindow($WindowHandle)
+function Send-SerperDrag([IntPtr]$WindowHandle, $From, $To) {
+    [void][SerperDesktopWin32]::SetForegroundWindow($WindowHandle)
     $startX = [int]$From.x
     $startY = [int]$From.y
     $endX = [int]$To.x
     $endY = [int]$To.y
-    [void][OrcaDesktopWin32]::SetCursorPos($startX, $startY)
-    [OrcaDesktopWin32]::mouse_event($MouseEvents.LeftDown, 0, 0, 0, [UIntPtr]::Zero)
+    [void][SerperDesktopWin32]::SetCursorPos($startX, $startY)
+    [SerperDesktopWin32]::mouse_event($MouseEvents.LeftDown, 0, 0, 0, [UIntPtr]::Zero)
     for ($step = 1; $step -le 12; $step++) {
         $x = [int][Math]::Round($startX + (($endX - $startX) * $step / 12))
         $y = [int][Math]::Round($startY + (($endY - $startY) * $step / 12))
-        [void][OrcaDesktopWin32]::SetCursorPos($x, $y)
+        [void][SerperDesktopWin32]::SetCursorPos($x, $y)
         Start-Sleep -Milliseconds 20
     }
-    [OrcaDesktopWin32]::mouse_event($MouseEvents.LeftUp, 0, 0, 0, [UIntPtr]::Zero)
+    [SerperDesktopWin32]::mouse_event($MouseEvents.LeftUp, 0, 0, 0, [UIntPtr]::Zero)
 }
 
-function Send-OrcaText([IntPtr]$WindowHandle, [string]$Text) {
-    [void][OrcaDesktopWin32]::SetForegroundWindow($WindowHandle)
+function Send-SerperText([IntPtr]$WindowHandle, [string]$Text) {
+    [void][SerperDesktopWin32]::SetForegroundWindow($WindowHandle)
     $hasNonAscii = $false
     foreach ($character in $Text.ToCharArray()) {
         if ([int][char]$character -gt 0x7F) { $hasNonAscii = $true; break }
     }
     if ($hasNonAscii) {
         foreach ($character in $Text.ToCharArray()) {
-            [void][OrcaDesktopWin32]::PostMessage($WindowHandle, $WindowsMessages.Char, [IntPtr][int][char]$character, [IntPtr]::Zero)
+            [void][SerperDesktopWin32]::PostMessage($WindowHandle, $WindowsMessages.Char, [IntPtr][int][char]$character, [IntPtr]::Zero)
             Start-Sleep -Milliseconds 8
         }
         return
     }
-    [System.Windows.Forms.SendKeys]::SendWait((ConvertTo-OrcaSendKeysText $Text))
+    [System.Windows.Forms.SendKeys]::SendWait((ConvertTo-SerperSendKeysText $Text))
 }
 
-function Get-OrcaVirtualKey([string]$Key) {
+function Get-SerperVirtualKey([string]$Key) {
     $normalized = $Key.ToLowerInvariant()
     $map = @{
         "return" = 0x0D; "enter" = 0x0D; "tab" = 0x09; "escape" = 0x1B; "esc" = 0x1B
@@ -728,12 +728,12 @@ function Get-OrcaVirtualKey([string]$Key) {
     throw "Unsupported key: $Key"
 }
 
-function Send-OrcaKey([IntPtr]$WindowHandle, [string]$Key) {
-    [void][OrcaDesktopWin32]::SetForegroundWindow($WindowHandle)
-    [System.Windows.Forms.SendKeys]::SendWait((ConvertTo-OrcaSendKeysKey $Key))
+function Send-SerperKey([IntPtr]$WindowHandle, [string]$Key) {
+    [void][SerperDesktopWin32]::SetForegroundWindow($WindowHandle)
+    [System.Windows.Forms.SendKeys]::SendWait((ConvertTo-SerperSendKeysKey $Key))
 }
 
-function Get-OrcaModifierVirtualKey([string]$Modifier) {
+function Get-SerperModifierVirtualKey([string]$Modifier) {
     switch ($Modifier.ToLowerInvariant()) {
         { $_ -in @("ctrl", "control", "cmdorctrl", "commandorcontrol") } { return 0x11 }
         { $_ -in @("shift") } { return 0x10 }
@@ -743,21 +743,21 @@ function Get-OrcaModifierVirtualKey([string]$Modifier) {
     }
 }
 
-function Send-OrcaHotkey([IntPtr]$WindowHandle, [string]$KeySpec) {
+function Send-SerperHotkey([IntPtr]$WindowHandle, [string]$KeySpec) {
     $parts = @($KeySpec.Split("+") | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
     if ($parts.Count -eq 0) { throw "Unsupported key: $KeySpec" }
     $key = $parts[$parts.Count - 1]
     $prefix = ""
     if ($parts.Count -gt 1) {
         foreach ($modifier in $parts[0..($parts.Count - 2)]) {
-            $prefix += ConvertTo-OrcaSendKeysModifier $modifier
+            $prefix += ConvertTo-SerperSendKeysModifier $modifier
         }
     }
-    [void][OrcaDesktopWin32]::SetForegroundWindow($WindowHandle)
-    [System.Windows.Forms.SendKeys]::SendWait($prefix + (ConvertTo-OrcaSendKeysKey $key))
+    [void][SerperDesktopWin32]::SetForegroundWindow($WindowHandle)
+    [System.Windows.Forms.SendKeys]::SendWait($prefix + (ConvertTo-SerperSendKeysKey $key))
 }
 
-function ConvertTo-OrcaSendKeysText([string]$Text) {
+function ConvertTo-SerperSendKeysText([string]$Text) {
     $builder = New-Object System.Text.StringBuilder
     foreach ($character in $Text.ToCharArray()) {
         $value = [string]$character
@@ -772,7 +772,7 @@ function ConvertTo-OrcaSendKeysText([string]$Text) {
     $builder.ToString()
 }
 
-function ConvertTo-OrcaSendKeysKey([string]$Key) {
+function ConvertTo-SerperSendKeysKey([string]$Key) {
     switch ($Key.ToLowerInvariant()) {
         { $_ -in @("return", "enter") } { return "{ENTER}" }
         "tab" { return "{TAB}" }
@@ -787,13 +787,13 @@ function ConvertTo-OrcaSendKeysKey([string]$Key) {
         "home" { return "{HOME}" }
         "end" { return "{END}" }
         default {
-            if ($Key.Length -eq 1) { return (ConvertTo-OrcaSendKeysText $Key) }
+            if ($Key.Length -eq 1) { return (ConvertTo-SerperSendKeysText $Key) }
             throw "Unsupported key: $Key"
         }
     }
 }
 
-function ConvertTo-OrcaSendKeysModifier([string]$Modifier) {
+function ConvertTo-SerperSendKeysModifier([string]$Modifier) {
     switch ($Modifier.ToLowerInvariant()) {
         { $_ -in @("ctrl", "control", "cmdorctrl", "commandorcontrol") } { return "^" }
         "shift" { return "+" }
@@ -802,14 +802,14 @@ function ConvertTo-OrcaSendKeysModifier([string]$Modifier) {
     }
 }
 
-function Send-OrcaPasteText([IntPtr]$WindowHandle, [string]$Text) {
+function Send-SerperPasteText([IntPtr]$WindowHandle, [string]$Text) {
     $previous = $null
     $hadPrevious = $false
     try { $previous = [System.Windows.Forms.Clipboard]::GetDataObject() } catch {}
     $hadPrevious = $null -ne $previous
     try {
         Set-Clipboard -Value $Text
-        Send-OrcaHotkey $WindowHandle "Ctrl+v"
+        Send-SerperHotkey $WindowHandle "Ctrl+v"
     } finally {
         if ($hadPrevious) {
             try { [System.Windows.Forms.Clipboard]::SetDataObject($previous, $true) } catch {}
@@ -819,33 +819,33 @@ function Send-OrcaPasteText([IntPtr]$WindowHandle, [string]$Text) {
     }
 }
 
-function Invoke-OrcaOperation($Operation) {
+function Invoke-SerperOperation($Operation) {
     $includeScreenshot = -not [bool]$Operation.noScreenshot
     if ($Operation.tool -eq "handshake") {
-        return [pscustomobject]@{ ok = $true; capabilities = Get-OrcaHandshake }
+        return [pscustomobject]@{ ok = $true; capabilities = Get-SerperHandshake }
     }
     if ($Operation.tool -eq "list_apps") {
-        return [pscustomobject]@{ ok = $true; apps = @(Get-OrcaAppList) }
+        return [pscustomobject]@{ ok = $true; apps = @(Get-SerperAppList) }
     }
     if ($Operation.tool -eq "list_windows") {
-        $list = Get-OrcaWindowList $Operation.app
+        $list = Get-SerperWindowList $Operation.app
         return [pscustomobject]@{ ok = $true; app = $list.app; windows = @($list.windows) }
     }
     if ($Operation.tool -eq "get_app_state") {
-        return [pscustomobject]@{ ok = $true; snapshot = New-OrcaSnapshot $Operation.app $includeScreenshot $Operation.windowId $Operation.windowIndex ([bool]$Operation.restoreWindow) }
+        return [pscustomobject]@{ ok = $true; snapshot = New-SerperSnapshot $Operation.app $includeScreenshot $Operation.windowId $Operation.windowIndex ([bool]$Operation.restoreWindow) }
     }
 
-    $process = Find-OrcaProcess $Operation.app
-    if ([bool]$Operation.restoreWindow) { Restore-OrcaWindow $process }
-    Assert-OrcaWindowTarget $process $Operation.windowId $Operation.windowIndex
-    $root = Get-OrcaRootElement $process
-    $windowFrame = if ($null -ne $Operation.windowBounds) { $Operation.windowBounds } else { Get-OrcaWindowFrame $process $root }
-    $element = Find-OrcaElement $root $Operation.element
-    $fromElement = Find-OrcaElement $root $Operation.fromElement
-    $toElement = Find-OrcaElement $root $Operation.toElement
+    $process = Find-SerperProcess $Operation.app
+    if ([bool]$Operation.restoreWindow) { Restore-SerperWindow $process }
+    Assert-SerperWindowTarget $process $Operation.windowId $Operation.windowIndex
+    $root = Get-SerperRootElement $process
+    $windowFrame = if ($null -ne $Operation.windowBounds) { $Operation.windowBounds } else { Get-SerperWindowFrame $process $root }
+    $element = Find-SerperElement $root $Operation.element
+    $fromElement = Find-SerperElement $root $Operation.fromElement
+    $toElement = Find-SerperElement $root $Operation.toElement
     $handle = [IntPtr]$process.MainWindowHandle
     if ($Operation.tool -in @("type_text", "press_key", "hotkey", "paste_text")) {
-        Assert-OrcaKeyboardFocus $handle $Operation
+        Assert-SerperKeyboardFocus $handle $Operation
     }
     $action = $null
 
@@ -853,12 +853,12 @@ function Invoke-OrcaOperation($Operation) {
         "click" {
             $handledByPattern = $false
             if ($null -ne $element -and $Operation.mouse_button -ne "right" -and $Operation.mouse_button -ne "middle" -and [int]$Operation.click_count -le 1) {
-                $handledByPattern = Invoke-OrcaPrimaryAction $element
+                $handledByPattern = Invoke-SerperPrimaryAction $element
             }
             if (-not $handledByPattern) {
-                $point = Get-OrcaElementScreenPoint $element
-                if ($null -eq $point) { $point = Get-OrcaScreenPoint $Operation $windowFrame }
-                Send-OrcaMouseClick $handle $point.x $point.y $Operation.mouse_button ([int]$Operation.click_count)
+                $point = Get-SerperElementScreenPoint $element
+                if ($null -eq $point) { $point = Get-SerperScreenPoint $Operation $windowFrame }
+                Send-SerperMouseClick $handle $point.x $point.y $Operation.mouse_button ([int]$Operation.click_count)
                 $action = [pscustomobject]@{ path = "synthetic"; actionName = $null; fallbackReason = "actionUnsupported" }
             } else {
                 $action = [pscustomobject]@{ path = "accessibility"; actionName = "primaryAction"; fallbackReason = $null }
@@ -866,7 +866,7 @@ function Invoke-OrcaOperation($Operation) {
         }
         "perform_secondary_action" {
             if ($null -eq $element) { throw "unknown element_index" }
-            if (-not (Invoke-OrcaNamedAction $element $Operation.action)) {
+            if (-not (Invoke-SerperNamedAction $element $Operation.action)) {
                 throw "$($Operation.action) is not a valid secondary action"
             }
             $action = [pscustomobject]@{ path = "accessibility"; actionName = $Operation.action; fallbackReason = $null }
@@ -874,41 +874,41 @@ function Invoke-OrcaOperation($Operation) {
         "scroll" {
             $delta = 120 * [int][Math]::Max(1, [Math]::Ceiling([double]$Operation.pages))
             if ($Operation.direction -eq "down" -or $Operation.direction -eq "right") { $delta = -1 * $delta }
-            $point = Get-OrcaElementScreenPoint $element
-            if ($null -eq $point) { $point = Get-OrcaScreenPoint $Operation $windowFrame }
-            [void][OrcaDesktopWin32]::SetForegroundWindow($handle)
-            [void][OrcaDesktopWin32]::SetCursorPos([int]$point.x, [int]$point.y)
-            [OrcaDesktopWin32]::mouse_event($MouseEvents.Wheel, 0, 0, $delta, [UIntPtr]::Zero)
+            $point = Get-SerperElementScreenPoint $element
+            if ($null -eq $point) { $point = Get-SerperScreenPoint $Operation $windowFrame }
+            [void][SerperDesktopWin32]::SetForegroundWindow($handle)
+            [void][SerperDesktopWin32]::SetCursorPos([int]$point.x, [int]$point.y)
+            [SerperDesktopWin32]::mouse_event($MouseEvents.Wheel, 0, 0, $delta, [UIntPtr]::Zero)
             $action = [pscustomobject]@{ path = "synthetic"; actionName = "scroll"; fallbackReason = $null }
         }
         "drag" {
-            $from = Get-OrcaElementScreenPoint $fromElement
+            $from = Get-SerperElementScreenPoint $fromElement
             if ($null -eq $from -and $null -ne $Operation.fromElement) { throw "stale element frame; run get-app-state again and use a fresh element index" }
             if ($null -eq $from) { $from = @{ x = $windowFrame.x + [double]$Operation.from_x; y = $windowFrame.y + [double]$Operation.from_y } }
-            $to = Get-OrcaElementScreenPoint $toElement
+            $to = Get-SerperElementScreenPoint $toElement
             if ($null -eq $to -and $null -ne $Operation.toElement) { throw "stale element frame; run get-app-state again and use a fresh element index" }
             if ($null -eq $to) { $to = @{ x = $windowFrame.x + [double]$Operation.to_x; y = $windowFrame.y + [double]$Operation.to_y } }
-            Send-OrcaDrag $handle $from $to
+            Send-SerperDrag $handle $from $to
             $action = [pscustomobject]@{ path = "synthetic"; actionName = "drag"; fallbackReason = $null }
         }
         "type_text" {
-            Send-OrcaText $handle ([string]$Operation.text)
+            Send-SerperText $handle ([string]$Operation.text)
             $action = [pscustomobject]@{ path = "synthetic"; actionName = "typeText"; fallbackReason = $null }
         }
         "press_key" {
-            Send-OrcaKey $handle ([string]$Operation.key)
+            Send-SerperKey $handle ([string]$Operation.key)
             $action = [pscustomobject]@{ path = "synthetic"; actionName = "pressKey"; fallbackReason = $null }
         }
         "hotkey" {
-            Send-OrcaHotkey $handle ([string]$Operation.key)
+            Send-SerperHotkey $handle ([string]$Operation.key)
             $action = [pscustomobject]@{ path = "synthetic"; actionName = "hotkey"; fallbackReason = $null; verification = [pscustomobject]@{ state = "unverified"; reason = "synthetic_input" } }
         }
         "paste_text" {
-            Send-OrcaPasteText $handle ([string]$Operation.text)
+            Send-SerperPasteText $handle ([string]$Operation.text)
             $action = [pscustomobject]@{ path = "clipboard"; actionName = "paste"; fallbackReason = $null; verification = [pscustomobject]@{ state = "unverified"; reason = "clipboard_paste" } }
         }
         "set_value" {
-            if ($null -eq $element -or -not (Set-OrcaElementValue $element ([string]$Operation.value))) {
+            if ($null -eq $element -or -not (Set-SerperElementValue $element ([string]$Operation.value))) {
                 throw "element value is not settable"
             }
             $action = [pscustomobject]@{ path = "accessibility"; actionName = "setValue"; fallbackReason = $null }
@@ -919,20 +919,20 @@ function Invoke-OrcaOperation($Operation) {
     }
 
     try {
-        $snapshot = New-OrcaSnapshot $Operation.app $includeScreenshot $Operation.windowId $Operation.windowIndex
+        $snapshot = New-SerperSnapshot $Operation.app $includeScreenshot $Operation.windowId $Operation.windowIndex
     } catch {
         if ($null -eq $Operation.windowId -and $null -eq $Operation.windowIndex) { throw }
         if ($null -eq $action.verification) {
             $action | Add-Member -NotePropertyName verification -NotePropertyValue ([pscustomobject]@{ state = "unverified"; reason = "window_changed" })
         }
-        $snapshot = New-OrcaSnapshot $Operation.app $includeScreenshot $null $null
+        $snapshot = New-SerperSnapshot $Operation.app $includeScreenshot $null $null
     }
     [pscustomobject]@{ ok = $true; action = $action; snapshot = $snapshot }
 }
 
 try {
-    $operation = Read-OrcaOperation $OperationPath
-    Write-OrcaJson (Invoke-OrcaOperation $operation)
+    $operation = Read-SerperOperation $OperationPath
+    Write-SerperJson (Invoke-SerperOperation $operation)
 } catch {
-    Write-OrcaJson ([pscustomobject]@{ ok = $false; error = [string]$_.Exception.Message })
+    Write-SerperJson ([pscustomobject]@{ ok = $false; error = [string]$_.Exception.Message })
 }

@@ -1,5 +1,5 @@
 import type { Page } from '@stablyai/playwright-test'
-import { test, expect } from './helpers/orca-app'
+import { test, expect } from './helpers/serper-app'
 import { waitForActiveWorktree, waitForSessionReady } from './helpers/store'
 
 type CreatePRPayload = {
@@ -79,7 +79,7 @@ async function seedCreatePREligibleBranch(
       number: 73,
       title: 'Create PR from E2E',
       state: 'open' as const,
-      url: 'https://github.com/acme/orca/pull/73',
+      url: 'https://github.com/acme/serper/pull/73',
       checksStatus: 'pending' as const,
       updatedAt: '2026-05-15T00:00:00.000Z',
       mergeable: 'UNKNOWN' as const
@@ -144,7 +144,7 @@ async function seedCreatePREligibleBranch(
         return {
           ok: true as const,
           number: 73,
-          url: 'https://github.com/acme/orca/pull/73'
+          url: 'https://github.com/acme/serper/pull/73'
         }
       }
     }))
@@ -156,24 +156,24 @@ async function seedCreatePREligibleBranch(
 }
 
 test.describe('Source Control create pull request', () => {
-  test.beforeEach(async ({ orcaPage }) => {
-    await waitForSessionReady(orcaPage)
-    await waitForActiveWorktree(orcaPage)
+  test.beforeEach(async ({ serperPage }) => {
+    await waitForSessionReady(serperPage)
+    await waitForActiveWorktree(serperPage)
   })
 
   test('opens the PR dialog from Source Control and creates the pull request', async ({
-    orcaPage
+    serperPage
   }) => {
-    const { branch, worktreeId } = await seedCreatePREligibleBranch(orcaPage)
-    await openSourceControl(orcaPage)
-    await forceCreatePREligibleStatus(orcaPage, worktreeId, branch)
+    const { branch, worktreeId } = await seedCreatePREligibleBranch(serperPage)
+    await openSourceControl(serperPage)
+    await forceCreatePREligibleStatus(serperPage, worktreeId, branch)
 
-    const createButton = orcaPage.getByRole('button', { name: 'Create PR' })
+    const createButton = serperPage.getByRole('button', { name: 'Create PR' })
     await expect(createButton).toBeVisible({ timeout: 10_000 })
     await expect(createButton).toBeEnabled()
     await createButton.click()
 
-    const dialog = orcaPage.getByRole('dialog', { name: 'Create Pull Request' })
+    const dialog = serperPage.getByRole('dialog', { name: 'Create Pull Request' })
     await expect(dialog).toBeVisible()
     await expect(dialog).toContainText(branch)
     await expect(dialog.getByLabel('Base branch')).toHaveValue('main')
@@ -183,9 +183,9 @@ test.describe('Source Control create pull request', () => {
     await dialog.getByRole('button', { name: 'Create PR' }).click()
 
     await expect(dialog).toBeHidden({ timeout: 10_000 })
-    await expect(orcaPage.getByText('Create PR from E2E')).toBeVisible({ timeout: 10_000 })
+    await expect(serperPage.getByText('Create PR from E2E')).toBeVisible({ timeout: 10_000 })
 
-    const payloads = await orcaPage.evaluate(
+    const payloads = await serperPage.evaluate(
       () => (window as unknown as { __createPRPayloads: CreatePRPayload[] }).__createPRPayloads
     )
     expect(payloads).toHaveLength(1)

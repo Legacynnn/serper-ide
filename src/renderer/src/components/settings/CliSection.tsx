@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Copy, FolderOpen, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import type { CliInstallStatus } from '../../../../shared/cli-install-types'
-import { ORCA_CLI_SKILL_INSTALL_COMMAND } from '@/lib/agent-feature-install-commands'
+import { SERPER_CLI_SKILL_INSTALL_COMMAND } from '@/lib/agent-feature-install-commands'
 import { Button } from '../ui/button'
 import {
   Dialog,
@@ -31,13 +31,13 @@ function getRevealLabel(platform: string): string {
 
 function getInstallDescription(platform: string): string {
   if (platform === 'darwin') {
-    return 'Register `orca` in /usr/local/bin.'
+    return 'Register `serper` in /usr/local/bin.'
   }
   if (platform === 'linux') {
-    return 'Register `orca` in ~/.local/bin.'
+    return 'Register `serper` in ~/.local/bin.'
   }
   if (platform === 'win32') {
-    return 'Register `orca` in your user PATH.'
+    return 'Register `serper` in your user PATH.'
   }
   return 'CLI registration is not yet available on this platform.'
 }
@@ -76,9 +76,9 @@ export function CliSection({ currentPlatform }: CliSectionProps): React.JSX.Elem
       const next = await window.api.cli.install()
       setStatus(next)
       setDialogOpen(false)
-      toast.success('Registered `orca` in PATH.')
+      toast.success('Registered `serper` in PATH.')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to register `orca` in PATH.')
+      toast.error(error instanceof Error ? error.message : 'Failed to register `serper` in PATH.')
     } finally {
       setBusyAction(null)
     }
@@ -90,9 +90,9 @@ export function CliSection({ currentPlatform }: CliSectionProps): React.JSX.Elem
       const next = await window.api.cli.remove()
       setStatus(next)
       setDialogOpen(false)
-      toast.success('Removed `orca` from PATH.')
+      toast.success('Removed `serper` from PATH.')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to remove `orca` from PATH.')
+      toast.error(error instanceof Error ? error.message : 'Failed to remove `serper` from PATH.')
     } finally {
       setBusyAction(null)
     }
@@ -110,9 +110,9 @@ export function CliSection({ currentPlatform }: CliSectionProps): React.JSX.Elem
   return (
     <section className="space-y-4">
       <div className="space-y-1">
-        <h2 className="text-sm font-semibold">Orca CLI</h2>
+        <h2 className="text-sm font-semibold">Serper CLI</h2>
         <p className="text-xs text-muted-foreground">
-          Use Orca from your terminal to open the app, manage worktrees, and interact with Orca
+          Use Serper from your terminal to open the app, manage worktrees, and interact with Serper
           terminals.
         </p>
       </div>
@@ -209,7 +209,7 @@ export function CliSection({ currentPlatform }: CliSectionProps): React.JSX.Elem
             <div className="space-y-0.5">
               <Label>Agent skills</Label>
               <p className="text-xs text-muted-foreground">
-                Install skills so agents know how to use Orca and report status.
+                Install skills so agents know how to use Serper and report status.
               </p>
             </div>
 
@@ -218,7 +218,7 @@ export function CliSection({ currentPlatform }: CliSectionProps): React.JSX.Elem
                 <p className="text-xs text-muted-foreground">CLI skill</p>
                 <div className="inline-flex max-w-full items-center gap-2 rounded-lg border border-border/60 bg-background/60 px-3 py-2">
                   <code className="overflow-x-auto whitespace-nowrap text-[11px] text-muted-foreground">
-                    {ORCA_CLI_SKILL_INSTALL_COMMAND}
+                    {SERPER_CLI_SKILL_INSTALL_COMMAND}
                   </code>
                   <TooltipProvider delayDuration={250}>
                     <Tooltip>
@@ -227,7 +227,7 @@ export function CliSection({ currentPlatform }: CliSectionProps): React.JSX.Elem
                           variant="ghost"
                           size="icon-xs"
                           onClick={() =>
-                            void handleCopySkillInstallCommand(ORCA_CLI_SKILL_INSTALL_COMMAND)
+                            void handleCopySkillInstallCommand(SERPER_CLI_SKILL_INSTALL_COMMAND)
                           }
                           aria-label="Copy CLI skill install command"
                         >
@@ -250,12 +250,12 @@ export function CliSection({ currentPlatform }: CliSectionProps): React.JSX.Elem
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {isEnabled ? 'Remove `orca` from PATH?' : 'Register `orca` in PATH?'}
+              {isEnabled ? 'Remove `serper` from PATH?' : 'Register `serper` in PATH?'}
             </DialogTitle>
             <DialogDescription>
               {isEnabled
-                ? 'This removes the shell command symlink. Orca itself remains installed.'
-                : `Orca will register ${status?.commandPath ?? '`orca`'} so the command works from your terminal.`}
+                ? 'This removes the shell command symlink. Serper itself remains installed.'
+                : `Serper will register ${status?.commandPath ?? '`serper`'} so the command works from your terminal.`}
             </DialogDescription>
           </DialogHeader>
           {status?.commandPath ? (

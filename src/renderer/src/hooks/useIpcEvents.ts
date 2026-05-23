@@ -509,7 +509,7 @@ export function useIpcEvents(): void {
           return
         }
         // Why: diff before vs. after fetchWorktrees to detect server-side
-        // deletions (CLI `orca worktree rm`, other window, out-of-band RPC)
+        // deletions (CLI `serper worktree rm`, other window, out-of-band RPC)
         // and purge worktree-scoped state for removed ids. Without this,
         // `ptyIdsByTabId` would retain entries for tabs whose worktree is
         // gone, and SessionsStatusSegment's `boundPtyIds` set would keep
@@ -1189,7 +1189,7 @@ export function useIpcEvents(): void {
       })
     )
 
-    // Why: `orca tab switch --focus` lands here after the bridge's state-only
+    // Why: `serper tab switch --focus` lands here after the bridge's state-only
     // `tabSwitch`. We deliberately DO NOT call `setActiveWorktree` — multiple
     // agents drive browsers in parallel worktrees, so a global focus call from
     // one agent's tab switch would steal the user's view from whichever
@@ -1218,7 +1218,7 @@ export function useIpcEvents(): void {
     )
 
     unsubs.push(
-      window.api.browser.onOpenLinkInOrcaTab(({ browserPageId, url }) => {
+      window.api.browser.onOpenLinkInSerperTab(({ browserPageId, url }) => {
         if (isRuntimeEnvironmentActive()) {
           return
         }
@@ -1229,10 +1229,10 @@ export function useIpcEvents(): void {
         if (!sourcePage) {
           return
         }
-        // Why: the guest process can request "open this link in Orca", but it
-        // does not own Orca's worktree/tab model. Resolve the source page's
+        // Why: the guest process can request "open this link in Serper", but it
+        // does not own Serper's worktree/tab model. Resolve the source page's
         // worktree and create a new outer browser tab so the link opens as a
-        // separate tab in the outer Orca tab bar.
+        // separate tab in the outer Serper tab bar.
         store.createBrowserTab(sourcePage.worktreeId, url, { title: url })
       })
     )

@@ -9,7 +9,7 @@ import { gitExecFileSync } from './git/runner'
 import { isWslPath, parseWslPath, toWindowsWslPath, toLinuxPath } from './wsl'
 import type {
   HookCommandSourcePolicy,
-  OrcaHooks,
+  SerperHooks,
   Repo,
   SetupDecision,
   SetupRunPolicy,
@@ -27,11 +27,11 @@ function getHookShell(): string | undefined {
 }
 
 /**
- * Parse a simple orca.yaml file. Handles only the supported `scripts:` and
+ * Parse a simple serper.yaml file. Handles only the supported `scripts:` and
  * `issueCommand:` keys with multiline string values (YAML block scalar `|`).
  */
-export function parseOrcaYaml(content: string): OrcaHooks | null {
-  const hooks: OrcaHooks = { scripts: {} }
+export function parseSerperYaml(content: string): SerperHooks | null {
+  const hooks: SerperHooks = { scripts: {} }
   const lines = content.split(/\r?\n/)
 
   let currentSection: 'scripts' | 'issueCommand' | null = null
@@ -91,7 +91,7 @@ export function parseOrcaYaml(content: string): OrcaHooks | null {
     }
 
     if (currentSection === 'issueCommand' && line.startsWith('  ')) {
-      // Why: `issueCommand` is a top-level scalar in `orca.yaml`, so its block
+      // Why: `issueCommand` is a top-level scalar in `serper.yaml`, so its block
       // content must stay separate from the `scripts:` parser rather than being
       // shoehorned into that section's indentation rules.
       issueCommandValue += `${line.slice(2)}\n`
@@ -111,49 +111,49 @@ export function parseOrcaYaml(content: string): OrcaHooks | null {
 }
 
 /**
- * Load hooks from orca.yaml in the given repo root.
+ * Load hooks from serper.yaml in the given repo root.
  */
-export function loadHooks(repoPath: string): OrcaHooks | null {
-  const yamlPath = join(repoPath, 'orca.yaml')
+export function loadHooks(repoPath: string): SerperHooks | null {
+  const yamlPath = join(repoPath, 'serper.yaml')
   if (!existsSync(yamlPath)) {
     return null
   }
 
   try {
     const content = readFileSync(yamlPath, 'utf-8')
-    return parseOrcaYaml(content)
+    return parseSerperYaml(content)
   } catch {
     return null
   }
 }
 
 /**
- * Check whether an orca.yaml exists for a repo.
+ * Check whether an serper.yaml exists for a repo.
  */
 export function hasHooksFile(repoPath: string): boolean {
-  return existsSync(join(repoPath, 'orca.yaml'))
+  return existsSync(join(repoPath, 'serper.yaml'))
 }
 
-// Why: when a newer Orca release adds a top-level key to `orca.yaml` (like
+// Why: when a newer Serper release adds a top-level key to `serper.yaml` (like
 // `issueCommand` was added here), older versions that don't recognise it will
-// return `null` from `parseOrcaYaml` and show a confusing "could not be parsed"
+// return `null` from `parseSerperYaml` and show a confusing "could not be parsed"
 // error.  Detecting well-formed but unrecognised keys lets the UI suggest an
 // update instead of implying the file is broken.
-const RECOGNIZED_ORCA_YAML_KEYS = new Set(['scripts', 'issueCommand'])
+const RECOGNIZED_SERPER_YAML_KEYS = new Set(['scripts', 'issueCommand'])
 
 /**
- * Return true when `orca.yaml` contains at least one top-level key that this
- * version of Orca does not handle.
+ * Return true when `serper.yaml` contains at least one top-level key that this
+ * version of Serper does not handle.
  */
-export function hasUnrecognizedOrcaYamlKeys(repoPath: string): boolean {
+export function hasUnrecognizedSerperYamlKeys(repoPath: string): boolean {
   try {
-    const content = readFileSync(join(repoPath, 'orca.yaml'), 'utf-8')
+    const content = readFileSync(join(repoPath, 'serper.yaml'), 'utf-8')
     return content.split(/\r?\n/).some((line) => {
       // Why: bare `key:` at end-of-line (no trailing space) is valid YAML for
       // a mapping with a block value on the next line. Match both forms so
       // newer keys like `futureFeature:\n  nested` are still detected.
       const m = line.match(/^([A-Za-z][A-Za-z0-9_-]*):(\s|$)/)
-      return m != null && !RECOGNIZED_ORCA_YAML_KEYS.has(m[1])
+      return m != null && !RECOGNIZED_SERPER_YAML_KEYS.has(m[1])
     })
   } catch {
     return false
@@ -161,15 +161,15 @@ export function hasUnrecognizedOrcaYamlKeys(repoPath: string): boolean {
 }
 
 // ─── Issue command files ────────────────────────────────────────────────
-// Why: `orca.yaml` is the tracked, project-wide defaults surface, while
-// `.orca/issue-command` remains the per-user override. Keeping the local file in
-// `.orca/` lets users customize agent automation without editing committed config.
+// Why: `serper.yaml` is the tracked, project-wide defaults surface, while
+// `.serper/issue-command` remains the per-user override. Keeping the local file in
+// `.serper/` lets users customize agent automation without editing committed config.
 
-const ORCA_DIR = '.orca'
+const SERPER_DIR = '.serper'
 const ISSUE_COMMAND_FILENAME = 'issue-command'
 
 export function getIssueCommandFilePath(repoPath: string): string {
-  return join(repoPath, ORCA_DIR, ISSUE_COMMAND_FILENAME)
+  return join(repoPath, SERPER_DIR, ISSUE_COMMAND_FILENAME)
 }
 
 export function getSharedIssueCommand(repoPath: string): string | null {
@@ -213,9 +213,9 @@ export function readIssueCommand(repoPath: string): ResolvedIssueCommand {
 }
 
 /**
- * Write the per-user issue command override to `{repoRoot}/.orca/issue-command`.
- * Creates `.orca/` and ensures it is in `.gitignore` on first write.
- * If content is empty, deletes only the override so the shared `orca.yaml`
+ * Write the per-user issue command override to `{repoRoot}/.serper/issue-command`.
+ * Creates `.serper/` and ensures it is in `.gitignore` on first write.
+ * If content is empty, deletes only the override so the shared `serper.yaml`
  * command becomes effective again.
  */
 export function writeIssueCommand(repoPath: string, content: string): void {
@@ -228,11 +228,11 @@ export function writeIssueCommand(repoPath: string, content: string): void {
       return
     }
 
-    const orcaDir = join(repoPath, ORCA_DIR)
-    if (!existsSync(orcaDir)) {
-      mkdirSync(orcaDir, { recursive: true })
+    const serperDir = join(repoPath, SERPER_DIR)
+    if (!existsSync(serperDir)) {
+      mkdirSync(serperDir, { recursive: true })
     }
-    ensureOrcaDirIgnored(repoPath)
+    ensureSerperDirIgnored(repoPath)
     writeFileSync(filePath, `${trimmed}\n`, 'utf-8')
   } catch (err) {
     console.error('[hooks] Failed to write issue command:', err)
@@ -243,24 +243,24 @@ export function writeIssueCommand(repoPath: string, content: string): void {
 }
 
 /**
- * Ensure `.orca` is listed in the repo's `.gitignore` so the per-user
+ * Ensure `.serper` is listed in the repo's `.gitignore` so the per-user
  * directory is never accidentally committed.
  */
-function ensureOrcaDirIgnored(repoPath: string): void {
+function ensureSerperDirIgnored(repoPath: string): void {
   const gitignorePath = join(repoPath, '.gitignore')
   try {
     if (existsSync(gitignorePath)) {
       const content = readFileSync(gitignorePath, 'utf-8')
-      if (/^\.orca\/?$/m.test(content)) {
+      if (/^\.serper\/?$/m.test(content)) {
         return
       }
       const separator = content.endsWith('\n') ? '' : '\n'
-      writeFileSync(gitignorePath, `${content}${separator}.orca\n`, 'utf-8')
+      writeFileSync(gitignorePath, `${content}${separator}.serper\n`, 'utf-8')
     } else {
-      writeFileSync(gitignorePath, '.orca\n', 'utf-8')
+      writeFileSync(gitignorePath, '.serper\n', 'utf-8')
     }
   } catch {
-    console.warn('[hooks] Could not update .gitignore to exclude .orca')
+    console.warn('[hooks] Could not update .gitignore to exclude .serper')
   }
 }
 
@@ -283,7 +283,7 @@ function getEffectiveHookScript(
 
   // Why: existing users persisted local setup/archive scripts before
   // commandSourcePolicy existed. Without a fallback the new default
-  // 'shared-only' would silently drop those scripts when orca.yaml is missing.
+  // 'shared-only' would silently drop those scripts when serper.yaml is missing.
   if (legacyFallback) {
     return shared || local || undefined
   }
@@ -297,7 +297,7 @@ function hasLegacyLocalScripts(repo: Repo): boolean {
   )
 }
 
-export function getEffectiveHooks(repo: Repo, worktreePath?: string): OrcaHooks | null {
+export function getEffectiveHooks(repo: Repo, worktreePath?: string): SerperHooks | null {
   const hooksRoot = worktreePath ?? repo.path
   const yamlHooks = loadHooks(hooksRoot)
   const yamlFileExists = hasHooksFile(hooksRoot)
@@ -318,7 +318,7 @@ export function getEffectiveHooks(repo: Repo, worktreePath?: string): OrcaHooks 
     return null
   }
 
-  // Why: committed `orca.yaml` and local Settings commands can intentionally
+  // Why: committed `serper.yaml` and local Settings commands can intentionally
   // coexist, but the source policy defines whether the committed file is an
   // authoritative boundary, local settings are authoritative, or both run.
   return {
@@ -374,7 +374,7 @@ export function getSetupCommandSource(
   }
 
   // Why: pre-policy persisted local setup scripts must keep working when
-  // orca.yaml is missing; otherwise upgrading silently drops the legacy hook.
+  // serper.yaml is missing; otherwise upgrading silently drops the legacy hook.
   if (rawPolicy === undefined && !yamlFileExists && localSetup && hasLegacyLocalScripts(repo)) {
     return { source: 'local', command: localSetup }
   }
@@ -384,9 +384,9 @@ export function getSetupCommandSource(
 
 function getSetupEnvVars(repo: Repo, worktreePath: string): Record<string, string> {
   return {
-    ORCA_ROOT_PATH: repo.path,
-    ORCA_WORKTREE_PATH: worktreePath,
-    ORCA_WORKSPACE_NAME: getRuntimePathBasename(worktreePath),
+    SERPER_ROOT_PATH: repo.path,
+    SERPER_WORKTREE_PATH: worktreePath,
+    SERPER_WORKSPACE_NAME: getRuntimePathBasename(worktreePath),
     // Compat with conductor.json users
     CONDUCTOR_ROOT_PATH: repo.path,
     GHOSTX_ROOT_PATH: repo.path
@@ -460,7 +460,9 @@ function createWorktreeRunnerScript(
   // Why: linked git worktrees use a `.git` file that points at the real gitdir,
   // so writing under `${worktreePath}/.git/...` fails. `git rev-parse --git-path`
   // resolves the actual per-worktree git storage path safely across platforms.
-  const gitRelPath = useWindowsFormat ? `orca/${runnerBaseName}.cmd` : `orca/${runnerBaseName}.sh`
+  const gitRelPath = useWindowsFormat
+    ? `serper/${runnerBaseName}.cmd`
+    : `serper/${runnerBaseName}.sh`
   let runnerScriptPath = getGitPath(worktreePath, gitRelPath)
 
   // Why: for WSL worktrees, getGitPath returns a Linux path (e.g. /home/user/...)
@@ -484,8 +486,8 @@ function createWorktreeRunnerScript(
     chmodSync(runnerScriptPath, 0o755)
   }
 
-  // Why: when the worktree is on WSL, env vars like ORCA_ROOT_PATH and
-  // ORCA_WORKTREE_PATH contain Windows UNC paths. The setup script runs
+  // Why: when the worktree is on WSL, env vars like SERPER_ROOT_PATH and
+  // SERPER_WORKTREE_PATH contain Windows UNC paths. The setup script runs
   // inside WSL bash, so translate them to Linux paths.
   if (wslWorktree) {
     for (const key of Object.keys(envVars)) {
@@ -522,8 +524,8 @@ export function runHook(
     const escapedCwd = wslInfo.linuxPath.replace(/'/g, "'\\''")
     const escapedScript = script.replace(/'/g, "'\\''")
     const bashCmd = `cd '${escapedCwd}' && ${escapedScript}`
-    // Why: translate ORCA_ROOT_PATH / ORCA_WORKTREE_PATH to Linux paths so
-    // hook scripts that reference $ORCA_WORKTREE_PATH get usable paths
+    // Why: translate SERPER_ROOT_PATH / SERPER_WORKTREE_PATH to Linux paths so
+    // hook scripts that reference $SERPER_WORKTREE_PATH get usable paths
     // inside WSL, not Windows UNC paths.
     const envVars = getSetupEnvVars(repo, cwd)
     const wslEnv: Record<string, string> = {}

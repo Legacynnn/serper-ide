@@ -33,9 +33,9 @@ function prepareShellConfigDirEnv(agentId: string): { ok: true; env?: NodeJS.Pro
   }
   const sourceVar =
     agentId === 'opencode'
-      ? 'ORCA_OPENCODE_SOURCE_CONFIG_DIR'
+      ? 'SERPER_OPENCODE_SOURCE_CONFIG_DIR'
       : agentId === 'pi'
-        ? 'ORCA_PI_SOURCE_AGENT_DIR'
+        ? 'SERPER_PI_SOURCE_AGENT_DIR'
         : undefined
 
   const value = readInheritedOrShellEnvVar(configVar, sourceVar)
@@ -43,9 +43,9 @@ function prepareShellConfigDirEnv(agentId: string): { ok: true; env?: NodeJS.Pro
     return { ok: true }
   }
 
-  // Why: GUI-launched Orca may not inherit shell startup exports, but these
-  // vars point the headless CLI at the user's auth/config root. Nested Orca
-  // launches inherit PTY overlays, so prefer ORCA_*_SOURCE_* when present.
+  // Why: GUI-launched Serper may not inherit shell startup exports, but these
+  // vars point the headless CLI at the user's auth/config root. Nested Serper
+  // launches inherit PTY overlays, so prefer SERPER_*_SOURCE_* when present.
   return { ok: true, env: { ...cloneProcessEnv(), [configVar]: value } }
 }
 

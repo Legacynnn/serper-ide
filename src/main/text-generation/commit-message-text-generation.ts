@@ -197,7 +197,7 @@ function userFacingAgentFailure(label: string): string {
 }
 
 function userFacingUnsafeWindowsBatchArgs(label: string): string {
-  return `${label} cannot be run as a Windows batch command with the prompt in argv. Remove {prompt} so Orca sends the prompt on stdin.`
+  return `${label} cannot be run as a Windows batch command with the prompt in argv. Remove {prompt} so Serper sends the prompt on stdin.`
 }
 
 function toModelDiscoveryCapability(

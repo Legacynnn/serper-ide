@@ -269,7 +269,7 @@ async function fetchViaOAuth(token: string): Promise<ProviderRateLimits> {
         Authorization: `Bearer ${token}`,
         'anthropic-beta': OAUTH_BETA_HEADER,
         // Why: Claude's OAuth usage endpoint is the Claude Code usage API;
-        // matching the CLI user-agent keeps Orca aligned with that contract.
+        // matching the CLI user-agent keeps Serper aligned with that contract.
         'User-Agent': CLAUDE_CODE_USER_AGENT
       },
       signal: controller.signal

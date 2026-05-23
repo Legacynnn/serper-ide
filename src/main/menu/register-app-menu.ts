@@ -106,7 +106,7 @@ function buildAndApplyMenu(options: RegisterAppMenuOptions): void {
   // Why: the macOS app-menu (named after the app) is mandatory on darwin and
   // owns hide/hideOthers/unhide/services/quit roles that only make sense in
   // the system menu bar. On Windows/Linux that menu would render as a
-  // redundant "Orca" entry with roles that don't apply, so we omit it there
+  // redundant "Serper" entry with roles that don't apply, so we omit it there
   // and distribute its items across File / Help instead.
   const macAppMenu: Electron.MenuItemConstructorOptions = {
     label: app.name,

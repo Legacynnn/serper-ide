@@ -684,7 +684,7 @@ describe('generateCommitMessageFromContext', () => {
       {
         agentId: 'custom',
         model: '',
-        customAgentCommand: 'orca-test-agent-nope'
+        customAgentCommand: 'serper-test-agent-nope'
       },
       {
         kind: 'local',
@@ -701,7 +701,7 @@ describe('generateCommitMessageFromContext', () => {
       message: 'Add README note'
     })
     expect(spawnMock).toHaveBeenCalledWith(
-      'orca-test-agent-nope',
+      'serper-test-agent-nope',
       [],
       expect.objectContaining({
         env: expect.objectContaining({ CODEX_HOME: '/managed/codex-home' })
@@ -877,7 +877,7 @@ describe('generateCommitMessageFromContext', () => {
       expect(result).toEqual({
         success: false,
         error:
-          'C:/tools/agent.cmd cannot be run as a Windows batch command with the prompt in argv. Remove {prompt} so Orca sends the prompt on stdin.'
+          'C:/tools/agent.cmd cannot be run as a Windows batch command with the prompt in argv. Remove {prompt} so Serper sends the prompt on stdin.'
       })
       expect(spawnMock).not.toHaveBeenCalled()
     })

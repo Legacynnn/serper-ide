@@ -3,7 +3,7 @@ import { homedir } from 'os'
 import { basename, join } from 'path'
 import { app } from 'electron'
 import {
-  ORCA_PI_AGENT_STATUS_EXTENSION_FILE,
+  SERPER_PI_AGENT_STATUS_EXTENSION_FILE,
   getPiAgentStatusExtensionSource
 } from './agent-status-extension-source'
 import {
@@ -18,8 +18,8 @@ import {
 // keeps holding after the helper moved to src/main/pty/overlay-mirror.ts.
 export const isSafeDescendCandidate = sharedIsSafeDescendCandidate
 
-const ORCA_PI_EXTENSION_FILE = 'orca-titlebar-spinner.ts'
-const ORCA_PI_PREFILL_EXTENSION_FILE = 'orca-prefill.ts'
+const SERPER_PI_EXTENSION_FILE = 'serper-titlebar-spinner.ts'
+const SERPER_PI_PREFILL_EXTENSION_FILE = 'serper-prefill.ts'
 const PI_AGENT_DIR_NAME = '.pi'
 const PI_AGENT_SUBDIR = 'agent'
 const PI_OVERLAY_DIR_NAME = 'pi-agent-overlays'
@@ -31,13 +31,13 @@ const PI_OVERLAY_DIR_NAME = 'pi-agent-overlays'
 // linked GitHub/Linear issue URL into pi without racing pi's lengthy
 // startup output (banner + skills + extensions) against the bracketed-
 // paste readiness detector.
-export const ORCA_PI_PREFILL_ENV_VAR = 'ORCA_PI_PREFILL'
+export const SERPER_PI_PREFILL_ENV_VAR = 'SERPER_PI_PREFILL'
 
 // Why: pi exposes `pi.ui.setEditorText(text)` from inside an extension's
 // session_start handler — that's the equivalent of Claude's `--prefill`.
 // We can't use a CLI flag (pi has none) and bracketed-paste-after-ready
 // races against pi's startup output, so we ship a tiny extension that
-// reads ORCA_PI_PREFILL on session_start and types it into the editor.
+// reads SERPER_PI_PREFILL on session_start and types it into the editor.
 // The env var is consumed (deleted from process.env) so /new in the same
 // session doesn't re-prefill.
 function getPiPrefillExtensionSource(): string {
@@ -45,9 +45,9 @@ function getPiPrefillExtensionSource(): string {
     'export default function (pi) {',
     "  pi.on('session_start', async (event, ctx) => {",
     "    if (event.reason !== 'startup') return",
-    `    const prefill = process.env.${ORCA_PI_PREFILL_ENV_VAR}`,
+    `    const prefill = process.env.${SERPER_PI_PREFILL_ENV_VAR}`,
     '    if (!prefill) return',
-    `    delete process.env.${ORCA_PI_PREFILL_ENV_VAR}`,
+    `    delete process.env.${SERPER_PI_PREFILL_ENV_VAR}`,
     '    try {',
     '      ctx.ui.setEditorText(prefill)',
     '    } catch {}',
@@ -161,7 +161,7 @@ export class PiTitlebarExtensionService {
 
       // Why: PI_CODING_AGENT_DIR controls Pi's entire state tree, not just
       // extension discovery. Mirror the user's top-level Pi resources into the
-      // overlay so enabling Orca's titlebar extension preserves auth, sessions,
+      // overlay so enabling Serper's titlebar extension preserves auth, sessions,
       // skills, prompts, themes, and any future files Pi stores there.
       mirrorEntry(sourcePath, join(overlayDir, basename(sourcePath)))
     }
@@ -175,7 +175,7 @@ export class PiTitlebarExtensionService {
       this.safeRemoveOverlay(overlayDir)
     } catch {
       // Why: on Windows the overlay directory can be locked by another process
-      // (e.g. antivirus, indexer, or a previous Orca session that didn't clean up).
+      // (e.g. antivirus, indexer, or a previous Serper session that didn't clean up).
       // If we can't remove the stale overlay, fall back to the user's own Pi agent
       // dir so the terminal still spawns — the titlebar spinner is not worth
       // blocking the PTY.
@@ -189,12 +189,12 @@ export class PiTitlebarExtensionService {
       const extensionsDir = join(overlayDir, 'extensions')
       mkdirSync(extensionsDir, { recursive: true })
       // Why: Pi auto-loads global extensions from PI_CODING_AGENT_DIR/extensions.
-      // Add Orca's titlebar extension alongside the user's existing extensions
-      // instead of replacing that directory, otherwise Orca terminals would
-      // silently disable the user's Pi customization inside Orca only.
-      writeFileSync(join(extensionsDir, ORCA_PI_EXTENSION_FILE), getPiTitlebarExtensionSource())
+      // Add Serper's titlebar extension alongside the user's existing extensions
+      // instead of replacing that directory, otherwise Serper terminals would
+      // silently disable the user's Pi customization inside Serper only.
+      writeFileSync(join(extensionsDir, SERPER_PI_EXTENSION_FILE), getPiTitlebarExtensionSource())
       writeFileSync(
-        join(extensionsDir, ORCA_PI_PREFILL_EXTENSION_FILE),
+        join(extensionsDir, SERPER_PI_PREFILL_EXTENSION_FILE),
         getPiPrefillExtensionSource()
       )
       // Why: bundled status extension that bridges pi's in-process event API
@@ -202,14 +202,14 @@ export class PiTitlebarExtensionService {
       // no entry in agentStatusByPaneKey and the dashboard would fall back
       // to terminal-title heuristics like any uninstrumented CLI.
       writeFileSync(
-        join(extensionsDir, ORCA_PI_AGENT_STATUS_EXTENSION_FILE),
+        join(extensionsDir, SERPER_PI_AGENT_STATUS_EXTENSION_FILE),
         getPiAgentStatusExtensionSource()
       )
     } catch {
       // Why: overlay creation is best-effort — permission errors (EPERM/EACCES)
       // on Windows can occur when the userData directory is restricted or when
       // symlink/junction creation fails without developer mode. Fall back to the
-      // user's Pi agent dir so the terminal spawns without the Orca extension.
+      // user's Pi agent dir so the terminal spawns without the Serper extension.
       this.clearPty(ptyId)
       return existingAgentDir ? { PI_CODING_AGENT_DIR: existingAgentDir } : {}
     }

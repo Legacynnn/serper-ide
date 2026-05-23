@@ -86,7 +86,7 @@ export class CdpWsProxy {
   private buildTargetInfo(): Record<string, unknown> {
     const destroyed = this.webContents.isDestroyed()
     return {
-      targetId: 'orca-proxy-target',
+      targetId: 'serper-proxy-target',
       type: 'page',
       title: destroyed ? '' : this.webContents.getTitle(),
       url: destroyed ? '' : this.webContents.getURL(),
@@ -100,7 +100,7 @@ export class CdpWsProxy {
     if (url === '/json/version' || url === '/json/version/') {
       res.writeHead(200, { 'Content-Type': 'application/json' })
       // Why: agent-browser reads this endpoint to identify the browser. Returning
-      // "Orca/CdpWsProxy" leaks that this is an embedded automation surface, which
+      // "Serper/CdpWsProxy" leaks that this is an embedded automation surface, which
       // could affect downstream detection heuristics.
       // Why: process.versions.chrome contains the exact Chromium version
       // bundled with Electron, producing a realistic version string.
@@ -120,7 +120,7 @@ export class CdpWsProxy {
         JSON.stringify([
           {
             ...this.buildTargetInfo(),
-            id: 'orca-proxy-target',
+            id: 'serper-proxy-target',
             webSocketDebuggerUrl: `ws://127.0.0.1:${this.port}`
           }
         ])
@@ -223,12 +223,12 @@ export class CdpWsProxy {
       return
     }
     if (msg.method === 'Target.attachToTarget') {
-      this.clientSessionId = 'orca-proxy-session'
+      this.clientSessionId = 'serper-proxy-session'
       this.sendResult(clientId, { sessionId: this.clientSessionId }, client)
       return
     }
     if (msg.method === 'Browser.getVersion') {
-      // Why: returning "Orca/Electron" identifies this as an embedded automation
+      // Why: returning "Serper/Electron" identifies this as an embedded automation
       // surface to agent-browser. Use a generic Chrome product string instead.
       const chromeVersion = process.versions.chrome ?? '134.0.0.0'
       this.sendResult(

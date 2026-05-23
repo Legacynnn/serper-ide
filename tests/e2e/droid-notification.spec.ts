@@ -1,4 +1,4 @@
-import { test, expect } from './helpers/orca-app'
+import { test, expect } from './helpers/serper-app'
 import type { ElectronApplication, Page } from '@stablyai/playwright-test'
 import { getRendererTitleLog, installRendererTitleLog } from './helpers/terminal-title-log'
 import {
@@ -132,17 +132,17 @@ async function getActivePaneDescriptor(
 
 test.describe('Droid notifications', () => {
   test('Codex hook completion dispatches while its worktree is inactive', async ({
-    orcaPage,
+    serperPage,
     electronApp
   }) => {
-    await waitForSessionReady(orcaPage)
-    await waitForActiveWorktree(orcaPage)
-    await ensureTerminalVisible(orcaPage)
-    await waitForActiveTerminalManager(orcaPage, 30_000)
+    await waitForSessionReady(serperPage)
+    await waitForActiveWorktree(serperPage)
+    await ensureTerminalVisible(serperPage)
+    await waitForActiveTerminalManager(serperPage, 30_000)
     await installMainProcessNotificationDispatchSpy(electronApp)
     const endpoint = await readHookEndpoint(electronApp)
 
-    const { paneKey, worktreeId } = await getActivePaneDescriptor(orcaPage)
+    const { paneKey, worktreeId } = await getActivePaneDescriptor(serperPage)
     const prompt = `codex-hook-notify-${Date.now()}`
     await emitCodexHookStatus(endpoint, {
       paneKey,
@@ -153,7 +153,7 @@ test.describe('Droid notifications', () => {
     await expect
       .poll(
         async () =>
-          (await getAgentStatuses(orcaPage)).some(
+          (await getAgentStatuses(serperPage)).some(
             (status) =>
               status.agentType === 'codex' && status.state === 'working' && status.prompt === prompt
           ),
@@ -164,7 +164,7 @@ test.describe('Droid notifications', () => {
       )
       .toBe(true)
 
-    await createAndSwitchToOtherWorktree(orcaPage)
+    await createAndSwitchToOtherWorktree(serperPage)
 
     const finalMessage = `Codex hook completed ${Date.now()}`
     await emitCodexHookStatus(endpoint, {
@@ -177,7 +177,7 @@ test.describe('Droid notifications', () => {
     await expect
       .poll(
         async () =>
-          (await getAgentStatuses(orcaPage)).some(
+          (await getAgentStatuses(serperPage)).some(
             (status) =>
               status.agentType === 'codex' &&
               status.state === 'done' &&
@@ -215,25 +215,25 @@ test.describe('Droid notifications', () => {
   })
 
   test('recognized agent title completion dispatches one task-complete notification', async ({
-    orcaPage,
+    serperPage,
     electronApp
   }) => {
-    await waitForSessionReady(orcaPage)
-    await waitForActiveWorktree(orcaPage)
-    await ensureTerminalVisible(orcaPage)
-    await waitForActiveTerminalManager(orcaPage, 30_000)
+    await waitForSessionReady(serperPage)
+    await waitForActiveWorktree(serperPage)
+    await ensureTerminalVisible(serperPage)
+    await waitForActiveTerminalManager(serperPage, 30_000)
     // Why: contextBridge freezes window.api, so notification invokes must be
     // observed in Electron's main process rather than monkey-patched renderer-side.
     await installMainProcessNotificationDispatchSpy(electronApp)
-    await installRendererTitleLog(orcaPage)
+    await installRendererTitleLog(serperPage)
 
-    const ptyId = await waitForActivePanePtyId(orcaPage)
+    const ptyId = await waitForActivePanePtyId(serperPage)
     const marker = `__CODEX_NOTIFY_READY_${Date.now()}__`
-    await sendToTerminal(orcaPage, ptyId, `printf '${marker}\\n'\r`)
-    await waitForTerminalOutput(orcaPage, marker)
+    await sendToTerminal(serperPage, ptyId, `printf '${marker}\\n'\r`)
+    await waitForTerminalOutput(serperPage, marker)
 
-    await emitOscTitle(orcaPage, ptyId, 'Codex working')
-    await emitOscTitle(orcaPage, ptyId, 'Codex done')
+    await emitOscTitle(serperPage, ptyId, 'Codex working')
+    await emitOscTitle(serperPage, ptyId, 'Codex done')
 
     await expect
       .poll(
@@ -252,29 +252,29 @@ test.describe('Droid notifications', () => {
   })
 
   test('Factory Droid needs-input native title does not dispatch a task-complete notification', async ({
-    orcaPage,
+    serperPage,
     electronApp
   }) => {
-    await waitForSessionReady(orcaPage)
-    await waitForActiveWorktree(orcaPage)
-    await ensureTerminalVisible(orcaPage)
-    await waitForActiveTerminalManager(orcaPage, 30_000)
+    await waitForSessionReady(serperPage)
+    await waitForActiveWorktree(serperPage)
+    await ensureTerminalVisible(serperPage)
+    await waitForActiveTerminalManager(serperPage, 30_000)
     // Why: contextBridge freezes window.api, so notification invokes must be
     // observed in Electron's main process rather than monkey-patched renderer-side.
     await installMainProcessNotificationDispatchSpy(electronApp)
-    await installRendererTitleLog(orcaPage)
+    await installRendererTitleLog(serperPage)
 
-    const ptyId = await waitForActivePanePtyId(orcaPage)
+    const ptyId = await waitForActivePanePtyId(serperPage)
     const marker = `__DROID_NOTIFY_READY_${Date.now()}__`
-    await sendToTerminal(orcaPage, ptyId, `printf '${marker}\\n'\r`)
-    await waitForTerminalOutput(orcaPage, marker)
+    await sendToTerminal(serperPage, ptyId, `printf '${marker}\\n'\r`)
+    await waitForTerminalOutput(serperPage, marker)
 
-    await emitOscTitle(orcaPage, ptyId, '⠋ Droid')
-    await emitOscTitle(orcaPage, ptyId, 'Factory Droid needs input')
+    await emitOscTitle(serperPage, ptyId, '⠋ Droid')
+    await emitOscTitle(serperPage, ptyId, 'Factory Droid needs input')
 
     await expect
       .poll(
-        async () => (await getRendererTitleLog(orcaPage)).includes('Factory Droid needs input'),
+        async () => (await getRendererTitleLog(serperPage)).includes('Factory Droid needs input'),
         {
           timeout: 10_000,
           message: 'Factory Droid marker title did not land'
@@ -284,7 +284,7 @@ test.describe('Droid notifications', () => {
 
     // Why: Factory Droid can show this title while Execute is still running
     // (for example `sleep 180`); hook events own Droid status, not this title.
-    await orcaPage.waitForTimeout(500)
+    await serperPage.waitForTimeout(500)
     const dispatches = await getNotificationDispatches(electronApp)
     expect(dispatches).toEqual([])
   })

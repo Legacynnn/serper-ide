@@ -24,8 +24,8 @@ vi.mock('../git/worktree', () => ({
 
 import { BrowserManager } from './browser-manager'
 import { CdpBridge } from './cdp-bridge'
-import { OrcaRuntimeService } from '../runtime/orca-runtime'
-import { OrcaRuntimeRpcServer } from '../runtime/runtime-rpc'
+import { SerperRuntimeService } from '../runtime/serper-runtime'
+import { SerperRuntimeRpcServer } from '../runtime/runtime-rpc'
 import { readRuntimeMetadata } from '../runtime/runtime-metadata'
 
 // ── CDP response builders ──
@@ -236,7 +236,7 @@ async function sendRequest(
 // ── Tests ──
 
 describe('Browser automation pipeline (integration)', () => {
-  let server: OrcaRuntimeRpcServer
+  let server: SerperRuntimeRpcServer
   let endpoint: string
   let authToken: string
 
@@ -265,11 +265,11 @@ describe('Browser automation pipeline (integration)', () => {
     cdpBridge.setActiveTab(GUEST_WC_ID)
 
     const userDataPath = mkdtempSync(join(tmpdir(), 'browser-e2e-'))
-    const runtime = new OrcaRuntimeService()
+    const runtime = new SerperRuntimeService()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     runtime.setAgentBrowserBridge(cdpBridge as any)
 
-    server = new OrcaRuntimeRpcServer({ runtime, userDataPath })
+    server = new SerperRuntimeRpcServer({ runtime, userDataPath })
     await server.start()
 
     const metadata = readRuntimeMetadata(userDataPath)!
@@ -513,11 +513,11 @@ describe('Browser automation pipeline (integration)', () => {
     const emptyBridge = new CdpBridge(emptyManager)
 
     const userDataPath2 = mkdtempSync(join(tmpdir(), 'browser-e2e-empty-'))
-    const runtime2 = new OrcaRuntimeService()
+    const runtime2 = new SerperRuntimeService()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     runtime2.setAgentBrowserBridge(emptyBridge as any)
 
-    const server2 = new OrcaRuntimeRpcServer({ runtime: runtime2, userDataPath: userDataPath2 })
+    const server2 = new SerperRuntimeRpcServer({ runtime: runtime2, userDataPath: userDataPath2 })
     await server2.start()
 
     const metadata2 = readRuntimeMetadata(userDataPath2)!

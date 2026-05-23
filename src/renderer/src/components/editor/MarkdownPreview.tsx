@@ -128,7 +128,7 @@ const markdownPreviewSanitizeSchema = {
   protocols: {
     ...defaultSchema.protocols,
     // Why: markdown preview owns file:// click routing and authorizes the
-    // user-selected path before opening it in Orca. Sanitization must preserve
+    // user-selected path before opening it in Serper. Sanitization must preserve
     // the target so the click handler can make that security decision.
     href: [...(defaultSchema.protocols?.href ?? []), 'file'],
     src: [...(defaultSchema.protocols?.src ?? []), 'file']
@@ -1504,10 +1504,10 @@ function MarkdownAnnotationComposer({
 
   return (
     <div className="markdown-annotation-composer" onClick={(event) => event.stopPropagation()}>
-      <div className="orca-diff-comment-popover-label">{label}</div>
+      <div className="serper-diff-comment-popover-label">{label}</div>
       <textarea
         ref={textareaRef}
-        className="orca-diff-comment-popover-textarea"
+        className="serper-diff-comment-popover-textarea"
         placeholder="Add note for the AI"
         value={body}
         onChange={(event) => {
@@ -1529,7 +1529,7 @@ function MarkdownAnnotationComposer({
         }}
         rows={3}
       />
-      <div className="orca-diff-comment-popover-footer">
+      <div className="serper-diff-comment-popover-footer">
         <Button variant="ghost" size="sm" onClick={onCancel} disabled={submitting}>
           Cancel
         </Button>

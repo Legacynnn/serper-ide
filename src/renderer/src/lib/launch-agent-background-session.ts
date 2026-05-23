@@ -95,9 +95,9 @@ export async function launchAgentBackgroundSession(
   store.setTabLayout(tab.id, singlePaneLayoutSnapshot(leafId))
   const paneEnv = {
     ...startupPlan.env,
-    ORCA_PANE_KEY: paneKey,
-    ORCA_TAB_ID: tab.id,
-    ORCA_WORKTREE_ID: worktreeId
+    SERPER_PANE_KEY: paneKey,
+    SERPER_TAB_ID: tab.id,
+    SERPER_WORKTREE_ID: worktreeId
   }
   const runtimeTarget = getActiveRuntimeTarget(store.settings)
   let ptyId: string

@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
   HookCommandSourcePolicy,
-  OrcaHooks,
+  SerperHooks,
   Repo,
   RepoHookSettings,
   SetupRunPolicy
@@ -19,7 +19,7 @@ import { normalizeHookCommandSourcePolicy } from '../../../../shared/hook-comman
 
 type RepositoryHooksSectionProps = {
   repo: Repo
-  yamlHooks: OrcaHooks | null
+  yamlHooks: SerperHooks | null
   hasHooksFile: boolean
   mayNeedUpdate: boolean
   copiedTemplate: boolean
@@ -49,7 +49,7 @@ const SETUP_RUN_POLICY_OPTIONS: PolicyOption<SetupRunPolicy>[] = [
 const COMMAND_SOURCE_POLICY_OPTIONS: PolicyOption<HookCommandSourcePolicy>[] = [
   {
     policy: 'shared-only',
-    label: 'Use orca.yaml only',
+    label: 'Use serper.yaml only',
     description: 'Run only committed repo commands; ignore local Settings commands.'
   },
   {
@@ -60,7 +60,7 @@ const COMMAND_SOURCE_POLICY_OPTIONS: PolicyOption<HookCommandSourcePolicy>[] = [
   {
     policy: 'run-both',
     label: 'Run both',
-    description: 'Run orca.yaml first, then your local Settings command.'
+    description: 'Run serper.yaml first, then your local Settings command.'
   }
 ]
 
@@ -74,13 +74,13 @@ const LOCAL_HOOK_FIELDS: {
     name: 'setup',
     label: 'Local setup command',
     description: 'Runs after a new workspace is created when the source policy includes local.',
-    placeholder: 'cp "$ORCA_ROOT_PATH/.env" "$ORCA_WORKTREE_PATH/.env"'
+    placeholder: 'cp "$SERPER_ROOT_PATH/.env" "$SERPER_WORKTREE_PATH/.env"'
   },
   {
     name: 'archive',
     label: 'Local archive command',
     description: 'Runs before a local worktree is archived or removed.',
-    placeholder: 'echo "Cleaning up $ORCA_WORKSPACE_NAME"'
+    placeholder: 'echo "Cleaning up $SERPER_WORKSPACE_NAME"'
   }
 ]
 
@@ -147,30 +147,30 @@ const YAML_STATE_STYLES: Record<
   loaded: {
     card: 'border-emerald-500/20 bg-emerald-500/5',
     title: 'text-emerald-700 dark:text-emerald-300',
-    heading: 'Using `orca.yaml`',
+    heading: 'Using `serper.yaml`',
     description:
       'Shared hook and issue-automation defaults are defined in the repo and available to everyone who uses it.'
   },
   'update-available': {
     card: 'border-amber-500/20 bg-amber-500/5',
     title: 'text-amber-700 dark:text-amber-300',
-    heading: '`orca.yaml` could not be parsed',
+    heading: '`serper.yaml` could not be parsed',
     description:
-      'The file contains configuration keys that this version of Orca does not recognize. You may need to update Orca, or check the file for typos.'
+      'The file contains configuration keys that this version of Serper does not recognize. You may need to update Serper, or check the file for typos.'
   },
   invalid: {
     card: 'border-amber-500/20 bg-amber-500/5',
     title: 'text-amber-700 dark:text-amber-300',
-    heading: '`orca.yaml` could not be parsed',
+    heading: '`serper.yaml` could not be parsed',
     description:
-      'The core configuration file exists in the repo root, but Orca could not parse the supported hook definitions yet.'
+      'The core configuration file exists in the repo root, but Serper could not parse the supported hook definitions yet.'
   },
   missing: {
     card: 'border-border/50 bg-muted/20',
     title: 'text-foreground',
-    heading: 'No `orca.yaml` detected',
+    heading: 'No `serper.yaml` detected',
     description:
-      'Add an `orca.yaml` file to enable shared setup, archive, or issue-automation defaults for this repo. Example template:'
+      'Add an `serper.yaml` file to enable shared setup, archive, or issue-automation defaults for this repo. Example template:'
   }
 }
 
@@ -225,7 +225,7 @@ function ExampleTemplateCard({
   return (
     <div className="space-y-2">
       <p className="text-[10px] tracking-[0.18em] text-muted-foreground">
-        Example <code className="rounded bg-muted px-1 py-0.5">orca.yaml</code> template
+        Example <code className="rounded bg-muted px-1 py-0.5">serper.yaml</code> template
       </p>
       <div className="relative rounded-lg border border-border/50 bg-background/70">
         <Button
@@ -259,7 +259,7 @@ export function RepositoryHooksSection({
   const settings = useAppStore((s) => s.settings)
   // Why: distinguish "file has unrecognised top-level keys" from "file is
   // genuinely malformed" so users see a helpful update prompt instead of a
-  // confusing parse-error when a newer Orca version adds keys to `orca.yaml`.
+  // confusing parse-error when a newer Serper version adds keys to `serper.yaml`.
   const yamlState = yamlHooks
     ? 'loaded'
     : hasHooksFile
@@ -426,7 +426,7 @@ export function RepositoryHooksSection({
     setIssueCommandSaveError(null)
 
     // Why: settings only edit the local override, but we still need to know
-    // whether `orca.yaml` defines a shared default so the helper copy can
+    // whether `serper.yaml` defines a shared default so the helper copy can
     // explain what happens when the override is blank.
     void readRuntimeIssueCommand(settings, repoId)
       .then((result) => {
@@ -477,13 +477,13 @@ export function RepositoryHooksSection({
       <div className="space-y-1">
         <h2 className="text-sm font-semibold">Worktree Hooks</h2>
         <p className="text-xs text-muted-foreground">
-          Configure shared repo hooks from `orca.yaml` and personal commands stored locally on this
-          machine.
+          Configure shared repo hooks from `serper.yaml` and personal commands stored locally on
+          this machine.
         </p>
       </div>
 
       <SearchableSetting
-        title="orca.yaml hooks"
+        title="serper.yaml hooks"
         description="Shared setup, archive, and issue automation commands for this repository."
         keywords={['hooks', 'setup', 'archive', 'yaml']}
       >
@@ -505,7 +505,7 @@ export function RepositoryHooksSection({
                 </pre>
               </div>
               <p className="text-xs text-muted-foreground">
-                Edit `orca.yaml` in the repository if you need to change these shared commands.
+                Edit `serper.yaml` in the repository if you need to change these shared commands.
               </p>
             </div>
           ) : yamlState === 'update-available' ? (
@@ -519,14 +519,14 @@ export function RepositoryHooksSection({
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <p className="text-base font-semibold text-amber-900 dark:text-amber-100">
-                      `orca.yaml` could not be parsed
+                      `serper.yaml` could not be parsed
                     </p>
                     <p className="text-sm leading-6 text-muted-foreground">
-                      {/* Why: once a repo has an `orca.yaml`, the failure mode is usually bad shape
+                      {/* Why: once a repo has an `serper.yaml`, the failure mode is usually bad shape
                       rather than a missing concept. Showing a repair-oriented explanation and
                       template here lets maintainers fix the committed file without needing the doc. */}
-                      The file is present, but Orca could not find valid `scripts` or `issueCommand`
-                      definitions in the expected format.
+                      The file is present, but Serper could not find valid `scripts` or
+                      `issueCommand` definitions in the expected format.
                     </p>
                   </div>
 
@@ -569,7 +569,8 @@ export function RepositoryHooksSection({
             <div className="space-y-1">
               <h5 className="text-sm font-semibold">Local Settings Commands</h5>
               <p className="text-xs text-muted-foreground">
-                Stored in Orca on this machine. These commands are not committed to the repository.
+                Stored in Serper on this machine. These commands are not committed to the
+                repository.
               </p>
             </div>
             {localHookEntries.length > 0 ? (
@@ -580,14 +581,16 @@ export function RepositoryHooksSection({
           </div>
 
           <div className="flex flex-wrap gap-1.5">
-            {['$ORCA_ROOT_PATH', '$ORCA_WORKTREE_PATH', '$ORCA_WORKSPACE_NAME'].map((name) => (
-              <code
-                key={name}
-                className="rounded-md border border-border/50 bg-muted/35 px-2 py-1 font-mono text-[11px] text-muted-foreground"
-              >
-                {name}
-              </code>
-            ))}
+            {['$SERPER_ROOT_PATH', '$SERPER_WORKTREE_PATH', '$SERPER_WORKSPACE_NAME'].map(
+              (name) => (
+                <code
+                  key={name}
+                  className="rounded-md border border-border/50 bg-muted/35 px-2 py-1 font-mono text-[11px] text-muted-foreground"
+                >
+                  {name}
+                </code>
+              )
+            )}
           </div>
 
           <div className="grid gap-3">
@@ -690,14 +693,14 @@ export function RepositoryHooksSection({
 
       <SearchableSetting
         title="Command Source"
-        description="Choose whether Orca runs commands from `orca.yaml`, local Settings, or both."
-        keywords={['command source', 'local', 'shared', 'orca.yaml', 'both', 'authoritative']}
+        description="Choose whether Serper runs commands from `serper.yaml`, local Settings, or both."
+        keywords={['command source', 'local', 'shared', 'serper.yaml', 'both', 'authoritative']}
       >
         <div className="space-y-3 rounded-2xl border border-border/50 bg-background/80 p-4 shadow-sm">
           <div className="space-y-1">
             <h5 className="text-sm font-semibold">Command Source</h5>
             <p className="text-xs text-muted-foreground">
-              Choose whether Orca runs commands from `orca.yaml`, local Settings, or both.
+              Choose whether Serper runs commands from `serper.yaml`, local Settings, or both.
             </p>
           </div>
 
@@ -758,7 +761,7 @@ export function RepositoryHooksSection({
             </p>
             <p className="text-xs text-muted-foreground">
               Leave blank to use the repo default from{' '}
-              <code className="rounded bg-muted px-1 py-0.5">orca.yaml</code>
+              <code className="rounded bg-muted px-1 py-0.5">serper.yaml</code>
               {hasSharedIssueCommand ? '.' : ' when one exists.'}
             </p>
             {issueCommandSaveError ? (
@@ -776,7 +779,7 @@ const PARSE_ERROR_FIXES = [
   'Define only the supported keys: `scripts`, `setup`, `archive`, and `issueCommand`.',
   'Compare your file against the working template below and copy that shape if needed.'
 ]
-function renderYamlScriptPreview(hooks: OrcaHooks | null): string {
+function renderYamlScriptPreview(hooks: SerperHooks | null): string {
   const fmt = (key: string, cmd?: string): string =>
     cmd ? `\n  ${key}: |\n${cmd.replace(/^/gm, '    ')}` : ''
   const issueCommand = hooks?.issueCommand

@@ -5,7 +5,7 @@ import { app, ipcMain, session } from 'electron'
 import type { BrowserWindow } from 'electron'
 import type { Store } from '../persistence'
 import type { CreateWorktreeResult, WorktreeStartupLaunch } from '../../shared/types'
-import { ORCA_BROWSER_PARTITION } from '../../shared/constants'
+import { SERPER_BROWSER_PARTITION } from '../../shared/constants'
 import { registerRepoHandlers } from '../ipc/repos'
 import { registerWorktreeHandlers } from '../ipc/worktrees'
 import { registerWorkspaceCleanupHandlers } from '../ipc/workspace-cleanup'
@@ -15,7 +15,7 @@ import { registerSshHandlers } from '../ipc/ssh'
 import { registerRemoteWorkspaceHandlers } from '../ipc/remote-workspace'
 import { browserManager } from '../browser/browser-manager'
 import { hasSystemMediaAccess, requestSystemMediaAccess } from '../browser/browser-media-access'
-import type { OrcaRuntimeService } from '../runtime/orca-runtime'
+import type { SerperRuntimeService } from '../runtime/serper-runtime'
 import {
   checkForUpdatesFromMenu,
   downloadUpdate,
@@ -38,7 +38,7 @@ import { requestMobileMarkdownFromRenderer } from './mobile-markdown-request-rel
 export function attachMainWindowServices(
   mainWindow: BrowserWindow,
   store: Store,
-  runtime: OrcaRuntimeService,
+  runtime: SerperRuntimeService,
   getSelectedCodexHomePath?: () => string | null,
   prepareClaudeAuth?: () => Promise<ClaudeRuntimeAuthPreparation>
 ): void {
@@ -67,7 +67,7 @@ export function attachMainWindowServices(
   })
   // Why: warm-reattach gap.
   // Daemon-hosted PTYs survive renderer restarts on purpose, so on a fresh
-  // Orca launch the daemon's `listSessions()` returns sessions that
+  // Serper launch the daemon's `listSessions()` returns sessions that
   // `pty:spawn` hasn't re-registered yet. Without this hydration, the
   // memory snapshot omits those PTYs and the renderer mislabels their
   // workspaces as `· REMOTE` while showing `—` for CPU/Memory.
@@ -128,14 +128,14 @@ export function attachMainWindowServices(
     }
   )
 
-  const browserSession = session.fromPartition(ORCA_BROWSER_PARTITION)
+  const browserSession = session.fromPartition(SERPER_BROWSER_PARTITION)
   browserSession.setPermissionRequestHandler((webContents, permission, callback, details) => {
     // Why: the in-app browser is for dev previews and lightweight browsing, not
     // trusted desktop-app privileges. Denying by default keeps arbitrary sites
-    // from silently escalating into camera/mic/notification prompts inside Orca.
+    // from silently escalating into camera/mic/notification prompts inside Serper.
     // Why `media` is allowed through: camera/mic are still gated by macOS TCC
     // at the app-process level, so granting here only *permits* Chromium to
-    // use whatever the OS has already authorized for Orca. Denying at this
+    // use whatever the OS has already authorized for Serper. Denying at this
     // layer would make pages inside the in-app browser throw NotAllowedError
     // even after the user granted Camera/Microphone via Settings → Permissions
     // or System Settings — the bug #1273 partially addressed.
@@ -185,7 +185,7 @@ export function attachMainWindowServices(
     return false
   })
   browserSession.setDisplayMediaRequestHandler((_request, callback) => {
-    // Why: arbitrary sites inside Orca should never be able to capture the
+    // Why: arbitrary sites inside Serper should never be able to capture the
     // desktop or application windows until there is explicit product UX for
     // selecting a source and surfacing that choice to the user.
     // Why: pass undefined (not null) to satisfy Electron's typed callback
@@ -194,7 +194,7 @@ export function attachMainWindowServices(
   })
   browserSession.on('will-download', (_event, item, webContents) => {
     // Why: browser-tab downloads need explicit product UX before arbitrary sites
-    // can write files through Orca. Pause the item and route it through
+    // can write files through Serper. Pause the item and route it through
     // BrowserManager so the user must explicitly accept the save path first.
     browserManager.handleGuestWillDownload({ guestWebContentsId: webContents.id, item })
   })
@@ -210,7 +210,7 @@ export function attachMainWindowServices(
 
 function registerRuntimeWindowLifecycle(
   mainWindow: BrowserWindow,
-  runtime: OrcaRuntimeService
+  runtime: SerperRuntimeService
 ): void {
   runtime.attachWindow(mainWindow.id)
   const send = (channel: string, ...args: unknown[]): void => {

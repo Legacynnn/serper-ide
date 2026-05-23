@@ -391,7 +391,7 @@
   -webkit-line-clamp: 3;
 }
 
-.markdown-review-note .orca-diff-comment-card {
+.markdown-review-note .serper-diff-comment-card {
   max-width: none;
 }
 
@@ -466,7 +466,7 @@ li:focus-within > .markdown-annotation-controls > .markdown-annotation-add {
   margin-top: 6px;
 }
 
-.markdown-annotation-card.is-active > .orca-diff-comment-card {
+.markdown-annotation-card.is-active > .serper-diff-comment-card {
   border-color: color-mix(in srgb, var(--foreground) 32%, transparent);
   background: color-mix(in srgb, var(--foreground) 8%, var(--editor-surface));
 }

@@ -48,7 +48,7 @@ type Props = {
   onContextMenuSelect?: (event: React.MouseEvent<HTMLElement>) => readonly Worktree[]
 }
 
-const CLOSE_ALL_CONTEXT_MENUS_EVENT = 'orca-close-all-context-menus'
+const CLOSE_ALL_CONTEXT_MENUS_EVENT = 'serper-close-all-context-menus'
 const WORKTREE_CONTEXT_MENU_SCOPE_ATTR = 'data-worktree-context-menu-scope'
 const CONTEXT_MENU_CLICK_SUPPRESSION_MS = 500
 
@@ -304,7 +304,7 @@ const WorktreeContextMenu = React.memo(function WorktreeContextMenu({
       }
       if (isFolder) {
         // Why: folder mode reuses the worktree row UI for a synthetic root entry,
-        // but users still expect "remove" to disconnect the folder from Orca,
+        // but users still expect "remove" to disconnect the folder from Serper,
         // not to run git-style delete semantics against the real folder on disk.
         openModal('confirm-remove-folder', {
           repoId: worktree.repoId,
@@ -539,7 +539,7 @@ const WorktreeContextMenu = React.memo(function WorktreeContextMenu({
               : isMultiContext
                 ? deleteLabel
                 : isFolder
-                  ? 'Remove Folder from Orca'
+                  ? 'Remove Folder from Serper'
                   : 'Delete'}
           </DropdownMenuItem>
         </DropdownMenuContent>

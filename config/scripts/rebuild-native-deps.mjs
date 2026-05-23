@@ -43,7 +43,7 @@ if (ignoreModules.length > 0) {
 // ABI regardless of the package manager's store layout.
 const NATIVE_MODULES = ['better-sqlite3', 'node-pty', 'cpu-features']
 const onlyModules = NATIVE_MODULES.filter((m) => !ignoreModules.includes(m))
-const forceRebuild = process.env.ORCA_FORCE_NATIVE_REBUILD === '1'
+const forceRebuild = process.env.SERPER_FORCE_NATIVE_REBUILD === '1'
 
 if (!forceRebuild) {
   // Why: Windows cannot unlink a loaded .node DLL, so avoid @electron/rebuild
@@ -58,7 +58,7 @@ if (!forceRebuild) {
     console.log(probe.stderr.trim())
   }
 } else {
-  console.log('[rebuild] ORCA_FORCE_NATIVE_REBUILD=1 set; forcing native rebuild.')
+  console.log('[rebuild] SERPER_FORCE_NATIVE_REBUILD=1 set; forcing native rebuild.')
 }
 
 // Why: cpu-features ships without `buildcheck.gypi`; its own `install` script
@@ -109,10 +109,10 @@ try {
   if (isWindowsNativeLockError(err)) {
     console.error(
       '[rebuild] A Windows process appears to be using a native .node file. ' +
-        'Close running Orca/Electron/dev processes for this worktree, then rerun `pnpm install` ' +
+        'Close running Serper/Electron/dev processes for this worktree, then rerun `pnpm install` ' +
         'or `pnpm run rebuild:electron`.'
     )
-    if (isPostinstall() && process.env.ORCA_STRICT_NATIVE_REBUILD !== '1') {
+    if (isPostinstall() && process.env.SERPER_STRICT_NATIVE_REBUILD !== '1') {
       console.error(
         '[rebuild] Continuing postinstall because the failure is a Windows file lock. ' +
           'The next dev/start command will re-check native modules.'

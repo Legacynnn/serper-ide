@@ -17,7 +17,7 @@ import { checkRuntimeHooks } from '@/runtime/runtime-hooks-client'
 import { track, tuiAgentToAgentKind } from '@/lib/telemetry'
 import type {
   GitPushTarget,
-  OrcaHooks,
+  SerperHooks,
   RepoHookSettings,
   SetupDecision,
   TuiAgent,
@@ -110,10 +110,10 @@ async function resolveSetupDecision(
   repoId: string,
   repo: { hookSettings?: RepoHookSettings }
 ): Promise<{ kind: 'decided'; decision: SetupDecision } | { kind: 'needs-modal' }> {
-  let yamlHooks: OrcaHooks | null = null
+  let yamlHooks: SerperHooks | null = null
   try {
     const result = await checkRuntimeHooks(useAppStore.getState().settings, repoId)
-    yamlHooks = (result.hooks as OrcaHooks | null) ?? null
+    yamlHooks = (result.hooks as SerperHooks | null) ?? null
   } catch {
     yamlHooks = null
   }

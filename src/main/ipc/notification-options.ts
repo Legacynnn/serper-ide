@@ -31,8 +31,8 @@ export function buildNotificationOptions(args: NotificationDispatchRequest): {
 
   if (args.source === 'test') {
     return {
-      title: 'Orca notifications are on',
-      body: 'This is a test notification from Orca.'
+      title: 'Serper notifications are on',
+      body: 'This is a test notification from Serper.'
     }
   }
 

@@ -1,6 +1,6 @@
 // Why: subprocess-level test for the CLI heartbeat behavior described in
 // design doc §3.4. Spawns the real compiled CLI with no TTY, points it at a
-// real in-process runtime via ORCA_USER_DATA_PATH, and asserts:
+// real in-process runtime via SERPER_USER_DATA_PATH, and asserts:
 //   - the first heartbeat line appears on stderr well under Claude Code's
 //     ~2 min Bash-tool silence budget (we verify with a shortened interval;
 //     production uses 15 s via the same code path)
@@ -20,9 +20,9 @@ import { existsSync, mkdtempSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { describe, expect, it } from 'vitest'
-import { OrcaRuntimeService } from './orca-runtime'
+import { SerperRuntimeService } from './serper-runtime'
 import { OrchestrationDb } from './orchestration/db'
-import { OrcaRuntimeRpcServer } from './runtime-rpc'
+import { SerperRuntimeRpcServer } from './runtime-rpc'
 
 // Why: Vitest runs tests with `process.cwd()` pinned to the repo root, so
 // join against it to locate the compiled CLI regardless of where this test
@@ -31,17 +31,17 @@ const CLI_PATH = join(process.cwd(), 'out', 'cli', 'index.js')
 
 const describeIfBuilt = existsSync(CLI_PATH) ? describe : describe.skip
 
-describeIfBuilt('orca orchestration check --wait subprocess (§3.4)', () => {
+describeIfBuilt('serper orchestration check --wait subprocess (§3.4)', () => {
   it('emits newline-flushed JSON heartbeats to stderr while waiting', async () => {
-    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-cli-sub-'))
-    const runtime = new OrcaRuntimeService()
+    const userDataPath = mkdtempSync(join(tmpdir(), 'serper-cli-sub-'))
+    const runtime = new SerperRuntimeService()
     const db = new OrchestrationDb(':memory:')
     runtime.setOrchestrationDb(db)
-    const server = new OrcaRuntimeRpcServer({ runtime, userDataPath })
+    const server = new SerperRuntimeRpcServer({ runtime, userDataPath })
     await server.start()
 
     try {
-      // Why: use the ORCA_HEARTBEAT_INTERVAL_MS escape hatch to shrink the
+      // Why: use the SERPER_HEARTBEAT_INTERVAL_MS escape hatch to shrink the
       // test to ~1 s wall time. Production callers never set this; the
       // production default (15 s) is exercised by §3.4's own unit tests
       // and by the fact that this same code path runs with the real
@@ -63,9 +63,9 @@ describeIfBuilt('orca orchestration check --wait subprocess (§3.4)', () => {
         {
           env: {
             ...process.env,
-            ORCA_USER_DATA_PATH: userDataPath,
-            ORCA_TERMINAL_HANDLE: 'term_nobody',
-            ORCA_HEARTBEAT_INTERVAL_MS: String(heartbeatMs)
+            SERPER_USER_DATA_PATH: userDataPath,
+            SERPER_TERMINAL_HANDLE: 'term_nobody',
+            SERPER_HEARTBEAT_INTERVAL_MS: String(heartbeatMs)
           },
           // Why: explicit pipe for all three fds so we can watch stderr
           // in real time; no TTY attached (Bash-tool parity).

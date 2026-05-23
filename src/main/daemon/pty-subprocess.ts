@@ -19,7 +19,7 @@ import { resolveEffectiveWindowsPowerShell } from '../providers/windows-powershe
 import { isPwshAvailable } from '../pwsh'
 import { removeInheritedNoColor } from '../pty/terminal-color-env'
 
-const PANE_IDENTITY_ENV_KEYS = ['ORCA_PANE_KEY', 'ORCA_TAB_ID', 'ORCA_WORKTREE_ID'] as const
+const PANE_IDENTITY_ENV_KEYS = ['SERPER_PANE_KEY', 'SERPER_TAB_ID', 'SERPER_WORKTREE_ID'] as const
 
 export type PtySubprocessOptions = {
   sessionId: string
@@ -68,7 +68,7 @@ function formatMissingDaemonPathError(kind: 'helper' | 'cwd', path: string): Dae
   const step = kind === 'helper' ? 'posix_spawn' : 'daemon_cwd'
   return new DaemonProtocolError(
     `Daemon's ${kind === 'helper' ? 'node-pty install' : 'working directory'} is gone ` +
-      `(worktree deleted?). Restart Orca. node-pty: ${step} failed: ENOENT ` +
+      `(worktree deleted?). Restart Serper. node-pty: ${step} failed: ENOENT ` +
       `(errno 2, No such file or directory) - ${detailName}='${path}'`
   )
 }
@@ -148,16 +148,16 @@ export function createPtySubprocess(opts: PtySubprocessOptions): SubprocessHandl
     ...opts.env,
     TERM: 'xterm-256color',
     COLORTERM: 'truecolor',
-    TERM_PROGRAM: 'Orca',
+    TERM_PROGRAM: 'Serper',
     // Why: TUIs feature-gate on TERM_PROGRAM_VERSION. The daemon is forked
-    // by main (daemon-init.ts:93) with the parent's env, so ORCA_APP_VERSION
+    // by main (daemon-init.ts:93) with the parent's env, so SERPER_APP_VERSION
     // — set in src/main/index.ts from app.getVersion() — is inherited here.
-    TERM_PROGRAM_VERSION: process.env.ORCA_APP_VERSION ?? '0.0.0-dev',
+    TERM_PROGRAM_VERSION: process.env.SERPER_APP_VERSION ?? '0.0.0-dev',
     // Why: opt tools (Claude Code, ls --hyperlink, etc.) into emitting OSC 8
     // hyperlinks. The `supports-hyperlinks` npm package gates on a hard-coded
     // TERM_PROGRAM allowlist (iTerm.app / WezTerm / vscode) and returns false
-    // for TERM_PROGRAM=Orca, so callers drop OSC 8 output entirely and emit
-    // bare text instead. xterm.js in Orca parses OSC 8 and the pane's
+    // for TERM_PROGRAM=Serper, so callers drop OSC 8 output entirely and emit
+    // bare text instead. xterm.js in Serper parses OSC 8 and the pane's
     // linkHandler routes clicks, so forcing the advertisement is safe and
     // restores clickable refs like `owner/repo#123` / `PR#123`.
     FORCE_HYPERLINK: '1'
@@ -210,13 +210,13 @@ export function createPtySubprocess(opts: PtySubprocessOptions): SubprocessHandl
     spawnCwd = resolved.effectiveCwd
     validationCwd = resolved.validationCwd
   } else {
-    // Why: any Orca-injected overlay env that user rc files can clobber
+    // Why: any Serper-injected overlay env that user rc files can clobber
     // needs the wrapper so the post-rc restore line runs.
     const shellLaunch = opts.command
       ? getShellReadyLaunchConfig(shellPath)
-      : env.ORCA_ATTRIBUTION_SHIM_DIR ||
-          env.ORCA_OPENCODE_CONFIG_DIR ||
-          env.ORCA_PI_CODING_AGENT_DIR
+      : env.SERPER_ATTRIBUTION_SHIM_DIR ||
+          env.SERPER_OPENCODE_CONFIG_DIR ||
+          env.SERPER_PI_CODING_AGENT_DIR
         ? getAttributionShellLaunchConfig(shellPath)
         : null
     if (shellLaunch) {

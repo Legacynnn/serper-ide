@@ -73,7 +73,7 @@ export function shellEscape(s: string): string {
 }
 
 export function wrapRemoteCommandForPosixShell(command: string): string {
-  // Why: sshd asks the user's login shell to parse exec commands. Orca emits
+  // Why: sshd asks the user's login shell to parse exec commands. Serper emits
   // POSIX sh snippets; `exec` avoids leaving that shell around for relay bridges.
   return `exec /bin/sh -c ${shellEscape(command)}`
 }

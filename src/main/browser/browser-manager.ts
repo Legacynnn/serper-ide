@@ -217,7 +217,7 @@ export class BrowserManager {
     return renderer
   }
 
-  // Why: screenshot sessions target guest page ids, but Orca's visible browser
+  // Why: screenshot sessions target guest page ids, but Serper's visible browser
   // chrome is keyed by workspace ids. If we activate the page id directly, the
   // webview stays hidden under the terminal pane and Page.captureScreenshot
   // times out even though the guest still exists.
@@ -406,7 +406,7 @@ export class BrowserManager {
                 ${JSON.stringify(prev?.targetBrowserPageId)} &&
               typeof state.setActiveBrowserPage === 'function'
             ) {
-              // Why: Orca remembers the last browser workspace/page even when
+              // Why: Serper remembers the last browser workspace/page even when
               // the user is currently in terminal/editor view. Screenshot prep
               // temporarily switches that hidden browser selection state, so
               // restore it independently of the visible tab type.
@@ -445,7 +445,7 @@ export class BrowserManager {
 
     // Why: background throttling must be disabled so agent-driven screenshots
     // (Page.captureScreenshot via CDP proxy) can capture frames even when the
-    // Orca window is not the focused foreground app. With throttling enabled,
+    // Serper window is not the focused foreground app. With throttling enabled,
     // the compositor stops producing frames and capturePage() returns empty.
     guest.setBackgroundThrottling(false)
     guest.setWindowOpenHandler(({ url }) => {
@@ -454,15 +454,15 @@ export class BrowserManager {
       const externalUrl = normalizeExternalBrowserUrl(url)
 
       // Why: popup-capable guests are required for OAuth and target=_blank
-      // flows, but Orca still does not host child windows itself. For normal
-      // web URLs, route the request into Orca's own browser-tab model first so
+      // flows, but Serper still does not host child windows itself. For normal
+      // web URLs, route the request into Serper's own browser-tab model first so
       // the user stays in the IDE. Only fall back to the system browser when
-      // Orca cannot safely host the destination or when the guest is not yet
+      // Serper cannot safely host the destination or when the guest is not yet
       // associated with a trusted browser tab/renderer.
-      if (browserTabId && browserUrl && this.openLinkInOrcaTab(browserTabId, browserUrl)) {
+      if (browserTabId && browserUrl && this.openLinkInSerperTab(browserTabId, browserUrl)) {
         this.forwardOrQueuePopupEvent(guest.id, {
           origin: safeOrigin(browserUrl),
-          action: 'opened-in-orca'
+          action: 'opened-in-serper'
         })
       } else if (externalUrl) {
         // Why: a target=_blank click on a Kagi search result page produces a
@@ -694,7 +694,7 @@ export class BrowserManager {
     // Cancel all active grab ops before tearing down registrations
     this.grabSessionController.cancelAll('evicted')
     for (const downloadId of this.downloadsById.keys()) {
-      this.cancelDownloadInternal(downloadId, 'Orca is shutting down.')
+      this.cancelDownloadInternal(downloadId, 'Serper is shutting down.')
     }
     for (const browserTabId of this.webContentsIdByTabId.keys()) {
       this.unregisterGuest(browserTabId)
@@ -783,7 +783,7 @@ export class BrowserManager {
       item.pause()
     } catch {
       // Why: some interrupted downloads throw if paused immediately. Keep
-      // tracking the item anyway so Orca can still explain the failure path.
+      // tracking the item anyway so Serper can still explain the failure path.
     }
 
     const download: ActiveDownload = {
@@ -915,7 +915,7 @@ export class BrowserManager {
     return true
   }
 
-  // Why: guest browser surfaces are intentionally isolated from Orca's preload
+  // Why: guest browser surfaces are intentionally isolated from Serper's preload
   // bridge, so renderer code cannot directly call Electron WebContents APIs on
   // them. Main owns the devtools escape hatch and only after tab→guest lookup.
   async openDevTools(browserTabId: string): Promise<boolean> {
@@ -1465,7 +1465,7 @@ export class BrowserManager {
     } catch {
       // Why: DownloadItem.cancel can throw after the item has already
       // finalized. Cleanup here is best-effort because the UI state is the
-      // source of truth for whether Orca still considers the request active.
+      // source of truth for whether Serper still considers the request active.
     }
 
     if (download.browserTabId) {
@@ -1510,7 +1510,7 @@ export class BrowserManager {
     })
   }
 
-  private openLinkInOrcaTab(browserTabId: string, rawUrl: string): boolean {
+  private openLinkInSerperTab(browserTabId: string, rawUrl: string): boolean {
     const renderer = this.resolveRendererForBrowserTab(browserTabId)
     if (!renderer) {
       return false
@@ -1521,9 +1521,9 @@ export class BrowserManager {
     }
     // Why: the guest context menu knows which browser tab the click came from,
     // but only the renderer owns the worktree/tab model. Forward the validated
-    // URL back to that renderer so it can open a sibling Orca browser tab in
+    // URL back to that renderer so it can open a sibling Serper browser tab in
     // the same worktree without letting the guest process mutate app state.
-    renderer.send('browser:open-link-in-orca-tab', {
+    renderer.send('browser:open-link-in-serper-tab', {
       browserPageId: browserTabId,
       url: normalizedUrl
     })

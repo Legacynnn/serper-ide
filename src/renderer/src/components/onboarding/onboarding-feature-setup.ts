@@ -5,7 +5,7 @@ import type {
 } from '../../../../shared/computer-use-permissions-types'
 import {
   COMPUTER_USE_SKILL_NAME,
-  ORCA_CLI_SKILL_NAME,
+  SERPER_CLI_SKILL_NAME,
   ORCHESTRATION_SKILL_NAME,
   buildAgentFeatureSkillInstallCommand
 } from '@/lib/agent-feature-install-commands'
@@ -35,7 +35,7 @@ export const ONBOARDING_FEATURE_SETUP_IDS: readonly OnboardingFeatureSetupId[] =
 ]
 
 const FEATURE_SKILL_NAMES: Record<OnboardingFeatureSetupId, string> = {
-  browserUse: ORCA_CLI_SKILL_NAME,
+  browserUse: SERPER_CLI_SKILL_NAME,
   computerUse: COMPUTER_USE_SKILL_NAME,
   orchestration: ORCHESTRATION_SKILL_NAME
 }
@@ -197,7 +197,7 @@ export async function runOnboardingFeatureSetup(
     if (!status.supported) {
       warnings.push({
         featureId: 'cli',
-        message: status.detail ?? 'Orca CLI registration is not available on this platform.'
+        message: status.detail ?? 'Serper CLI registration is not available on this platform.'
       })
     } else if (status.state !== 'installed') {
       const next = await deps.installCli()
@@ -205,7 +205,7 @@ export async function runOnboardingFeatureSetup(
       if (next.state !== 'installed') {
         warnings.push({
           featureId: 'cli',
-          message: next.detail ?? 'Orca CLI registration needs attention.'
+          message: next.detail ?? 'Serper CLI registration needs attention.'
         })
       } else if (!next.pathConfigured && next.detail) {
         warnings.push({ featureId: 'cli', message: next.detail })

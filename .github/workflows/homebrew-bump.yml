@@ -1,19 +1,19 @@
 name: Homebrew Cask Bump
 
-# Why: keep the stablyai/homebrew-orca tap in sync with GitHub Releases.
+# Why: keep the Legacynnn/homebrew-serper tap in sync with GitHub Releases.
 # Triggers:
 #   - workflow_call → release-cut.yml finished publishing a stable tag
 #   - workflow_dispatch → manual backfill for a specific tag
 #
-# The job computes the sha256 of orca-macos-arm64.dmg + orca-macos-x64.dmg
-# from the release, templates Casks/orca.rb in this repo with the new
-# version and hashes, then PRs the result into stablyai/homebrew-orca. It
+# The job computes the sha256 of serper-macos-arm64.dmg + serper-macos-x64.dmg
+# from the release, templates Casks/serper.rb in this repo with the new
+# version and hashes, then PRs the result into Legacynnn/homebrew-serper. It
 # does NOT run for -rc.* tags: the stable cask should only track GA.
 #
 # Why no `release.published` trigger: other products shipped from this repo
 # (e.g. mobile under `mobile-v*`) also publish GitHub Releases. A blanket
 # `release.published` trigger would fire this workflow for any of them and
-# attempt to download `orca-macos-*.dmg` from a non-desktop release, at
+# attempt to download `serper-macos-*.dmg` from a non-desktop release, at
 # best 404ing and at worst (if the filter were weaker) rewriting the cask
 # to a non-desktop version. The tap is only ever bumped by the desktop
 # release pipeline calling this workflow directly.
@@ -47,7 +47,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Checkout orca
+      - name: Checkout serper
         uses: actions/checkout@v4
 
       - name: Resolve tag and version
@@ -76,11 +76,11 @@ jobs:
           mkdir -p dmgs
           gh release download "$TAG" \
             --repo "${{ github.repository }}" \
-            --pattern 'orca-macos-arm64.dmg' \
-            --pattern 'orca-macos-x64.dmg' \
+            --pattern 'serper-macos-arm64.dmg' \
+            --pattern 'serper-macos-x64.dmg' \
             --dir dmgs
-          arm=$(sha256sum dmgs/orca-macos-arm64.dmg | awk '{print $1}')
-          intel=$(sha256sum dmgs/orca-macos-x64.dmg  | awk '{print $1}')
+          arm=$(sha256sum dmgs/serper-macos-arm64.dmg | awk '{print $1}')
+          intel=$(sha256sum dmgs/serper-macos-x64.dmg  | awk '{print $1}')
           echo "arm=$arm"     >>"$GITHUB_OUTPUT"
           echo "intel=$intel" >>"$GITHUB_OUTPUT"
 
@@ -93,7 +93,7 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           import os, re, pathlib
-          p = pathlib.Path("Casks/orca.rb")
+          p = pathlib.Path("Casks/serper.rb")
           src = p.read_text()
           src = re.sub(r'version "[^"]+"',
                        f'version "{os.environ["VERSION"]}"', src, count=1)
@@ -108,7 +108,7 @@ jobs:
 
       # Why: reuse the existing buf0-bot GitHub App (also used by
       # track-community-prs.yaml) instead of minting a new PAT. The app is
-      # installed org-wide, so it has access to stablyai/homebrew-orca
+      # installed org-wide, so it has access to Legacynnn/homebrew-serper
       # automatically. GITHUB_TOKEN cannot push cross-repo; a short-lived
       # installation token can.
       - name: Generate buf0-bot token
@@ -117,13 +117,13 @@ jobs:
         with:
           app-id: 2590194
           private-key: ${{ secrets.BUFO_BOT_PRIVATE_KEY }}
-          owner: stablyai
-          repositories: homebrew-orca
+          owner: Legacynnn
+          repositories: homebrew-serper
 
       - name: Checkout tap
         uses: actions/checkout@v4
         with:
-          repository: stablyai/homebrew-orca
+          repository: Legacynnn/homebrew-serper
           path: tap
           token: ${{ steps.app-token.outputs.token }}
 
@@ -135,7 +135,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p tap/Casks
-          cp Casks/orca.rb tap/Casks/orca.rb
+          cp Casks/serper.rb tap/Casks/serper.rb
 
           cd tap
           # Why: commit author must match the buf0-bot app so commits are
@@ -148,20 +148,20 @@ jobs:
             exit 0
           fi
 
-          branch="bump/orca-$VERSION"
+          branch="bump/serper-$VERSION"
           git checkout -b "$branch"
-          git add Casks/orca.rb
-          git commit -m "orca $VERSION"
+          git add Casks/serper.rb
+          git commit -m "serper $VERSION"
           git push -u origin "$branch" --force
 
           # Why: prefer --fill so the PR body matches the commit; fall back
           # to a brief body if the PR already exists for this branch.
           gh pr create \
-            --title "orca $VERSION" \
-            --body "Automated bump from stablyai/orca release $TAG." \
+            --title "serper $VERSION" \
+            --body "Automated bump from Legacynnn/serper release $TAG." \
             --base main \
             --head "$branch" \
-            || gh pr edit "$branch" --title "orca $VERSION"
+            || gh pr edit "$branch" --title "serper $VERSION"
 
           # Why: squash-merge immediately rather than --auto. The tap has no
           # required checks or branch protection, and `gh pr merge --auto`

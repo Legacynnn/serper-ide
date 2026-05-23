@@ -297,7 +297,7 @@ describe('connectPanePty', () => {
       worktreesByRepo: {
         repo1: [{ id: 'wt-1', repoId: 'repo1', path: '/tmp/wt-1', displayName: 'feat/notis' }]
       },
-      repos: [{ id: 'repo1', connectionId: null, displayName: 'orca' }],
+      repos: [{ id: 'repo1', connectionId: null, displayName: 'serper' }],
       sshConnectionStates: new Map(),
       cacheTimerByKey: {},
       settings: { promptCacheTimerEnabled: true },
@@ -2185,7 +2185,7 @@ describe('connectPanePty', () => {
       expect.objectContaining({
         source: 'agent-task-complete',
         worktreeId: 'wt-1',
-        repoLabel: 'orca',
+        repoLabel: 'serper',
         worktreeLabel: 'feat/notis',
         hasMultipleActiveRepos: true,
         terminalTitle: '* Claude done',

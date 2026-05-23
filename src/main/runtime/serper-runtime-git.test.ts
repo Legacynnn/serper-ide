@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GlobalSettings } from '../../shared/types'
 import type * as GitStatusModule from '../git/status'
 import type * as CommitMessageTextGenerationModule from '../text-generation/commit-message-text-generation'
-import { RuntimeGitCommands, type ResolvedRuntimeGitWorktree } from './orca-runtime-git'
+import { RuntimeGitCommands, type ResolvedRuntimeGitWorktree } from './serper-runtime-git'
 
 const mocks = vi.hoisted(() => ({
   getStagedCommitContext: vi.fn(),
@@ -70,7 +70,7 @@ describe('RuntimeGitCommands', () => {
   })
 
   it('rejects slash-only git mutation paths before they can target the worktree root', async () => {
-    const worktreePath = mkdtempSync(join(tmpdir(), 'orca-runtime-git-'))
+    const worktreePath = mkdtempSync(join(tmpdir(), 'serper-runtime-git-'))
     tempDirs.push(worktreePath)
     const commands = makeCommands(worktreePath)
 
@@ -83,7 +83,7 @@ describe('RuntimeGitCommands', () => {
   })
 
   it('prepares the selected local agent environment before generating commit messages', async () => {
-    const worktreePath = mkdtempSync(join(tmpdir(), 'orca-runtime-git-'))
+    const worktreePath = mkdtempSync(join(tmpdir(), 'serper-runtime-git-'))
     tempDirs.push(worktreePath)
     const context = {
       branch: 'main',

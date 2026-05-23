@@ -1,5 +1,5 @@
 /* eslint-disable max-lines -- Why: this service owns the single runtime-home
-contract for Codex inside Orca. Keeping path resolution, system-default
+contract for Codex inside Serper. Keeping path resolution, system-default
 snapshots, auth materialization, and recovery together prevents account-switch
 semantics from drifting across PTY launch, login, and quota fetch paths. */
 import {
@@ -40,16 +40,16 @@ type CodexReadBackMatch =
   | { kind: 'none' | 'ambiguous' }
 
 export class CodexRuntimeHomeService {
-  // Why: tracks whether auth.json is currently managed by Orca. When null,
-  // Orca does NOT own auth.json and must not overwrite external changes
+  // Why: tracks whether auth.json is currently managed by Serper. When null,
+  // Serper does NOT own auth.json and must not overwrite external changes
   // (e.g. user running `codex login` or another auth tool). The snapshot
   // restore only fires on the managed→system-default transition.
   private lastSyncedAccountId: string | null = null
-  // Why: tracks the auth.json content Orca last wrote to ~/.codex/auth.json.
+  // Why: tracks the auth.json content Serper last wrote to ~/.codex/auth.json.
   // Between syncs, if the file differs, Codex CLI refreshed the token — so
-  // Orca writes back the refreshed token to managed storage before overwriting.
+  // Serper writes back the refreshed token to managed storage before overwriting.
   // On managed→system-default transition, if the file differs, an external
-  // login (e.g. `codex auth login`) overwrote it — so Orca adopts the file as
+  // login (e.g. `codex auth login`) overwrote it — so Serper adopts the file as
   // the new system default instead of restoring a stale snapshot.
   private lastWrittenAuthJson: string | null = null
   private skipNextReadBackForAccountId: string | null = null
@@ -100,7 +100,7 @@ export class CodexRuntimeHomeService {
       }
       // Why: only restore the snapshot when transitioning FROM a managed
       // account back to system default. When no managed account was ever
-      // active, auth.json belongs to the user and Orca must not touch it.
+      // active, auth.json belongs to the user and Serper must not touch it.
       // This prevents overwriting external auth changes (codex login or other
       // tools) on every PTY launch / rate-limit fetch.
       if (this.lastSyncedAccountId !== null) {
@@ -130,7 +130,7 @@ export class CodexRuntimeHomeService {
     }
 
     // Why: Codex CLI refreshes expired OAuth tokens and writes them back to
-    // ~/.codex/auth.json. If we detect the runtime file differs from what Orca
+    // ~/.codex/auth.json. If we detect the runtime file differs from what Serper
     // last wrote, the CLI must have refreshed — so we preserve those tokens
     // back to managed storage before overwriting runtime with managed state.
     if (this.lastSyncedAccountId === activeAccount.id) {
@@ -182,7 +182,7 @@ export class CodexRuntimeHomeService {
         }
         return 'rejected'
       }
-      // Why: after app restart, Orca has no last-written baseline. Identity
+      // Why: after app restart, Serper has no last-written baseline. Identity
       // alone cannot prove runtime auth is newer than managed storage.
       if (
         this.lastWrittenAuthJson === null &&
@@ -267,7 +267,7 @@ export class CodexRuntimeHomeService {
     // Why: old live Codex PTYs can still write refreshed tokens into the
     // shared runtime home after the user switches accounts. Never persist
     // that write into the newly active managed account unless the auth claims
-    // still match the account Orca believes is selected.
+    // still match the account Serper believes is selected.
     const selectedEmail = this.firstNonNull(
       this.normalizeField(activeAccount.email),
       managedIdentity?.email
@@ -511,7 +511,7 @@ export class CodexRuntimeHomeService {
         continue
       }
       const managedHomePath = join(managedAccountsRoot, entry.name, 'home')
-      if (existsSync(join(managedHomePath, '.orca-managed-home'))) {
+      if (existsSync(join(managedHomePath, '.serper-managed-home'))) {
         managedHomes.push(managedHomePath)
       }
     }
@@ -601,7 +601,7 @@ export class CodexRuntimeHomeService {
   private getPreservedLegacySessionPath(runtimeFilePath: string, accountId: string): string {
     const extension = extname(runtimeFilePath)
     const basename = runtimeFilePath.slice(0, runtimeFilePath.length - extension.length)
-    return `${basename}.orca-legacy-${accountId}${extension}`
+    return `${basename}.serper-legacy-${accountId}${extension}`
   }
 
   private appendMigrationDiagnostic(record: Record<string, string>): void {
@@ -657,7 +657,7 @@ export class CodexRuntimeHomeService {
   }
 
   // Why: mirrors ClaudeRuntimeAuthService.detectExternalLoginAndUpdateSnapshot().
-  // If the runtime auth.json differs from what Orca last wrote, something
+  // If the runtime auth.json differs from what Serper last wrote, something
   // external changed it. That external state should become the new system
   // default rather than being overwritten by a potentially stale snapshot.
   private detectExternalLoginAndUpdateSnapshot(): boolean {

@@ -25,7 +25,7 @@ import {
   TextCursorInput,
   UserCog
 } from 'lucide-react'
-import type { GlobalSettings, OrcaHooks } from '../../../../shared/types'
+import type { GlobalSettings, SerperHooks } from '../../../../shared/types'
 import { getRepoKindLabel, isFolderRepo } from '../../../../shared/repo-kind'
 import { useAppStore } from '../../store'
 import { useSystemPrefersDark } from '@/components/terminal-pane/use-system-prefers-dark'
@@ -222,7 +222,7 @@ function isEditableTarget(target: EventTarget | null): boolean {
 
 function isWebClientLocation(): boolean {
   return (
-    Boolean((window as unknown as { __ORCA_WEB_CLIENT__?: boolean }).__ORCA_WEB_CLIENT__) ||
+    Boolean((window as unknown as { __SERPER_WEB_CLIENT__?: boolean }).__SERPER_WEB_CLIENT__) ||
     window.location.pathname.endsWith('/web-index.html')
   )
 }
@@ -243,7 +243,7 @@ function Settings(): React.JSX.Element {
   const setSettingsSearchQuery = useAppStore((s) => s.setSettingsSearchQuery)
 
   const [repoHooksMap, setRepoHooksMap] = useState<
-    Record<string, { hasHooks: boolean; hooks: OrcaHooks | null; mayNeedUpdate: boolean }>
+    Record<string, { hasHooks: boolean; hooks: SerperHooks | null; mayNeedUpdate: boolean }>
   >({})
   const systemPrefersDark = useSystemPrefersDark()
   const isWindows = isWindowsUserAgent()
@@ -529,17 +529,17 @@ function Settings(): React.JSX.Element {
       {
         id: 'orchestration',
         title: 'Orchestration',
-        description: 'Coordinate multiple coding agents through Orca.',
+        description: 'Coordinate multiple coding agents through Serper.',
         icon: Network,
         searchEntries: ORCHESTRATION_PANE_SEARCH_ENTRIES,
         group: 'capabilities'
       },
       {
         id: 'servers',
-        title: 'Remote Orca Servers',
+        title: 'Remote Serper Servers',
         description: isWebClient
-          ? 'Connect this browser to a saved Orca server.'
-          : 'Switch between local desktop mode and paired remote Orca runtimes.',
+          ? 'Connect this browser to a saved Serper server.'
+          : 'Switch between local desktop mode and paired remote Serper runtimes.',
         icon: Server,
         searchEntries: [runtimeEnvironmentsSearchEntry],
         group: 'remote',
@@ -615,7 +615,7 @@ function Settings(): React.JSX.Element {
       {
         id: 'stats',
         title: 'Stats & Usage',
-        description: 'Orca stats plus Claude, Codex, and OpenCode usage analytics.',
+        description: 'Serper stats plus Claude, Codex, and OpenCode usage analytics.',
         icon: BarChart3,
         searchEntries: STATS_PANE_SEARCH_ENTRIES,
         group: 'interface'
@@ -754,7 +754,7 @@ function Settings(): React.JSX.Element {
     setRepoHooksMap((previous) => {
       const next = Object.fromEntries(
         Object.entries(previous).filter(([repoId]) => repoIdSet.has(repoId))
-      ) as Record<string, { hasHooks: boolean; hooks: OrcaHooks | null; mayNeedUpdate: boolean }>
+      ) as Record<string, { hasHooks: boolean; hooks: SerperHooks | null; mayNeedUpdate: boolean }>
       return Object.keys(next).length === Object.keys(previous).length ? previous : next
     })
   }, [repos])
@@ -1055,7 +1055,7 @@ function Settings(): React.JSX.Element {
                 <SettingsSection
                   id="accounts"
                   title="AI Provider Accounts"
-                  description="Optional. Orca works with your existing provider logins; add accounts only if you want Orca to help switch between them."
+                  description="Optional. Serper works with your existing provider logins; add accounts only if you want Serper to help switch between them."
                   badge="Optional"
                   searchEntries={ACCOUNTS_PANE_SEARCH_ENTRIES}
                 >
@@ -1212,7 +1212,7 @@ function Settings(): React.JSX.Element {
                 <SettingsSection
                   id="stats"
                   title="Stats & Usage"
-                  description="Orca stats plus Claude, Codex, and OpenCode usage analytics."
+                  description="Serper stats plus Claude, Codex, and OpenCode usage analytics."
                   searchEntries={STATS_PANE_SEARCH_ENTRIES}
                 >
                   {isSectionMounted('stats') ? <StatsPane /> : null}
@@ -1221,7 +1221,7 @@ function Settings(): React.JSX.Element {
                 <SettingsSection
                   id="orchestration"
                   title="Orchestration"
-                  description="Coordinate multiple coding agents through Orca."
+                  description="Coordinate multiple coding agents through Serper."
                   searchEntries={ORCHESTRATION_PANE_SEARCH_ENTRIES}
                 >
                   {isSectionMounted('orchestration') ? <OrchestrationPane /> : null}
@@ -1278,12 +1278,12 @@ function Settings(): React.JSX.Element {
 
                 <SettingsSection
                   id="servers"
-                  title="Remote Orca Servers"
+                  title="Remote Serper Servers"
                   badge="Beta"
                   description={
                     isWebClient
-                      ? 'Connect this browser to a saved Orca server.'
-                      : 'Switch between local desktop mode and paired remote Orca runtimes.'
+                      ? 'Connect this browser to a saved Serper server.'
+                      : 'Switch between local desktop mode and paired remote Serper runtimes.'
                   }
                   searchEntries={[runtimeEnvironmentsSearchEntry]}
                 >

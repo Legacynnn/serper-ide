@@ -1,6 +1,6 @@
-const POWERSHELL_OSC133_BOOTSTRAP = `# Orca OSC 133 shell integration for PowerShell.
-if ((Test-Path variable:global:__OrcaOsc133State) -and
-    $null -ne $Global:__OrcaOsc133State.OriginalPrompt) {
+const POWERSHELL_OSC133_BOOTSTRAP = `# Serper OSC 133 shell integration for PowerShell.
+if ((Test-Path variable:global:__SerperOsc133State) -and
+    $null -ne $Global:__SerperOsc133State.OriginalPrompt) {
     return
 }
 
@@ -19,11 +19,11 @@ try {
     $OutputEncoding = [Console]::OutputEncoding
 } catch { Write-Error $_ -ErrorAction Continue }
 
-# Profiles can re-export user defaults after Orca's spawn env is set.
-if ($env:ORCA_OPENCODE_CONFIG_DIR) { $env:OPENCODE_CONFIG_DIR = $env:ORCA_OPENCODE_CONFIG_DIR }
-if ($env:ORCA_PI_CODING_AGENT_DIR) { $env:PI_CODING_AGENT_DIR = $env:ORCA_PI_CODING_AGENT_DIR }
+# Profiles can re-export user defaults after Serper's spawn env is set.
+if ($env:SERPER_OPENCODE_CONFIG_DIR) { $env:OPENCODE_CONFIG_DIR = $env:SERPER_OPENCODE_CONFIG_DIR }
+if ($env:SERPER_PI_CODING_AGENT_DIR) { $env:PI_CODING_AGENT_DIR = $env:SERPER_PI_CODING_AGENT_DIR }
 
-$Global:__OrcaOsc133State = @{
+$Global:__SerperOsc133State = @{
     OriginalPrompt = $function:prompt
     OriginalReadLine = $function:PSConsoleHostReadLine
     HasSeenPrompt = $false
@@ -40,24 +40,24 @@ function Global:prompt {
 
     # Emit D from prompt, not readline state. Some profile setups bypass
     # PSConsoleHostReadLine; the consumer only needs completion.
-    if ($Global:__OrcaOsc133State.HasSeenPrompt) {
-        $result += "$($Global:__OrcaOsc133State.Esc)]133;D;$fakeExitCode$($Global:__OrcaOsc133State.Bel)"
+    if ($Global:__SerperOsc133State.HasSeenPrompt) {
+        $result += "$($Global:__SerperOsc133State.Esc)]133;D;$fakeExitCode$($Global:__SerperOsc133State.Bel)"
     }
-    $Global:__OrcaOsc133State.HasSeenPrompt = $true
+    $Global:__SerperOsc133State.HasSeenPrompt = $true
 
-    $result += "$($Global:__OrcaOsc133State.Esc)]133;A$($Global:__OrcaOsc133State.Bel)"
+    $result += "$($Global:__SerperOsc133State.Esc)]133;A$($Global:__SerperOsc133State.Bel)"
     # Preserve the previous success/failure value for prompts that inspect it.
     if ($fakeExitCode -ne 0) { Write-Error "failure" -ea ignore }
-    $result += $Global:__OrcaOsc133State.OriginalPrompt.Invoke()
-    $result += "$($Global:__OrcaOsc133State.Esc)]133;B$($Global:__OrcaOsc133State.Bel)"
+    $result += $Global:__SerperOsc133State.OriginalPrompt.Invoke()
+    $result += "$($Global:__SerperOsc133State.Esc)]133;B$($Global:__SerperOsc133State.Bel)"
     $result
 }
 
-if ($Global:__OrcaOsc133State.HasPSReadLine -and
-    $null -ne $Global:__OrcaOsc133State.OriginalReadLine) {
+if ($Global:__SerperOsc133State.HasPSReadLine -and
+    $null -ne $Global:__SerperOsc133State.OriginalReadLine) {
     function Global:PSConsoleHostReadLine {
-        $commandLine = $Global:__OrcaOsc133State.OriginalReadLine.Invoke()
-        [Console]::Write("$($Global:__OrcaOsc133State.Esc)]133;C$($Global:__OrcaOsc133State.Bel)")
+        $commandLine = $Global:__SerperOsc133State.OriginalReadLine.Invoke()
+        [Console]::Write("$($Global:__SerperOsc133State.Esc)]133;C$($Global:__SerperOsc133State.Bel)")
         return $commandLine
     }
 }

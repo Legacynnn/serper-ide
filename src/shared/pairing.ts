@@ -20,18 +20,18 @@ export function encodePairingOffer(offer: PairingOffer): string {
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/, '')
-  return `orca://pair#${base64url}`
+  return `serper://pair#${base64url}`
 }
 
 export function decodePairingOffer(url: string): PairingOffer {
   const hashIndex = url.indexOf('#')
-  if (!url.startsWith('orca://pair') || hashIndex === -1) {
-    throw new Error('Invalid pairing URL: must start with orca://pair#')
+  if (!url.startsWith('serper://pair') || hashIndex === -1) {
+    throw new Error('Invalid pairing URL: must start with serper://pair#')
   }
   return decodePairingBase64(url.slice(hashIndex + 1))
 }
 
-// Why: accept either an `orca://pair#<base64>` URL or the bare base64
+// Why: accept either an `serper://pair#<base64>` URL or the bare base64
 // string so the mobile paste-pair flow can take whichever the user
 // actually copied from desktop.
 export function parsePairingCode(input: string): PairingOffer | null {
@@ -40,7 +40,7 @@ export function parsePairingCode(input: string): PairingOffer | null {
     return null
   }
   try {
-    if (trimmed.startsWith('orca://pair')) {
+    if (trimmed.startsWith('serper://pair')) {
       return decodePairingOffer(trimmed)
     }
     return decodePairingBase64(trimmed)

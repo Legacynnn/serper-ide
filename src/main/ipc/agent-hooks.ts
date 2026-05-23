@@ -18,7 +18,7 @@ import { grokHookService } from '../grok/hook-service'
 import { copilotHookService } from '../copilot/hook-service'
 import { hermesHookService } from '../hermes/hook-service'
 
-// Why: install/remove are intentionally not exposed to the renderer. Orca
+// Why: install/remove are intentionally not exposed to the renderer. Serper
 // auto-installs managed hooks at app startup (see src/main/index.ts), so a
 // renderer-triggered remove would be silently reverted on the next launch
 // and mislead the user.

@@ -64,7 +64,7 @@ export function TerminalThemePreview({
             >
               <div className="flex items-center gap-2 text-[11px] opacity-70">
                 <span className="size-2 rounded-full bg-emerald-500" />
-                <span>orca preview</span>
+                <span>serper preview</span>
               </div>
               <div className="mt-3">$ git status --short</div>
               <div style={{ color: palette[1] ?? foreground }}>

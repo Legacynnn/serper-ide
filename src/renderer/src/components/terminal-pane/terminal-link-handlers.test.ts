@@ -167,7 +167,7 @@ describe('handleOscLink', () => {
     expect(stopPropagation).not.toHaveBeenCalled()
   })
 
-  it('defaults to Orca when settings have not hydrated yet', () => {
+  it('defaults to Serper when settings have not hydrated yet', () => {
     setPlatform('Macintosh')
     storeState.settings = undefined
 
@@ -180,7 +180,7 @@ describe('handleOscLink', () => {
     expect(openUrlMock).not.toHaveBeenCalled()
   })
 
-  it('uses the system browser for shift+cmd/ctrl+click even when Orca browser tabs are enabled', () => {
+  it('uses the system browser for shift+cmd/ctrl+click even when Serper browser tabs are enabled', () => {
     setPlatform('Windows')
     storeState.settings = { openLinksInApp: true }
 
@@ -280,7 +280,7 @@ describe('handleOscLink', () => {
     expect(getTerminalHtmlFileOpenHint()).toBe('Ctrl+click to open in browser')
   })
 
-  it('opens file links in Orca instead of via shell when the platform modifier is pressed', async () => {
+  it('opens file links in Serper instead of via shell when the platform modifier is pressed', async () => {
     setPlatform('Windows')
 
     handleOscLink('file:///tmp/test.txt', { metaKey: false, ctrlKey: false }, deps)
@@ -430,7 +430,7 @@ describe('handleOscLink', () => {
     )
   })
 
-  it('opens SSH file links through Orca without local authorization', async () => {
+  it('opens SSH file links through Serper without local authorization', async () => {
     setPlatform('Macintosh')
     vi.mocked(getConnectionId).mockReturnValue('ssh-1')
 

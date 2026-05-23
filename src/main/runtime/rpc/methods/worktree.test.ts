@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { RpcDispatcher } from '../dispatcher'
 import type { RpcRequest } from '../core'
-import type { OrcaRuntimeService } from '../../orca-runtime'
+import type { SerperRuntimeService } from '../../serper-runtime'
 import { WORKTREE_METHODS } from './worktree'
 
 function makeRequest(method: string, params?: unknown): RpcRequest {
@@ -13,7 +13,7 @@ describe('worktree RPC methods', () => {
     const runtime = {
       getRuntimeId: () => 'test-runtime',
       createManagedWorktree: vi.fn().mockResolvedValue({ worktree: { id: 'wt-1' } })
-    } as unknown as OrcaRuntimeService
+    } as unknown as SerperRuntimeService
     const dispatcher = new RpcDispatcher({ runtime, methods: WORKTREE_METHODS })
 
     await dispatcher.dispatch(
@@ -64,7 +64,7 @@ describe('worktree RPC methods', () => {
     const runtime = {
       getRuntimeId: () => 'test-runtime',
       createManagedWorktree: vi.fn()
-    } as unknown as OrcaRuntimeService
+    } as unknown as SerperRuntimeService
     const dispatcher = new RpcDispatcher({ runtime, methods: WORKTREE_METHODS })
 
     const response = await dispatcher.dispatch(
@@ -85,7 +85,7 @@ describe('worktree RPC methods', () => {
     const runtime = {
       getRuntimeId: () => 'test-runtime',
       updateManagedWorktreeMeta: vi.fn()
-    } as unknown as OrcaRuntimeService
+    } as unknown as SerperRuntimeService
     const dispatcher = new RpcDispatcher({ runtime, methods: WORKTREE_METHODS })
 
     const response = await dispatcher.dispatch(
@@ -116,7 +116,7 @@ describe('worktree RPC methods', () => {
     const runtime = {
       getRuntimeId: () => 'test-runtime',
       listWorktreeLineage: vi.fn().mockResolvedValue(lineage)
-    } as unknown as OrcaRuntimeService
+    } as unknown as SerperRuntimeService
     const dispatcher = new RpcDispatcher({ runtime, methods: WORKTREE_METHODS })
 
     const response = await dispatcher.dispatch(makeRequest('worktree.lineageList'))
@@ -129,7 +129,7 @@ describe('worktree RPC methods', () => {
     const runtime = {
       getRuntimeId: () => 'test-runtime',
       persistManagedWorktreeSortOrder: vi.fn().mockReturnValue({ updated: 2 })
-    } as unknown as OrcaRuntimeService
+    } as unknown as SerperRuntimeService
     const dispatcher = new RpcDispatcher({ runtime, methods: WORKTREE_METHODS })
 
     const response = await dispatcher.dispatch(

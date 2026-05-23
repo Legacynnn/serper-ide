@@ -128,17 +128,17 @@ export function DiffCommentCard({
   }
 
   return (
-    <div className="orca-diff-comment-card">
-      <div className="orca-diff-comment-header">
-        <span className="orca-diff-comment-meta">
+    <div className="serper-diff-comment-card">
+      <div className="serper-diff-comment-header">
+        <span className="serper-diff-comment-meta">
           Note · {label ?? getDiffCommentLineLabel({ lineNumber, startLine }).toLowerCase()}
         </span>
-        <div className="orca-diff-comment-actions">
+        <div className="serper-diff-comment-actions">
           {!editing && headerActions}
           {onSubmitEdit && !editing && (
             <button
               type="button"
-              className="orca-diff-comment-edit"
+              className="serper-diff-comment-edit"
               title="Edit note"
               aria-label="Edit note"
               onMouseDown={(ev) => ev.stopPropagation()}
@@ -154,7 +154,7 @@ export function DiffCommentCard({
           {!editing && (
             <button
               type="button"
-              className="orca-diff-comment-delete"
+              className="serper-diff-comment-delete"
               title="Delete note"
               aria-label="Delete note"
               onMouseDown={(ev) => ev.stopPropagation()}
@@ -173,7 +173,7 @@ export function DiffCommentCard({
         <>
           <textarea
             ref={textareaRef}
-            className="orca-diff-comment-popover-textarea"
+            className="serper-diff-comment-popover-textarea"
             value={draft}
             onChange={(e) => {
               setDraft(e.target.value)
@@ -204,7 +204,7 @@ export function DiffCommentCard({
             }}
             rows={3}
           />
-          <div className="orca-diff-comment-popover-footer">
+          <div className="serper-diff-comment-popover-footer">
             <Button variant="ghost" size="sm" onClick={handleCancel} disabled={submitting}>
               Cancel
             </Button>
@@ -224,7 +224,7 @@ export function DiffCommentCard({
           </div>
         </>
       ) : (
-        <div className="orca-diff-comment-body">{body}</div>
+        <div className="serper-diff-comment-body">{body}</div>
       )}
     </div>
   )

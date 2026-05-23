@@ -26,7 +26,7 @@ describe('openComputerUsePermissions', () => {
     resolveHelperAppPathMock.mockReset()
     resolveHelperExecutablePathMock.mockReset()
     resolveHelperExecutablePathMock.mockReturnValue(
-      '/Applications/Orca Computer Use.app/Contents/MacOS/orca-computer-use-macos'
+      '/Applications/Serper Computer Use.app/Contents/MacOS/serper-computer-use-macos'
     )
     mockPermissionStatus('{"accessibility":"granted","screenshots":"granted"}')
     setPlatform('darwin')
@@ -37,11 +37,11 @@ describe('openComputerUsePermissions', () => {
   })
 
   it('does not launch the setup helper when all permissions are granted', () => {
-    resolveHelperAppPathMock.mockReturnValue('/Applications/Orca Computer Use.app')
+    resolveHelperAppPathMock.mockReturnValue('/Applications/Serper Computer Use.app')
 
     expect(openComputerUsePermissions()).toEqual({
       platform: 'darwin',
-      helperAppPath: '/Applications/Orca Computer Use.app',
+      helperAppPath: '/Applications/Serper Computer Use.app',
       permissionId: undefined,
       openedSettings: false,
       launchedHelper: false,
@@ -55,12 +55,12 @@ describe('openComputerUsePermissions', () => {
   })
 
   it('launches the helper app in permissions mode', () => {
-    resolveHelperAppPathMock.mockReturnValue('/Applications/Orca Computer Use.app')
+    resolveHelperAppPathMock.mockReturnValue('/Applications/Serper Computer Use.app')
     mockPermissionStatus('{"accessibility":"granted","screenshots":"not-granted"}')
 
     expect(openComputerUsePermissions()).toEqual({
       platform: 'darwin',
-      helperAppPath: '/Applications/Orca Computer Use.app',
+      helperAppPath: '/Applications/Serper Computer Use.app',
       permissionId: undefined,
       openedSettings: false,
       launchedHelper: true,
@@ -68,33 +68,33 @@ describe('openComputerUsePermissions', () => {
         { id: 'accessibility', status: 'granted' },
         { id: 'screenshots', status: 'not-granted' }
       ],
-      nextStep: 'Grant Screen Recording to Orca Computer Use, then retry get-app-state.'
+      nextStep: 'Grant Screen Recording to Serper Computer Use, then retry get-app-state.'
     })
     expect(spawn).toHaveBeenCalledTimes(1)
     expect(spawnSync).toHaveBeenCalledWith(
       '/usr/bin/pkill',
-      ['-f', 'orca-computer-use-macos --permission'],
+      ['-f', 'serper-computer-use-macos --permission'],
       { stdio: 'ignore' }
     )
     expect(spawnSync).toHaveBeenCalledWith(
       '/usr/bin/pkill',
-      ['-f', 'orca-computer-use-macos --permissions'],
+      ['-f', 'serper-computer-use-macos --permissions'],
       { stdio: 'ignore' }
     )
     expect(spawn).toHaveBeenCalledWith(
       '/usr/bin/open',
-      ['-n', '/Applications/Orca Computer Use.app', '--args', '--permissions'],
+      ['-n', '/Applications/Serper Computer Use.app', '--args', '--permissions'],
       { detached: true, stdio: 'ignore' }
     )
   })
 
   it('launches a targeted permission helper flow', () => {
-    resolveHelperAppPathMock.mockReturnValue('/Applications/Orca Computer Use.app')
+    resolveHelperAppPathMock.mockReturnValue('/Applications/Serper Computer Use.app')
     mockPermissionStatus('{"accessibility":"not-granted","screenshots":"not-granted"}')
 
     expect(openComputerUsePermissions('accessibility')).toEqual({
       platform: 'darwin',
-      helperAppPath: '/Applications/Orca Computer Use.app',
+      helperAppPath: '/Applications/Serper Computer Use.app',
       permissionId: 'accessibility',
       openedSettings: true,
       launchedHelper: true,
@@ -102,11 +102,11 @@ describe('openComputerUsePermissions', () => {
         { id: 'accessibility', status: 'not-granted' },
         { id: 'screenshots', status: 'not-granted' }
       ],
-      nextStep: 'Grant Accessibility to Orca Computer Use, then retry get-app-state.'
+      nextStep: 'Grant Accessibility to Serper Computer Use, then retry get-app-state.'
     })
     expect(spawn).toHaveBeenCalledWith(
       '/usr/bin/open',
-      ['-n', '/Applications/Orca Computer Use.app', '--args', '--permission', 'accessibility'],
+      ['-n', '/Applications/Serper Computer Use.app', '--args', '--permission', 'accessibility'],
       { detached: true, stdio: 'ignore' }
     )
   })
@@ -132,26 +132,26 @@ describe('openComputerUsePermissions', () => {
   it('throws when the helper app is missing on macOS', () => {
     resolveHelperAppPathMock.mockReturnValue(null)
 
-    expect(() => openComputerUsePermissions()).toThrow('Orca Computer Use.app was not found')
+    expect(() => openComputerUsePermissions()).toThrow('Serper Computer Use.app was not found')
   })
 
   it('throws when the helper executable is missing during setup', () => {
-    resolveHelperAppPathMock.mockReturnValue('/Applications/Orca Computer Use.app')
+    resolveHelperAppPathMock.mockReturnValue('/Applications/Serper Computer Use.app')
     resolveHelperExecutablePathMock.mockReturnValue(null)
 
     expect(() => openComputerUsePermissions('accessibility')).toThrow(
-      '/Applications/Orca Computer Use.app/Contents/MacOS/orca-computer-use-macos was not found'
+      '/Applications/Serper Computer Use.app/Contents/MacOS/serper-computer-use-macos was not found'
     )
   })
 
   it('reads permission status through the helper app executable', async () => {
     const { getComputerUsePermissionStatus } = await import('./macos-computer-use-permissions')
-    resolveHelperAppPathMock.mockReturnValue('/Applications/Orca Computer Use.app')
+    resolveHelperAppPathMock.mockReturnValue('/Applications/Serper Computer Use.app')
     mockPermissionStatus('{"accessibility":"granted","screenshots":"not-granted"}')
 
     expect(getComputerUsePermissionStatus()).toEqual({
       platform: 'darwin',
-      helperAppPath: '/Applications/Orca Computer Use.app',
+      helperAppPath: '/Applications/Serper Computer Use.app',
       helperUnavailableReason: null,
       permissions: [
         { id: 'accessibility', status: 'granted' },
@@ -159,7 +159,7 @@ describe('openComputerUsePermissions', () => {
       ]
     })
     expect(execFileSync).toHaveBeenCalledWith(
-      '/Applications/Orca Computer Use.app/Contents/MacOS/orca-computer-use-macos',
+      '/Applications/Serper Computer Use.app/Contents/MacOS/serper-computer-use-macos',
       ['--permission-status'],
       { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }
     )
@@ -172,7 +172,7 @@ describe('openComputerUsePermissions', () => {
     expect(getComputerUsePermissionStatus()).toEqual({
       platform: 'darwin',
       helperAppPath: null,
-      helperUnavailableReason: 'Orca Computer Use.app was not found',
+      helperUnavailableReason: 'Serper Computer Use.app was not found',
       permissions: [
         { id: 'accessibility', status: 'not-granted' },
         { id: 'screenshots', status: 'not-granted' }

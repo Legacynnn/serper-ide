@@ -33,7 +33,7 @@ import {
   readIssueCommand,
   runHook,
   hasHooksFile,
-  hasUnrecognizedOrcaYamlKeys,
+  hasUnrecognizedSerperYamlKeys,
   writeIssueCommand
 } from '../hooks'
 import {
@@ -50,7 +50,7 @@ import {
   notifyWorktreesChanged
 } from './worktree-remote'
 import { invalidateAuthorizedRootsCache, registerWorktreeRootsForRepo } from './filesystem-auth'
-import type { OrcaRuntimeService } from '../runtime/orca-runtime'
+import type { SerperRuntimeService } from '../runtime/serper-runtime'
 import { killAllProcessesForWorktree } from '../runtime/worktree-teardown'
 import { getLocalPtyProvider } from './pty'
 import { removeWorktreeSymlinks } from './worktree-symlinks'
@@ -63,7 +63,7 @@ import {
   getRegisteredDeletableWorktree
 } from '../worktree-removal-safety'
 
-// Why: worktrees discovered on disk (not created via Orca's UI) have no
+// Why: worktrees discovered on disk (not created via Serper's UI) have no
 // persisted WorktreeMeta, so mergeWorktree falls back to `lastActivityAt: 0`.
 // That makes them sort to the bottom of "Recent" even though the user just
 // added the repo / folder. Stamp discovery time the first time we see a
@@ -215,7 +215,7 @@ function listDisconnectedSshWorktrees(
 export function registerWorktreeHandlers(
   mainWindow: BrowserWindow,
   store: Store,
-  runtime: OrcaRuntimeService
+  runtime: SerperRuntimeService
 ): void {
   // Remove any previously registered handlers so we can re-register them
   // (e.g. when macOS re-activates the app and creates a new window).
@@ -758,11 +758,11 @@ export function registerWorktreeHandlers(
 
     const has = hasHooksFile(repo.path)
     const hooks = has ? loadHooks(repo.path) : null
-    // Why: when a newer Orca version adds a top-level key to `orca.yaml`, older
+    // Why: when a newer Serper version adds a top-level key to `serper.yaml`, older
     // versions that don't recognise it return null and show "could not be parsed".
     // Detecting well-formed but unrecognised keys lets the UI suggest updating
     // instead of implying the file is broken.
-    const mayNeedUpdate = has && !hooks && hasUnrecognizedOrcaYamlKeys(repo.path)
+    const mayNeedUpdate = has && !hooks && hasUnrecognizedSerperYamlKeys(repo.path)
     return {
       hasHooks: has,
       hooks,

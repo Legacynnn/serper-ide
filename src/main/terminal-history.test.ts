@@ -349,7 +349,7 @@ describe('terminal-history', () => {
       try {
         parseWslPathMock.mockReturnValue({ distro: 'Ubuntu', linuxPath: '/home/user/project' })
         toLinuxPathMock.mockReturnValue(
-          '/mnt/c/Users/user/AppData/Roaming/Orca/terminal-history-wsl/Ubuntu/abc123/bash_history'
+          '/mnt/c/Users/user/AppData/Roaming/Serper/terminal-history-wsl/Ubuntu/abc123/bash_history'
         )
         mkdirSyncMock.mockReturnValue(undefined)
         existsSyncMock.mockReturnValue(true)

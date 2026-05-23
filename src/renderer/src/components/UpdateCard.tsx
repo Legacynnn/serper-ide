@@ -17,8 +17,8 @@ function releaseUrlForVersion(version: string | null): string {
   // when GitHub's release API is degraded, and the listing is the most
   // reliable manual fallback.
   return version
-    ? `https://github.com/stablyai/orca/releases/tag/v${version}`
-    : 'https://github.com/stablyai/orca/releases'
+    ? `https://github.com/Legacynnn/serper/releases/tag/v${version}`
+    : 'https://github.com/Legacynnn/serper/releases'
 }
 
 function isAnimatedGif(url: string | undefined): boolean {
@@ -317,7 +317,7 @@ export function UpdateCard() {
     status.state === 'error'
       ? {
           // Why: title is scoped to the operation that failed so check-time
-          // failures (commonly GitHub-side) don't read as a bug in Orca.
+          // failures (commonly GitHub-side) don't read as a bug in Serper.
           title: cachedVersion ? 'Update Error' : 'Update Check Failed',
           summary: cachedVersion
             ? 'Could not complete the update.'
@@ -685,7 +685,7 @@ function SimpleCardContent({
         </Button>
       </div>
 
-      <p className="text-sm text-muted-foreground">Orca v{version} is ready.</p>
+      <p className="text-sm text-muted-foreground">Serper v{version} is ready.</p>
 
       <p className="text-xs leading-relaxed text-muted-foreground">
         Sessions won&apos;t be interrupted.
@@ -776,7 +776,7 @@ function DownloadingContent({
       )}
 
       <p className="text-sm text-muted-foreground">
-        {release ? release.description : `Orca v${version} is downloading.`}
+        {release ? release.description : `Serper v${version} is downloading.`}
       </p>
 
       <button
@@ -883,7 +883,7 @@ function ReadyToInstallContent({
       </div>
 
       <p className="text-sm text-muted-foreground">
-        Orca v{version} is downloaded. Restart when you&apos;re ready.
+        Serper v{version} is downloaded. Restart when you&apos;re ready.
       </p>
 
       <Button variant="default" size="sm" onClick={onRestart} className="w-full">

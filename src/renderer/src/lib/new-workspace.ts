@@ -6,7 +6,7 @@ import {
 } from '@/runtime/runtime-terminal-inspection'
 import type { AgentStartupPlan } from '@/lib/tui-agent-startup'
 import { isShellProcess } from '@/lib/tui-agent-startup'
-import type { OrcaHooks, TaskViewPresetId } from '../../../shared/types'
+import type { SerperHooks, TaskViewPresetId } from '../../../shared/types'
 import { normalizeHookCommandSourcePolicy } from '../../../shared/hook-command-source-policy'
 
 /**
@@ -56,7 +56,7 @@ export type LinkedWorkItemSummary = {
   linearIdentifier?: string
 }
 
-// Why: when a repo has no `orca.yaml` issueCommand and no per-user override,
+// Why: when a repo has no `serper.yaml` issueCommand and no per-user override,
 // we still want the composer to send a useful default prompt whenever the user
 // attaches a linked work item without typing anything else. "Complete <url>"
 // is the minimum viable instruction that always produces a coherent agent task.
@@ -67,7 +67,7 @@ export type SetupConfig = { source: 'yaml' | 'local' | 'both'; command: string }
 /**
  * Substitute the issue-command template variables. Prefers `{{artifact_url}}`
  * and keeps `{{issue}}` working silently for repos that have not migrated
- * their `orca.yaml` / `.orca/issue-command` yet.
+ * their `serper.yaml` / `.serper/issue-command` yet.
  */
 export function renderIssueCommandTemplate(
   template: string,
@@ -126,7 +126,7 @@ export function getSetupConfig(
         }
       }
     | undefined,
-  yamlHooks: OrcaHooks | null
+  yamlHooks: SerperHooks | null
 ): SetupConfig | null {
   const yamlSetup = yamlHooks?.scripts?.setup?.trim()
   const localSetup = repo?.hookSettings?.scripts?.setup?.trim()

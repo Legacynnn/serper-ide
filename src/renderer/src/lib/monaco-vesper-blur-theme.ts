@@ -45,18 +45,33 @@ export const VESPER_BLUR_MONACO_THEME_DATA: monacoNs.editor.IStandaloneThemeData
   colors: {
     'editor.background': '#00000000',
     'editor.foreground': '#FFFFFF',
-    'editor.lineHighlightBackground': '#FFFFFF10',
-    'editor.lineHighlightBorder': '#00000000',
+    // Why: Vesper avoids blue entirely. Monaco inherits selected-line cues
+    // from vs-dark, so keep the active line as a soft peach wash and make its
+    // generated border effectively invisible. Use alpha 01 instead of 00:
+    // Monaco treats fully transparent theme colors as missing and falls back
+    // to the blue focus border in some generated rules.
+    focusBorder: '#FFC799',
+    'editor.lineHighlightBackground': '#FFC79914',
+    'editor.lineHighlightBorder': '#FFC79901',
+    'editor.rangeHighlightBackground': '#FFFFFF12',
+    'editor.rangeHighlightBorder': '#00000000',
     'editorLineNumber.foreground': '#505050',
     'editorLineNumber.activeForeground': '#FFFFFF',
     'editorIndentGuide.background': '#282828',
     'editorIndentGuide.activeBackground': '#505050',
     'editor.selectionBackground': '#FFFFFF25',
     'editor.selectionHighlightBackground': '#FFFFFF15',
+    'editor.selectionHighlightBorder': '#00000000',
     'editor.wordHighlightBackground': '#FFFFFF15',
+    'editor.wordHighlightBorder': '#00000000',
     'editor.wordHighlightStrongBackground': '#FFFFFF15',
+    'editor.wordHighlightStrongBorder': '#00000000',
     'editor.findMatchBackground': '#FFC79950',
     'editor.findMatchHighlightBackground': '#FFFFFF25',
+    'editor.findMatchBorder': '#FFC79980',
+    'editor.findMatchHighlightBorder': '#00000000',
+    'editorBracketMatch.background': '#FFC79925',
+    'editorBracketMatch.border': '#FFC79950',
     'editorCursor.foreground': '#FFC799',
     'editorWhitespace.foreground': '#282828',
     'editorGutter.background': '#00000000',

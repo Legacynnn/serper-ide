@@ -1,6 +1,6 @@
 import os from 'os'
 
-import { test, expect } from './helpers/orca-app'
+import { test, expect } from './helpers/serper-app'
 import { ensureTerminalVisible, waitForActiveWorktree, waitForSessionReady } from './helpers/store'
 import {
   UUID_RE,
@@ -19,23 +19,23 @@ type LocalhostSshTarget = {
   identityFile?: string
 }
 
-const RUN_LOCALHOST_SSH = process.env.ORCA_E2E_SSH_LOCALHOST === '1'
+const RUN_LOCALHOST_SSH = process.env.SERPER_E2E_SSH_LOCALHOST === '1'
 const RUN_REMOTE_HOOKS =
-  process.env.ORCA_FEATURE_REMOTE_AGENT_HOOKS === undefined ||
-  (process.env.ORCA_FEATURE_REMOTE_AGENT_HOOKS.trim() !== '' &&
-    process.env.ORCA_FEATURE_REMOTE_AGENT_HOOKS.trim() !== '0')
+  process.env.SERPER_FEATURE_REMOTE_AGENT_HOOKS === undefined ||
+  (process.env.SERPER_FEATURE_REMOTE_AGENT_HOOKS.trim() !== '' &&
+    process.env.SERPER_FEATURE_REMOTE_AGENT_HOOKS.trim() !== '0')
 
 function parsePort(value: string | undefined): number {
   const parsed = Number(value ?? '22')
   if (Number.isInteger(parsed) && parsed > 0 && parsed <= 65535) {
     return parsed
   }
-  throw new Error(`Invalid ORCA_E2E_SSH_PORT: ${value}`)
+  throw new Error(`Invalid SERPER_E2E_SSH_PORT: ${value}`)
 }
 
 function currentUsername(): string {
   return (
-    process.env.ORCA_E2E_SSH_USER ??
+    process.env.SERPER_E2E_SSH_USER ??
     process.env.USER ??
     process.env.USERNAME ??
     os.userInfo().username
@@ -43,14 +43,14 @@ function currentUsername(): string {
 }
 
 function readLocalhostSshTarget(): LocalhostSshTarget {
-  const configHost = process.env.ORCA_E2E_SSH_CONFIG_HOST?.trim()
-  const host = process.env.ORCA_E2E_SSH_HOST?.trim() ?? (configHost ? '' : '127.0.0.1')
-  const identityFile = process.env.ORCA_E2E_SSH_IDENTITY_FILE?.trim()
+  const configHost = process.env.SERPER_E2E_SSH_CONFIG_HOST?.trim()
+  const host = process.env.SERPER_E2E_SSH_HOST?.trim() ?? (configHost ? '' : '127.0.0.1')
+  const identityFile = process.env.SERPER_E2E_SSH_IDENTITY_FILE?.trim()
 
   return {
     label: `Localhost SSH E2E ${Date.now()}`,
     host,
-    port: parsePort(process.env.ORCA_E2E_SSH_PORT),
+    port: parsePort(process.env.SERPER_E2E_SSH_PORT),
     username: currentUsername(),
     ...(configHost ? { configHost } : {}),
     ...(identityFile ? { identityFile } : {})
@@ -62,7 +62,7 @@ function shellQuote(value: string): string {
 }
 
 function marker(name: string): string {
-  return `__ORCA_${name}_${Date.now()}__`
+  return `__SERPER_${name}_${Date.now()}__`
 }
 
 function emitMarkerCommand(value: string): string {
@@ -75,24 +75,24 @@ function emitMarkerCommand(value: string): string {
 test.describe('Localhost SSH', () => {
   test.skip(
     !RUN_LOCALHOST_SSH,
-    'Set ORCA_E2E_SSH_LOCALHOST=1 to run this local-machine-only SSH E2E test.'
+    'Set SERPER_E2E_SSH_LOCALHOST=1 to run this local-machine-only SSH E2E test.'
   )
   test.skip(
     !RUN_REMOTE_HOOKS,
-    'Unset ORCA_FEATURE_REMOTE_AGENT_HOOKS or set it to 1 so remote PTYs keep pane identity and forward hook events.'
+    'Unset SERPER_FEATURE_REMOTE_AGENT_HOOKS or set it to 1 so remote PTYs keep pane identity and forward hook events.'
   )
   test.skip(process.platform === 'win32', 'Localhost SSH hook E2E uses POSIX hook scripts.')
 
   test('routes a terminal and agent-hook status over localhost SSH', async ({
-    orcaPage,
+    serperPage,
     testRepoPath
   }) => {
     test.slow()
-    await waitForSessionReady(orcaPage)
-    await waitForActiveWorktree(orcaPage)
+    await waitForSessionReady(serperPage)
+    await waitForActiveWorktree(serperPage)
 
     const target = readLocalhostSshTarget()
-    const remote = await orcaPage.evaluate(
+    const remote = await serperPage.evaluate(
       async ({ remotePath, target }) => {
         const store = window.__store
         if (!store) {
@@ -171,10 +171,10 @@ test.describe('Localhost SSH', () => {
     )
 
     await expect(remote.targetId).toBeTruthy()
-    await ensureTerminalVisible(orcaPage, 30_000)
-    await waitForActiveTerminalManager(orcaPage, 45_000)
-    const ptyId = await waitForActivePanePtyId(orcaPage, 45_000)
-    const paneKey = await orcaPage.evaluate(() => {
+    await ensureTerminalVisible(serperPage, 30_000)
+    await waitForActiveTerminalManager(serperPage, 45_000)
+    const ptyId = await waitForActivePanePtyId(serperPage, 45_000)
+    const paneKey = await serperPage.evaluate(() => {
       const store = window.__store
       if (!store) {
         throw new Error('Store unavailable')
@@ -203,33 +203,33 @@ test.describe('Localhost SSH', () => {
     expect(paneKeyLeafId).toMatch(UUID_RE)
 
     const terminalMarker = marker('LOCALHOST_SSH')
-    await execInTerminal(orcaPage, ptyId, emitMarkerCommand(terminalMarker))
-    await waitForTerminalOutput(orcaPage, terminalMarker, 20_000)
+    await execInTerminal(serperPage, ptyId, emitMarkerCommand(terminalMarker))
+    await waitForTerminalOutput(serperPage, terminalMarker, 20_000)
 
     const envMarker = marker('AGENT_HOOK_ENV_OK')
     const envFailedMarker = marker('AGENT_HOOK_ENV_BAD')
     await execInTerminal(
-      orcaPage,
+      serperPage,
       ptyId,
       [
-        `if [ "$ORCA_PANE_KEY" = ${shellQuote(paneKey)} ] && [ -n "$ORCA_AGENT_HOOK_PORT" ] && [ -n "$ORCA_AGENT_HOOK_TOKEN" ] && /bin/sh -c 'test -n "$ORCA_PANE_KEY" && test -n "$ORCA_AGENT_HOOK_PORT" && test -n "$ORCA_AGENT_HOOK_TOKEN"'; then`,
+        `if [ "$SERPER_PANE_KEY" = ${shellQuote(paneKey)} ] && [ -n "$SERPER_AGENT_HOOK_PORT" ] && [ -n "$SERPER_AGENT_HOOK_TOKEN" ] && /bin/sh -c 'test -n "$SERPER_PANE_KEY" && test -n "$SERPER_AGENT_HOOK_PORT" && test -n "$SERPER_AGENT_HOOK_TOKEN"'; then`,
         `  ${emitMarkerCommand(envMarker)}`,
         'else',
-        '  token_state=${ORCA_AGENT_HOOK_TOKEN:+set}',
-        `  printf '%s pane=%s port=%s token=%s endpoint=%s\\n' ${shellQuote(envFailedMarker)} "$ORCA_PANE_KEY" "$ORCA_AGENT_HOOK_PORT" "$token_state" "$ORCA_AGENT_HOOK_ENDPOINT"`,
+        '  token_state=${SERPER_AGENT_HOOK_TOKEN:+set}',
+        `  printf '%s pane=%s port=%s token=%s endpoint=%s\\n' ${shellQuote(envFailedMarker)} "$SERPER_PANE_KEY" "$SERPER_AGENT_HOOK_PORT" "$token_state" "$SERPER_AGENT_HOOK_ENDPOINT"`,
         'fi'
       ].join('\n')
     )
-    await waitForTerminalOutput(orcaPage, envMarker, 20_000)
+    await waitForTerminalOutput(serperPage, envMarker, 20_000)
 
     const pluginOverlayMarker = marker('AGENT_PLUGIN_OVERLAYS_OK')
     const pluginOverlayFailedMarker = marker('AGENT_PLUGIN_OVERLAYS_BAD')
     await execInTerminal(
-      orcaPage,
+      serperPage,
       ptyId,
       [
-        'opencode_status_file="$OPENCODE_CONFIG_DIR/plugins/orca-opencode-status.js"',
-        'pi_status_file="$PI_CODING_AGENT_DIR/extensions/orca-agent-status.ts"',
+        'opencode_status_file="$OPENCODE_CONFIG_DIR/plugins/serper-opencode-status.js"',
+        'pi_status_file="$PI_CODING_AGENT_DIR/extensions/serper-agent-status.ts"',
         'if [ -n "$OPENCODE_CONFIG_DIR" ] && [ -f "$opencode_status_file" ] && [ -n "$PI_CODING_AGENT_DIR" ] && [ -f "$pi_status_file" ]; then',
         `  ${emitMarkerCommand(pluginOverlayMarker)}`,
         'else',
@@ -237,38 +237,38 @@ test.describe('Localhost SSH', () => {
         'fi'
       ].join('\n')
     )
-    await waitForTerminalOutput(orcaPage, pluginOverlayMarker, 20_000)
+    await waitForTerminalOutput(serperPage, pluginOverlayMarker, 20_000)
 
-    const prompt = `orca ssh e2e prompt ${Date.now()}`
+    const prompt = `serper ssh e2e prompt ${Date.now()}`
     const hookPostedMarker = marker('AGENT_HOOK_POSTED')
     await execInTerminal(
-      orcaPage,
+      serperPage,
       ptyId,
       [
-        'if [ -z "$ORCA_AGENT_HOOK_PORT" ] || [ -z "$ORCA_AGENT_HOOK_TOKEN" ] || [ -z "$ORCA_PANE_KEY" ]; then',
-        '  echo __ORCA_AGENT_HOOK_ENV_MISSING__',
+        'if [ -z "$SERPER_AGENT_HOOK_PORT" ] || [ -z "$SERPER_AGENT_HOOK_TOKEN" ] || [ -z "$SERPER_PANE_KEY" ]; then',
+        '  echo __SERPER_AGENT_HOOK_ENV_MISSING__',
         'else',
         `  hook_payload=${shellQuote(JSON.stringify({ hook_event_name: 'UserPromptSubmit', prompt }))}`,
-        '  if curl -sS -X POST "http://127.0.0.1:${ORCA_AGENT_HOOK_PORT}/hook/codex" \\',
+        '  if curl -sS -X POST "http://127.0.0.1:${SERPER_AGENT_HOOK_PORT}/hook/codex" \\',
         '    -H "Content-Type: application/x-www-form-urlencoded" \\',
-        '    -H "X-Orca-Agent-Hook-Token: ${ORCA_AGENT_HOOK_TOKEN}" \\',
-        '    --data-urlencode "paneKey=${ORCA_PANE_KEY}" \\',
-        '    --data-urlencode "tabId=${ORCA_TAB_ID}" \\',
-        '    --data-urlencode "worktreeId=${ORCA_WORKTREE_ID}" \\',
-        '    --data-urlencode "env=${ORCA_AGENT_HOOK_ENV}" \\',
-        '    --data-urlencode "version=${ORCA_AGENT_HOOK_VERSION}" \\',
+        '    -H "X-Serper-Agent-Hook-Token: ${SERPER_AGENT_HOOK_TOKEN}" \\',
+        '    --data-urlencode "paneKey=${SERPER_PANE_KEY}" \\',
+        '    --data-urlencode "tabId=${SERPER_TAB_ID}" \\',
+        '    --data-urlencode "worktreeId=${SERPER_WORKTREE_ID}" \\',
+        '    --data-urlencode "env=${SERPER_AGENT_HOOK_ENV}" \\',
+        '    --data-urlencode "version=${SERPER_AGENT_HOOK_VERSION}" \\',
         '    --data-urlencode "payload=${hook_payload}" >/dev/null; then',
         `    ${emitMarkerCommand(hookPostedMarker)}`,
         '  fi',
         'fi'
       ].join('\n')
     )
-    await waitForTerminalOutput(orcaPage, hookPostedMarker, 20_000)
+    await waitForTerminalOutput(serperPage, hookPostedMarker, 20_000)
 
     await expect
       .poll(
         async () =>
-          orcaPage.evaluate(
+          serperPage.evaluate(
             ({ paneKey, prompt, targetId, worktreeId }) => {
               const state = window.__store?.getState()
               const entries = Object.values(state?.agentStatusByPaneKey ?? {})

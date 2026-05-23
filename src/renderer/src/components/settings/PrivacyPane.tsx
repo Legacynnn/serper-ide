@@ -5,7 +5,7 @@
 //      main derives the `via` tag and fires `telemetry_opted_in` /
 //      `telemetry_opted_out`.
 //   2. Render the correct "blocked by X" helper text when an environment
-//      variable (DO_NOT_TRACK, ORCA_TELEMETRY_DISABLED) or CI presence
+//      variable (DO_NOT_TRACK, SERPER_TELEMETRY_DISABLED) or CI presence
 //      disables transmission at runtime. Env vars are main-side process
 //      state, so the pane reads effective consent via
 //      `telemetry:getConsentState`.
@@ -35,7 +35,7 @@ import { useAppStore } from '../../store'
 // useEffect cannot be exercised in the node-env vitest harness (no DOM,
 // no act()), so we keep the blocked-state decision and the env-var name
 // mapping as plain functions that tests can call without rendering.
-export type EnvBlockedReason = 'do_not_track' | 'orca_disabled' | 'ci'
+export type EnvBlockedReason = 'do_not_track' | 'serper_disabled' | 'ci'
 
 // Reasons the toggle is read-only. Only env/CI overrides block the toggle:
 // they persist until the operator unsets the variable and relaunches, so
@@ -51,7 +51,7 @@ export function isEnvBlocked(consent: TelemetryConsentState | null): consent is 
   return (
     consent?.effective === 'disabled' &&
     (consent.reason === 'do_not_track' ||
-      consent.reason === 'orca_disabled' ||
+      consent.reason === 'serper_disabled' ||
       consent.reason === 'ci')
   )
 }
@@ -60,8 +60,8 @@ export function envVarNameForReason(reason: EnvBlockedReason): string {
   if (reason === 'do_not_track') {
     return 'DO_NOT_TRACK'
   }
-  if (reason === 'orca_disabled') {
-    return 'ORCA_TELEMETRY_DISABLED'
+  if (reason === 'serper_disabled') {
+    return 'SERPER_TELEMETRY_DISABLED'
   }
   return 'CI'
 }
@@ -179,9 +179,9 @@ export function PrivacyPane({ settings }: PrivacyPaneProps): React.JSX.Element {
             <Label>Share anonymous usage data</Label>
           </div>
           <p className="text-xs text-muted-foreground">
-            Help us figure out what to build next. Orca sends anonymous counts of which features you
-            use and where things break — no file contents, prompts, terminal output, branch names,
-            or anything that identifies you.{' '}
+            Help us figure out what to build next. Serper sends anonymous counts of which features
+            you use and where things break — no file contents, prompts, terminal output, branch
+            names, or anything that identifies you.{' '}
             <button
               type="button"
               className="underline underline-offset-2 hover:text-foreground"

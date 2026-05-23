@@ -2,7 +2,7 @@ import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import { homedir } from 'os'
 import { basename, dirname, join } from 'path'
 
-const RELAY_SHELL_READY_DIR = '.orca-relay/shell-ready'
+const RELAY_SHELL_READY_DIR = '.serper-relay/shell-ready'
 const POSIX_LOGIN_ARGS = ['-l']
 
 export type RelayShellLaunchConfig = {
@@ -15,7 +15,7 @@ function quotePosixSingle(value: string): string {
 }
 
 function hasOverlayRestoreEnv(env: Record<string, string>): boolean {
-  return Boolean(env.ORCA_OPENCODE_CONFIG_DIR || env.ORCA_PI_CODING_AGENT_DIR)
+  return Boolean(env.SERPER_OPENCODE_CONFIG_DIR || env.SERPER_PI_CODING_AGENT_DIR)
 }
 
 function getWrapperRoot(env: Record<string, string>): string {
@@ -36,7 +36,7 @@ function normalizeOriginalZdotdirCandidate(value: string | undefined): string | 
 function resolveOriginalZdotdir(env: Record<string, string>): string {
   return (
     normalizeOriginalZdotdirCandidate(env.ZDOTDIR) ||
-    normalizeOriginalZdotdirCandidate(env.ORCA_ORIG_ZDOTDIR) ||
+    normalizeOriginalZdotdirCandidate(env.SERPER_ORIG_ZDOTDIR) ||
     env.HOME ||
     process.env.HOME ||
     ''
@@ -47,52 +47,52 @@ function ensureOverlayRestoreWrappers(root: string): void {
   const zshDir = join(root, 'zsh')
   const bashDir = join(root, 'bash')
 
-  const zshEnv = `# Orca relay zsh overlay wrapper
-export ORCA_ORIG_ZDOTDIR="\${ORCA_ORIG_ZDOTDIR:-$HOME}"
-case "\${ORCA_ORIG_ZDOTDIR%/}" in
-  */shell-ready/zsh) export ORCA_ORIG_ZDOTDIR="$HOME" ;;
+  const zshEnv = `# Serper relay zsh overlay wrapper
+export SERPER_ORIG_ZDOTDIR="\${SERPER_ORIG_ZDOTDIR:-$HOME}"
+case "\${SERPER_ORIG_ZDOTDIR%/}" in
+  */shell-ready/zsh) export SERPER_ORIG_ZDOTDIR="$HOME" ;;
 esac
-[[ -f "$ORCA_ORIG_ZDOTDIR/.zshenv" ]] && source "$ORCA_ORIG_ZDOTDIR/.zshenv"
-export ORCA_USER_ZDOTDIR="\${ZDOTDIR:-\${ORCA_ORIG_ZDOTDIR:-$HOME}}"
-case "\${ORCA_USER_ZDOTDIR%/}" in
-  */shell-ready/zsh) export ORCA_USER_ZDOTDIR="$HOME" ;;
+[[ -f "$SERPER_ORIG_ZDOTDIR/.zshenv" ]] && source "$SERPER_ORIG_ZDOTDIR/.zshenv"
+export SERPER_USER_ZDOTDIR="\${ZDOTDIR:-\${SERPER_ORIG_ZDOTDIR:-$HOME}}"
+case "\${SERPER_USER_ZDOTDIR%/}" in
+  */shell-ready/zsh) export SERPER_USER_ZDOTDIR="$HOME" ;;
 esac
 export ZDOTDIR=${quotePosixSingle(zshDir)}
 `
-  const zshProfile = `# Orca relay zsh overlay wrapper
-_orca_home="\${ORCA_USER_ZDOTDIR:-\${ORCA_ORIG_ZDOTDIR:-$HOME}}"
-case "\${_orca_home%/}" in
-  */shell-ready/zsh) _orca_home="$HOME" ;;
+  const zshProfile = `# Serper relay zsh overlay wrapper
+_serper_home="\${SERPER_USER_ZDOTDIR:-\${SERPER_ORIG_ZDOTDIR:-$HOME}}"
+case "\${_serper_home%/}" in
+  */shell-ready/zsh) _serper_home="$HOME" ;;
 esac
-[[ -f "$_orca_home/.zprofile" ]] && source "$_orca_home/.zprofile"
+[[ -f "$_serper_home/.zprofile" ]] && source "$_serper_home/.zprofile"
 `
-  const zshRc = `# Orca relay zsh overlay wrapper
-_orca_home="\${ORCA_USER_ZDOTDIR:-\${ORCA_ORIG_ZDOTDIR:-$HOME}}"
-case "\${_orca_home%/}" in
-  */shell-ready/zsh) _orca_home="$HOME" ;;
+  const zshRc = `# Serper relay zsh overlay wrapper
+_serper_home="\${SERPER_USER_ZDOTDIR:-\${SERPER_ORIG_ZDOTDIR:-$HOME}}"
+case "\${_serper_home%/}" in
+  */shell-ready/zsh) _serper_home="$HOME" ;;
 esac
-if [[ -o interactive && -f "$_orca_home/.zshrc" ]]; then
-  source "$_orca_home/.zshrc"
+if [[ -o interactive && -f "$_serper_home/.zshrc" ]]; then
+  source "$_serper_home/.zshrc"
 fi
 if [[ ! -o login ]]; then
   # Why: remote startup files can re-export user defaults after relay spawn.
-  [[ -n "\${ORCA_OPENCODE_CONFIG_DIR:-}" ]] && export OPENCODE_CONFIG_DIR="\${ORCA_OPENCODE_CONFIG_DIR}"
-  [[ -n "\${ORCA_PI_CODING_AGENT_DIR:-}" ]] && export PI_CODING_AGENT_DIR="\${ORCA_PI_CODING_AGENT_DIR}"
+  [[ -n "\${SERPER_OPENCODE_CONFIG_DIR:-}" ]] && export OPENCODE_CONFIG_DIR="\${SERPER_OPENCODE_CONFIG_DIR}"
+  [[ -n "\${SERPER_PI_CODING_AGENT_DIR:-}" ]] && export PI_CODING_AGENT_DIR="\${SERPER_PI_CODING_AGENT_DIR}"
 fi
 `
-  const zshLogin = `# Orca relay zsh overlay wrapper
-_orca_home="\${ORCA_USER_ZDOTDIR:-\${ORCA_ORIG_ZDOTDIR:-$HOME}}"
-case "\${_orca_home%/}" in
-  */shell-ready/zsh) _orca_home="$HOME" ;;
+  const zshLogin = `# Serper relay zsh overlay wrapper
+_serper_home="\${SERPER_USER_ZDOTDIR:-\${SERPER_ORIG_ZDOTDIR:-$HOME}}"
+case "\${_serper_home%/}" in
+  */shell-ready/zsh) _serper_home="$HOME" ;;
 esac
-if [[ -o interactive && -f "$_orca_home/.zlogin" ]]; then
-  source "$_orca_home/.zlogin"
+if [[ -o interactive && -f "$_serper_home/.zlogin" ]]; then
+  source "$_serper_home/.zlogin"
 fi
 # Why: .zlogin is the final zsh login startup file before the prompt.
-[[ -n "\${ORCA_OPENCODE_CONFIG_DIR:-}" ]] && export OPENCODE_CONFIG_DIR="\${ORCA_OPENCODE_CONFIG_DIR}"
-[[ -n "\${ORCA_PI_CODING_AGENT_DIR:-}" ]] && export PI_CODING_AGENT_DIR="\${ORCA_PI_CODING_AGENT_DIR}"
+[[ -n "\${SERPER_OPENCODE_CONFIG_DIR:-}" ]] && export OPENCODE_CONFIG_DIR="\${SERPER_OPENCODE_CONFIG_DIR}"
+[[ -n "\${SERPER_PI_CODING_AGENT_DIR:-}" ]] && export PI_CODING_AGENT_DIR="\${SERPER_PI_CODING_AGENT_DIR}"
 `
-  const bashRc = `# Orca relay bash overlay wrapper
+  const bashRc = `# Serper relay bash overlay wrapper
 [[ -f /etc/profile ]] && source /etc/profile
 if [[ -f "$HOME/.bash_profile" ]]; then
   source "$HOME/.bash_profile"
@@ -102,8 +102,8 @@ elif [[ -f "$HOME/.profile" ]]; then
   source "$HOME/.profile"
 fi
 # Why: remote startup files can re-export user defaults after relay spawn.
-[[ -n "\${ORCA_OPENCODE_CONFIG_DIR:-}" ]] && export OPENCODE_CONFIG_DIR="\${ORCA_OPENCODE_CONFIG_DIR}"
-[[ -n "\${ORCA_PI_CODING_AGENT_DIR:-}" ]] && export PI_CODING_AGENT_DIR="\${ORCA_PI_CODING_AGENT_DIR}"
+[[ -n "\${SERPER_OPENCODE_CONFIG_DIR:-}" ]] && export OPENCODE_CONFIG_DIR="\${SERPER_OPENCODE_CONFIG_DIR}"
+[[ -n "\${SERPER_PI_CODING_AGENT_DIR:-}" ]] && export PI_CODING_AGENT_DIR="\${SERPER_PI_CODING_AGENT_DIR}"
 `
 
   const files = [
@@ -122,7 +122,7 @@ fi
     } catch {
       existing = null
     }
-    // Why: relay wrapper files persist under ~/.orca-relay across app
+    // Why: relay wrapper files persist under ~/.serper-relay across app
     // upgrades. Existence alone is not enough; stale wrappers would miss
     // later fixes such as preserving post-.zshenv ZDOTDIR.
     if (existing !== content) {
@@ -152,7 +152,7 @@ export function getRelayShellLaunchConfig(
     return {
       args: POSIX_LOGIN_ARGS,
       env: {
-        ORCA_ORIG_ZDOTDIR: resolveOriginalZdotdir(env),
+        SERPER_ORIG_ZDOTDIR: resolveOriginalZdotdir(env),
         ZDOTDIR: join(root, 'zsh')
       }
     }

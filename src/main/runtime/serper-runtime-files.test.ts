@@ -46,7 +46,7 @@ vi.mock('../providers/ssh-filesystem-dispatch', () => ({
     'Remote connection dropped. Click Reconnect on the SSH target before retrying.'
 }))
 
-import { awaitRuntimeFileWatcherUnsubscribes, RuntimeFileCommands } from './orca-runtime-files'
+import { awaitRuntimeFileWatcherUnsubscribes, RuntimeFileCommands } from './serper-runtime-files'
 
 describe('RuntimeFileCommands', () => {
   const originalPlatform = process.platform

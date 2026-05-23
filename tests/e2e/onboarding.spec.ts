@@ -8,7 +8,7 @@
  * the overlay renders on first paint without any setup.
  */
 
-import { test, expect } from './helpers/orca-app'
+import { test, expect } from './helpers/serper-app'
 import { waitForSessionReady } from './helpers/store'
 import type { Page } from '@stablyai/playwright-test'
 import type { GlobalSettings, TuiAgent } from '../../src/shared/types'
@@ -20,11 +20,11 @@ type OnboardingState = {
   checklist: Record<string, boolean>
 }
 
-const ORCHESTRATION_ENABLED_STORAGE_KEY = 'orca.orchestration.enabled'
-const BROWSER_USE_ENABLED_STORAGE_KEY = 'orca.browserUse.enabled'
+const ORCHESTRATION_ENABLED_STORAGE_KEY = 'serper.orchestration.enabled'
+const BROWSER_USE_ENABLED_STORAGE_KEY = 'serper.browserUse.enabled'
 const SKIP_TO_PROJECT_SETUP_BUTTON = /^Skip to project setup$/i
 const TASK_SOURCES_HEADING = /Connect your task sources/i
-const REPO_STEP_HEADING = /Point Orca at some code/i
+const REPO_STEP_HEADING = /Point Serper at some code/i
 
 async function getOnboardingState(page: Page): Promise<OnboardingState> {
   return page.evaluate(() => window.api.onboarding.get() as Promise<OnboardingState>)
@@ -45,15 +45,15 @@ async function installSafeOnboardingFeatureSetupDeps(page: Page): Promise<void> 
     window.__onboardingFeatureSetupDeps = {
       getCliStatus: async () => ({
         platform: 'darwin',
-        commandName: 'orca',
-        commandPath: '/usr/local/bin/orca',
+        commandName: 'serper',
+        commandPath: '/usr/local/bin/serper',
         pathDirectory: '/usr/local/bin',
         pathConfigured: true,
-        launcherPath: '/Applications/Orca.app/Contents/MacOS/Orca',
+        launcherPath: '/Applications/Serper.app/Contents/MacOS/Serper',
         installMethod: 'symlink',
         supported: true,
         state: 'installed',
-        currentTarget: '/Applications/Orca.app/Contents/MacOS/Orca',
+        currentTarget: '/Applications/Serper.app/Contents/MacOS/Serper',
         unsupportedReason: null,
         detail: null
       }),
@@ -61,7 +61,7 @@ async function installSafeOnboardingFeatureSetupDeps(page: Page): Promise<void> 
         throw new Error('CLI registration should not run in this onboarding E2E')
       },
       writeClipboardText: async (text) => {
-        localStorage.setItem('orca.e2e.onboardingFeatureSetupClipboard', text)
+        localStorage.setItem('serper.e2e.onboardingFeatureSetupClipboard', text)
       },
       getComputerUsePermissionStatus: async () => ({
         platform: 'darwin',
@@ -76,7 +76,7 @@ async function installSafeOnboardingFeatureSetupDeps(page: Page): Promise<void> 
       setStorageItem: (key, value) => localStorage.setItem(key, value),
       removeStorageItem: (key) => localStorage.removeItem(key),
       notifyOrchestrationStateChanged: () => {
-        window.dispatchEvent(new CustomEvent('orca:orchestration-setup-state'))
+        window.dispatchEvent(new CustomEvent('serper:orchestration-setup-state'))
       }
     }
   })
@@ -137,29 +137,31 @@ test.describe('Onboarding flow', () => {
   // spec actually exercises the first-launch flow.
   test.use({ dismissOnboarding: false })
 
-  test.beforeEach(async ({ orcaPage }) => {
-    // Per-test userData is freshly minted by the orcaPage fixture, so persisted
+  test.beforeEach(async ({ serperPage }) => {
+    // Per-test userData is freshly minted by the serperPage fixture, so persisted
     // onboarding state defaults to `closedAt: null, lastCompletedStep: -1` and
     // the overlay paints on its own once App's bootstrap effect resolves.
-    await waitForSessionReady(orcaPage)
+    await waitForSessionReady(serperPage)
   })
 
-  test('renders on first launch with the agent step active', async ({ orcaPage }) => {
-    await expect(orcaPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible({
-      timeout: 15_000
-    })
-    await expect(orcaPage.getByText('1 of 5')).toBeVisible()
-    await expect(onboardingFooterButton(orcaPage, /^Continue\b/)).toBeVisible()
-    await expect(onboardingFooterButton(orcaPage, SKIP_TO_PROJECT_SETUP_BUTTON)).toBeVisible()
+  test('renders on first launch with the agent step active', async ({ serperPage }) => {
+    await expect(serperPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible(
+      {
+        timeout: 15_000
+      }
+    )
+    await expect(serperPage.getByText('1 of 5')).toBeVisible()
+    await expect(onboardingFooterButton(serperPage, /^Continue\b/)).toBeVisible()
+    await expect(onboardingFooterButton(serperPage, SKIP_TO_PROJECT_SETUP_BUTTON)).toBeVisible()
     // Why: Back is not rendered on the first step (was previously rendered-but-
     // disabled with `disabled:invisible`, now conditionally mounted).
-    await expect(orcaPage.getByRole('button', { name: 'Back', exact: true })).toHaveCount(0)
+    await expect(serperPage.getByRole('button', { name: 'Back', exact: true })).toHaveCount(0)
     // Footer hint shows the platform-correct continue shortcut (⌘ on Mac,
     // Ctrl elsewhere). Match either form so the test runs cross-platform.
     // Why: scope to the footer action so background UI shortcut hints cannot
     // false-positive this assertion.
     await expect(
-      onboardingFooterButton(orcaPage, /^Continue\b/)
+      onboardingFooterButton(serperPage, /^Continue\b/)
         .locator('span')
         .filter({ hasText: /⌘|Ctrl/ })
         .first()
@@ -167,11 +169,13 @@ test.describe('Onboarding flow', () => {
   })
 
   test('Continue advances steps, persists progress, and applies user-visible settings', async ({
-    orcaPage
+    serperPage
   }) => {
-    await expect(orcaPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible({
-      timeout: 15_000
-    })
+    await expect(serperPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible(
+      {
+        timeout: 15_000
+      }
+    )
 
     // --- Step 1: agent ---
     // Force a deterministic, non-default selection so the assertion below
@@ -180,7 +184,7 @@ test.describe('Onboarding flow', () => {
     // agents are detected, otherwise behind the "Show N more agents" details
     // expander — open it if codex isn't visible.
     const targetAgent: TuiAgent = 'codex'
-    const codexButton = orcaPage.getByRole('button', { name: /^Codex\s/ })
+    const codexButton = serperPage.getByRole('button', { name: /^Codex\s/ })
     // Why: isVisible() is a one-shot probe — on slow renderer paint it would
     // race the wizard mount and falsely take the "show more agents" branch.
     // waitFor with a small timeout actually retries until the button paints.
@@ -190,15 +194,15 @@ test.describe('Onboarding flow', () => {
       .then(() => true)
       .catch(() => false)
     if (!codexVisible) {
-      await orcaPage.getByText(/Show \d+ more agents/).click()
+      await serperPage.getByText(/Show \d+ more agents/).click()
     }
     await codexButton.click()
 
-    await continueOnboarding(orcaPage)
-    await expect(orcaPage.getByRole('heading', { name: /Make it feel like home/i })).toBeVisible()
-    await expect(orcaPage.getByText('2 of 5')).toBeVisible()
+    await continueOnboarding(serperPage)
+    await expect(serperPage.getByRole('heading', { name: /Make it feel like home/i })).toBeVisible()
+    await expect(serperPage.getByText('2 of 5')).toBeVisible()
     await expect
-      .poll(async () => (await getOnboardingState(orcaPage)).lastCompletedStep, {
+      .poll(async () => (await getOnboardingState(serperPage)).lastCompletedStep, {
         timeout: 5_000,
         message: 'lastCompletedStep did not advance to 1 after first Continue'
       })
@@ -206,7 +210,7 @@ test.describe('Onboarding flow', () => {
     // The agent choice must be persisted to settings (the user will see this
     // pre-selected when they later open a new tab / agent picker).
     await expect
-      .poll(async () => (await getSettings(orcaPage)).defaultTuiAgent, { timeout: 5_000 })
+      .poll(async () => (await getSettings(serperPage)).defaultTuiAgent, { timeout: 5_000 })
       .toBe(targetAgent)
 
     // --- Step 2: theme ---
@@ -216,30 +220,32 @@ test.describe('Onboarding flow', () => {
     // applies the choice immediately, not just on Continue.
     // Why: 'system' resolves async on mount, so wait for the class to settle
     // before snapshotting — otherwise startingTheme can be stale.
-    await orcaPage.waitForFunction(
+    await serperPage.waitForFunction(
       () =>
         document.documentElement.classList.contains('dark') ||
         document.documentElement.classList.contains('light')
     )
-    const startingTheme = await getDocumentThemeClass(orcaPage)
+    const startingTheme = await getDocumentThemeClass(serperPage)
     const oppositeTheme: 'dark' | 'light' = startingTheme === 'dark' ? 'light' : 'dark'
     const oppositeTileName = oppositeTheme === 'light' ? /Bright & crisp/ : /Easy on the eyes/
-    await orcaPage.getByRole('button', { name: oppositeTileName }).click()
+    await serperPage.getByRole('button', { name: oppositeTileName }).click()
     await expect
-      .poll(async () => getDocumentThemeClass(orcaPage), { timeout: 5_000 })
+      .poll(async () => getDocumentThemeClass(serperPage), { timeout: 5_000 })
       .toBe(oppositeTheme)
 
-    await continueOnboarding(orcaPage)
-    await expect(orcaPage.getByRole('heading', { name: /Set up Orca for agents/i })).toBeVisible()
-    await expect(orcaPage.getByText('3 of 5')).toBeVisible()
+    await continueOnboarding(serperPage)
+    await expect(
+      serperPage.getByRole('heading', { name: /Set up Serper for agents/i })
+    ).toBeVisible()
+    await expect(serperPage.getByText('3 of 5')).toBeVisible()
     await expect
-      .poll(async () => (await getOnboardingState(orcaPage)).lastCompletedStep, {
+      .poll(async () => (await getOnboardingState(serperPage)).lastCompletedStep, {
         timeout: 5_000,
         message: 'lastCompletedStep did not advance to 2 after second Continue'
       })
       .toBe(2)
     await expect
-      .poll(async () => (await getSettings(orcaPage)).theme, { timeout: 5_000 })
+      .poll(async () => (await getSettings(serperPage)).theme, { timeout: 5_000 })
       .toBe(oppositeTheme)
 
     // --- Step 3: notifications ---
@@ -251,22 +257,22 @@ test.describe('Onboarding flow', () => {
     // Why: the feature checklist also defaults ON; inject safe deps so this
     // E2E validates persistence without registering the real CLI or opening
     // OS permission prompts.
-    await installSafeOnboardingFeatureSetupDeps(orcaPage)
-    const browserUse = orcaPage.getByRole('checkbox', { name: /Agent Browser Use/i })
-    const computerUse = orcaPage.getByRole('checkbox', { name: /Computer Use/i })
-    const orchestration = orcaPage.getByRole('checkbox', { name: /Agent Orchestration/i })
+    await installSafeOnboardingFeatureSetupDeps(serperPage)
+    const browserUse = serperPage.getByRole('checkbox', { name: /Agent Browser Use/i })
+    const computerUse = serperPage.getByRole('checkbox', { name: /Computer Use/i })
+    const orchestration = serperPage.getByRole('checkbox', { name: /Agent Orchestration/i })
     await expect(browserUse).toHaveAttribute('aria-checked', 'true')
     await expect(computerUse).toHaveAttribute('aria-checked', 'true')
     await expect(orchestration).toHaveAttribute('aria-checked', 'true')
 
-    await setupOnboardingFeatures(orcaPage)
-    await expectSkillSetupTerminalReady(orcaPage)
-    await expect(onboardingFooterButton(orcaPage, /^Continue\b/)).toBeVisible()
-    await continueFromFeatureSetupToRepo(orcaPage)
-    await expect(orcaPage.getByRole('button', { name: 'Continue' })).toHaveCount(0)
-    await expect(orcaPage.getByRole('button', { name: /Open a folder/i })).toBeVisible()
+    await setupOnboardingFeatures(serperPage)
+    await expectSkillSetupTerminalReady(serperPage)
+    await expect(onboardingFooterButton(serperPage, /^Continue\b/)).toBeVisible()
+    await continueFromFeatureSetupToRepo(serperPage)
+    await expect(serperPage.getByRole('button', { name: 'Continue' })).toHaveCount(0)
+    await expect(serperPage.getByRole('button', { name: /Open a folder/i })).toBeVisible()
     await expect
-      .poll(async () => (await getOnboardingState(orcaPage)).lastCompletedStep, {
+      .poll(async () => (await getOnboardingState(serperPage)).lastCompletedStep, {
         timeout: 5_000
       })
       .toBe(4)
@@ -277,7 +283,7 @@ test.describe('Onboarding flow', () => {
     await expect
       .poll(
         async () => {
-          const s = await getSettings(orcaPage)
+          const s = await getSettings(serperPage)
           return {
             agentTaskComplete: s.notifications.agentTaskComplete,
             terminalBell: s.notifications.terminalBell,
@@ -297,7 +303,7 @@ test.describe('Onboarding flow', () => {
     await expect
       .poll(
         async () =>
-          orcaPage.evaluate(
+          serperPage.evaluate(
             ({ orchestrationKey, browserUseKey }) => ({
               orchestration: localStorage.getItem(orchestrationKey),
               browserUse: localStorage.getItem(browserUseKey)
@@ -312,61 +318,65 @@ test.describe('Onboarding flow', () => {
       .toEqual({ orchestration: '1', browserUse: '1' })
   })
 
-  test('Cmd/Ctrl+Enter advances steps like Continue', async ({ orcaPage }) => {
-    await expect(orcaPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible({
-      timeout: 15_000
-    })
+  test('Cmd/Ctrl+Enter advances steps like Continue', async ({ serperPage }) => {
+    await expect(serperPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible(
+      {
+        timeout: 15_000
+      }
+    )
 
     // Why: the OS the renderer reports drives whether Cmd or Ctrl is the
     // accelerator (OnboardingFlow.tsx checks navigator.userAgent).
-    const isMac = await orcaPage.evaluate(() => navigator.userAgent.includes('Mac'))
+    const isMac = await serperPage.evaluate(() => navigator.userAgent.includes('Mac'))
     const accelerator = isMac ? 'Meta+Enter' : 'Control+Enter'
 
     // Why: in headless Linux CI the window-level capture-phase listener can
     // miss synthetic keyboard events when no element holds focus. Click an
     // inert area inside the overlay first to anchor focus, then press.
-    await orcaPage.locator('footer').click({ position: { x: 1, y: 1 } })
-    await orcaPage.keyboard.press(accelerator)
-    await expect(orcaPage.getByRole('heading', { name: /Make it feel like home/i })).toBeVisible()
+    await serperPage.locator('footer').click({ position: { x: 1, y: 1 } })
+    await serperPage.keyboard.press(accelerator)
+    await expect(serperPage.getByRole('heading', { name: /Make it feel like home/i })).toBeVisible()
     await expect
-      .poll(async () => (await getOnboardingState(orcaPage)).lastCompletedStep, {
+      .poll(async () => (await getOnboardingState(serperPage)).lastCompletedStep, {
         timeout: 5_000
       })
       .toBe(1)
   })
 
   test('Skip jumps to the repo step, saves the selected agent, and keeps onboarding open', async ({
-    orcaPage
+    serperPage
   }) => {
-    await expect(orcaPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible({
-      timeout: 15_000
-    })
-    const codexButton = orcaPage.getByRole('button', { name: /^Codex\s/ })
+    await expect(serperPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible(
+      {
+        timeout: 15_000
+      }
+    )
+    const codexButton = serperPage.getByRole('button', { name: /^Codex\s/ })
     const codexVisible = await codexButton
       .first()
       .waitFor({ state: 'visible', timeout: 1_000 })
       .then(() => true)
       .catch(() => false)
     if (!codexVisible) {
-      await orcaPage.getByText(/Show \d+ more agents/).click()
+      await serperPage.getByText(/Show \d+ more agents/).click()
     }
     await codexButton.click()
 
-    await onboardingFooterButton(orcaPage, SKIP_TO_PROJECT_SETUP_BUTTON).click()
+    await onboardingFooterButton(serperPage, SKIP_TO_PROJECT_SETUP_BUTTON).click()
 
-    await expect(orcaPage.getByRole('heading', { name: REPO_STEP_HEADING })).toBeVisible()
-    await expect(orcaPage.getByText('5 of 5')).toBeVisible()
-    await expect(onboardingFooterButton(orcaPage, SKIP_TO_PROJECT_SETUP_BUTTON)).toHaveCount(0)
-    await expect(onboardingFooterButton(orcaPage, /Skip all onboarding/i)).toHaveCount(0)
-    await expect(orcaPage.getByRole('button', { name: /Open a folder/i })).toBeVisible()
+    await expect(serperPage.getByRole('heading', { name: REPO_STEP_HEADING })).toBeVisible()
+    await expect(serperPage.getByText('5 of 5')).toBeVisible()
+    await expect(onboardingFooterButton(serperPage, SKIP_TO_PROJECT_SETUP_BUTTON)).toHaveCount(0)
+    await expect(onboardingFooterButton(serperPage, /Skip all onboarding/i)).toHaveCount(0)
+    await expect(serperPage.getByRole('button', { name: /Open a folder/i })).toBeVisible()
     await expect(
-      orcaPage.getByRole('button', { name: /SSH\? Set hosts up in Settings/i })
+      serperPage.getByRole('button', { name: /SSH\? Set hosts up in Settings/i })
     ).toBeVisible()
 
     await expect
       .poll(
         async () => {
-          const state = await getOnboardingState(orcaPage)
+          const state = await getOnboardingState(serperPage)
           return {
             closedAt: state.closedAt,
             outcome: state.outcome,
@@ -383,40 +393,44 @@ test.describe('Onboarding flow', () => {
         lastCompletedStep: 4
       })
     await expect
-      .poll(async () => (await getSettings(orcaPage)).defaultTuiAgent, { timeout: 5_000 })
+      .poll(async () => (await getSettings(serperPage)).defaultTuiAgent, { timeout: 5_000 })
       .toBe('codex')
 
-    await orcaPage.reload()
-    await waitForSessionReady(orcaPage)
-    await expect(orcaPage.getByRole('heading', { name: REPO_STEP_HEADING })).toBeVisible()
-    await expect(orcaPage.getByText('5 of 5')).toBeVisible()
-    await expect(onboardingFooterButton(orcaPage, SKIP_TO_PROJECT_SETUP_BUTTON)).toHaveCount(0)
-    expect((await getOnboardingState(orcaPage)).closedAt).toBeNull()
+    await serperPage.reload()
+    await waitForSessionReady(serperPage)
+    await expect(serperPage.getByRole('heading', { name: REPO_STEP_HEADING })).toBeVisible()
+    await expect(serperPage.getByText('5 of 5')).toBeVisible()
+    await expect(onboardingFooterButton(serperPage, SKIP_TO_PROJECT_SETUP_BUTTON)).toHaveCount(0)
+    expect((await getOnboardingState(serperPage)).closedAt).toBeNull()
   })
 
-  test('SSH settings link opens settings without dismissing onboarding', async ({ orcaPage }) => {
-    await expect(orcaPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible({
-      timeout: 15_000
-    })
+  test('SSH settings link opens settings without dismissing onboarding', async ({ serperPage }) => {
+    await expect(serperPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible(
+      {
+        timeout: 15_000
+      }
+    )
 
-    await onboardingFooterButton(orcaPage, SKIP_TO_PROJECT_SETUP_BUTTON).click()
-    await expect(orcaPage.getByRole('heading', { name: REPO_STEP_HEADING })).toBeVisible()
+    await onboardingFooterButton(serperPage, SKIP_TO_PROJECT_SETUP_BUTTON).click()
+    await expect(serperPage.getByRole('heading', { name: REPO_STEP_HEADING })).toBeVisible()
 
-    await orcaPage.getByRole('button', { name: /SSH\? Set hosts up in Settings/i }).click()
+    await serperPage.getByRole('button', { name: /SSH\? Set hosts up in Settings/i }).click()
 
-    await expect(orcaPage.getByRole('heading', { name: REPO_STEP_HEADING })).toHaveCount(0)
+    await expect(serperPage.getByRole('heading', { name: REPO_STEP_HEADING })).toHaveCount(0)
     await expect(
-      orcaPage
+      serperPage
         .locator('[data-settings-section="ssh"]')
         .getByRole('heading', { name: 'SSH', exact: true })
     ).toBeInViewport({ timeout: 10_000 })
     await expect(
-      orcaPage.locator('[data-settings-section="ssh"]').getByRole('button', { name: /Add Target/i })
+      serperPage
+        .locator('[data-settings-section="ssh"]')
+        .getByRole('button', { name: /Add Target/i })
     ).toBeVisible()
     await expect
       .poll(
         async () => {
-          const state = await getOnboardingState(orcaPage)
+          const state = await getOnboardingState(serperPage)
           return {
             closedAt: state.closedAt === null ? null : 'set',
             outcome: state.outcome,
@@ -433,106 +447,114 @@ test.describe('Onboarding flow', () => {
         lastCompletedStep: 4
       })
 
-    await orcaPage.keyboard.press('Escape')
-    await expect(orcaPage.getByRole('heading', { name: REPO_STEP_HEADING })).toBeVisible()
-    await expect(orcaPage.getByText('5 of 5')).toBeVisible()
+    await serperPage.keyboard.press('Escape')
+    await expect(serperPage.getByRole('heading', { name: REPO_STEP_HEADING })).toBeVisible()
+    await expect(serperPage.getByText('5 of 5')).toBeVisible()
   })
 
   test('Skip from theme reverts preview without saving the skipped choice', async ({
-    orcaPage
+    serperPage
   }) => {
-    await expect(orcaPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible({
-      timeout: 15_000
-    })
-    await continueOnboarding(orcaPage)
-    await expect(orcaPage.getByRole('heading', { name: /Make it feel like home/i })).toBeVisible()
+    await expect(serperPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible(
+      {
+        timeout: 15_000
+      }
+    )
+    await continueOnboarding(serperPage)
+    await expect(serperPage.getByRole('heading', { name: /Make it feel like home/i })).toBeVisible()
 
-    await orcaPage.waitForFunction(
+    await serperPage.waitForFunction(
       () =>
         document.documentElement.classList.contains('dark') ||
         document.documentElement.classList.contains('light')
     )
-    const initialThemeSetting = (await getSettings(orcaPage)).theme
-    const startingTheme = await getDocumentThemeClass(orcaPage)
+    const initialThemeSetting = (await getSettings(serperPage)).theme
+    const startingTheme = await getDocumentThemeClass(serperPage)
     const oppositeTheme: 'dark' | 'light' = startingTheme === 'dark' ? 'light' : 'dark'
     const oppositeTileName = oppositeTheme === 'light' ? /Bright & crisp/ : /Easy on the eyes/
-    await orcaPage.getByRole('button', { name: oppositeTileName }).click()
+    await serperPage.getByRole('button', { name: oppositeTileName }).click()
     await expect
-      .poll(async () => getDocumentThemeClass(orcaPage), { timeout: 5_000 })
+      .poll(async () => getDocumentThemeClass(serperPage), { timeout: 5_000 })
       .toBe(oppositeTheme)
 
-    await onboardingFooterButton(orcaPage, SKIP_TO_PROJECT_SETUP_BUTTON).click()
+    await onboardingFooterButton(serperPage, SKIP_TO_PROJECT_SETUP_BUTTON).click()
 
-    await expect(orcaPage.getByRole('heading', { name: REPO_STEP_HEADING })).toBeVisible()
+    await expect(serperPage.getByRole('heading', { name: REPO_STEP_HEADING })).toBeVisible()
     await expect
-      .poll(async () => (await getSettings(orcaPage)).theme, { timeout: 5_000 })
+      .poll(async () => (await getSettings(serperPage)).theme, { timeout: 5_000 })
       .toBe(initialThemeSetting)
     await expect
-      .poll(async () => getDocumentThemeClass(orcaPage), { timeout: 5_000 })
+      .poll(async () => getDocumentThemeClass(serperPage), { timeout: 5_000 })
       .toBe(startingTheme)
   })
 
-  test('Skip preserves runtime server project setup UI', async ({ orcaPage }) => {
-    await expect(orcaPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible({
-      timeout: 15_000
-    })
-    await orcaPage.evaluate(async () => {
+  test('Skip preserves runtime server project setup UI', async ({ serperPage }) => {
+    await expect(serperPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible(
+      {
+        timeout: 15_000
+      }
+    )
+    await serperPage.evaluate(async () => {
       await window.__store?.getState().updateSettings({ activeRuntimeEnvironmentId: 'env-e2e' })
     })
     await expect
-      .poll(async () => (await getSettings(orcaPage)).activeRuntimeEnvironmentId, {
+      .poll(async () => (await getSettings(serperPage)).activeRuntimeEnvironmentId, {
         timeout: 5_000
       })
       .toBe('env-e2e')
 
-    await onboardingFooterButton(orcaPage, SKIP_TO_PROJECT_SETUP_BUTTON).click()
+    await onboardingFooterButton(serperPage, SKIP_TO_PROJECT_SETUP_BUTTON).click()
 
-    await expect(orcaPage.getByRole('heading', { name: REPO_STEP_HEADING })).toBeVisible()
-    await expect(orcaPage.getByText('Runtime server', { exact: true })).toBeVisible()
-    await expect(orcaPage.getByText('Server paths only')).toBeVisible()
-    await expect(orcaPage.getByText('Open a server project')).toBeVisible()
-    await expect(orcaPage.getByPlaceholder('/home/user/project')).toBeVisible()
-    await expect(orcaPage.getByRole('button', { name: /Add Git Project/i })).toBeDisabled()
-    await expect(orcaPage.getByRole('button', { name: /Open as Folder/i })).toBeDisabled()
-    await orcaPage
+    await expect(serperPage.getByRole('heading', { name: REPO_STEP_HEADING })).toBeVisible()
+    await expect(serperPage.getByText('Runtime server', { exact: true })).toBeVisible()
+    await expect(serperPage.getByText('Server paths only')).toBeVisible()
+    await expect(serperPage.getByText('Open a server project')).toBeVisible()
+    await expect(serperPage.getByPlaceholder('/home/user/project')).toBeVisible()
+    await expect(serperPage.getByRole('button', { name: /Add Git Project/i })).toBeDisabled()
+    await expect(serperPage.getByRole('button', { name: /Open as Folder/i })).toBeDisabled()
+    await serperPage
       .getByPlaceholder('git@github.com:org/repo.git')
       .fill('git@github.com:org/repo.git')
-    await expect(orcaPage.getByRole('button', { name: /^Clone$/i })).toBeDisabled()
-    await expect(onboardingFooterButton(orcaPage, SKIP_TO_PROJECT_SETUP_BUTTON)).toHaveCount(0)
-    expect((await getOnboardingState(orcaPage)).closedAt).toBeNull()
+    await expect(serperPage.getByRole('button', { name: /^Clone$/i })).toBeDisabled()
+    await expect(onboardingFooterButton(serperPage, SKIP_TO_PROJECT_SETUP_BUTTON)).toHaveCount(0)
+    expect((await getOnboardingState(serperPage)).closedAt).toBeNull()
   })
 
   test('Skip from notifications does not persist notification or feature setup', async ({
-    orcaPage
+    serperPage
   }) => {
-    await expect(orcaPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible({
-      timeout: 15_000
-    })
-    await continueOnboarding(orcaPage)
-    await expect(orcaPage.getByRole('heading', { name: /Make it feel like home/i })).toBeVisible()
-    await continueOnboarding(orcaPage)
-    await expect(orcaPage.getByRole('heading', { name: /Set up Orca for agents/i })).toBeVisible()
+    await expect(serperPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible(
+      {
+        timeout: 15_000
+      }
+    )
+    await continueOnboarding(serperPage)
+    await expect(serperPage.getByRole('heading', { name: /Make it feel like home/i })).toBeVisible()
+    await continueOnboarding(serperPage)
+    await expect(
+      serperPage.getByRole('heading', { name: /Set up Serper for agents/i })
+    ).toBeVisible()
 
-    const beforeNotifications = (await getSettings(orcaPage)).notifications
-    await orcaPage.evaluate(() => {
-      localStorage.removeItem('orca.e2e.notificationPermissionRequested')
+    const beforeNotifications = (await getSettings(serperPage)).notifications
+    await serperPage.evaluate(() => {
+      localStorage.removeItem('serper.e2e.notificationPermissionRequested')
       window.api.notifications.requestPermission = async () => {
-        localStorage.setItem('orca.e2e.notificationPermissionRequested', '1')
+        localStorage.setItem('serper.e2e.notificationPermissionRequested', '1')
         return { supported: true, platform: 'darwin', requested: true }
       }
     })
-    const bellSwitch = orcaPage.getByRole('switch', { name: /Terminal bell/i })
+    const bellSwitch = serperPage.getByRole('switch', { name: /Terminal bell/i })
     await expect(bellSwitch).toHaveAttribute('aria-checked', 'true')
     await bellSwitch.click()
     await expect(bellSwitch).toHaveAttribute('aria-checked', 'false')
 
-    await onboardingFooterButton(orcaPage, SKIP_TO_PROJECT_SETUP_BUTTON).click()
+    await onboardingFooterButton(serperPage, SKIP_TO_PROJECT_SETUP_BUTTON).click()
 
-    await expect(orcaPage.getByRole('heading', { name: REPO_STEP_HEADING })).toBeVisible()
+    await expect(serperPage.getByRole('heading', { name: REPO_STEP_HEADING })).toBeVisible()
     await expect
       .poll(
         async () => {
-          const s = await getSettings(orcaPage)
+          const s = await getSettings(serperPage)
           return {
             agentTaskComplete: s.notifications.agentTaskComplete,
             terminalBell: s.notifications.terminalBell,
@@ -551,7 +573,7 @@ test.describe('Onboarding flow', () => {
     await expect
       .poll(
         async () =>
-          orcaPage.evaluate(
+          serperPage.evaluate(
             ({ orchestrationKey, browserUseKey }) => ({
               orchestration: localStorage.getItem(orchestrationKey),
               browserUse: localStorage.getItem(browserUseKey)
@@ -567,25 +589,29 @@ test.describe('Onboarding flow', () => {
     await expect
       .poll(
         async () =>
-          orcaPage.evaluate(() => localStorage.getItem('orca.e2e.notificationPermissionRequested')),
+          serperPage.evaluate(() =>
+            localStorage.getItem('serper.e2e.notificationPermissionRequested')
+          ),
         { timeout: 5_000 }
       )
       .toBeNull()
   })
 
-  test('selected agent button reports aria-pressed=true', async ({ orcaPage }) => {
-    await expect(orcaPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible({
-      timeout: 15_000
-    })
+  test('selected agent button reports aria-pressed=true', async ({ serperPage }) => {
+    await expect(serperPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible(
+      {
+        timeout: 15_000
+      }
+    )
 
-    const codexButton = orcaPage.getByRole('button', { name: /^Codex\s/ })
+    const codexButton = serperPage.getByRole('button', { name: /^Codex\s/ })
     const codexVisible = await codexButton
       .first()
       .waitFor({ state: 'visible', timeout: 1_000 })
       .then(() => true)
       .catch(() => false)
     if (!codexVisible) {
-      await orcaPage.getByText(/Show \d+ more agents/).click()
+      await serperPage.getByText(/Show \d+ more agents/).click()
     }
     await codexButton.click()
     // Why: AgentButton now sets aria-pressed so screen readers and assistive
@@ -593,32 +619,38 @@ test.describe('Onboarding flow', () => {
     await expect(codexButton).toHaveAttribute('aria-pressed', 'true')
   })
 
-  test('notification toggles flip independently and persist on Continue', async ({ orcaPage }) => {
-    await expect(orcaPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible({
-      timeout: 15_000
-    })
-    await continueOnboarding(orcaPage)
-    await expect(orcaPage.getByRole('heading', { name: /Make it feel like home/i })).toBeVisible()
-    await continueOnboarding(orcaPage)
-    await expect(orcaPage.getByRole('heading', { name: /Set up Orca for agents/i })).toBeVisible()
+  test('notification toggles flip independently and persist on Continue', async ({
+    serperPage
+  }) => {
+    await expect(serperPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible(
+      {
+        timeout: 15_000
+      }
+    )
+    await continueOnboarding(serperPage)
+    await expect(serperPage.getByRole('heading', { name: /Make it feel like home/i })).toBeVisible()
+    await continueOnboarding(serperPage)
+    await expect(
+      serperPage.getByRole('heading', { name: /Set up Serper for agents/i })
+    ).toBeVisible()
 
     // Why: NotificationStep buttons expose role="switch" + aria-checked. Flip
     // terminalBell off and verify the toggle reflects + persists. The other
     // two toggles stay at their wizard-default ON state.
-    const bellSwitch = orcaPage.getByRole('switch', { name: /Terminal bell/i })
+    const bellSwitch = serperPage.getByRole('switch', { name: /Terminal bell/i })
     await expect(bellSwitch).toHaveAttribute('aria-checked', 'true')
     await bellSwitch.click()
     await expect(bellSwitch).toHaveAttribute('aria-checked', 'false')
 
-    await installSafeOnboardingFeatureSetupDeps(orcaPage)
-    await setupOnboardingFeatures(orcaPage)
-    await expect(orcaPage.getByRole('region', { name: /Skill setup command/i })).toBeVisible()
-    await continueOnboarding(orcaPage)
-    await expect(orcaPage.getByRole('heading', { name: TASK_SOURCES_HEADING })).toBeVisible()
+    await installSafeOnboardingFeatureSetupDeps(serperPage)
+    await setupOnboardingFeatures(serperPage)
+    await expect(serperPage.getByRole('region', { name: /Skill setup command/i })).toBeVisible()
+    await continueOnboarding(serperPage)
+    await expect(serperPage.getByRole('heading', { name: TASK_SOURCES_HEADING })).toBeVisible()
     await expect
       .poll(
         async () => {
-          const s = await getSettings(orcaPage)
+          const s = await getSettings(serperPage)
           return {
             agentTaskComplete: s.notifications.agentTaskComplete,
             terminalBell: s.notifications.terminalBell
@@ -630,31 +662,35 @@ test.describe('Onboarding flow', () => {
   })
 
   test('can opt into orchestration setup without enabling browser or computer use', async ({
-    orcaPage
+    serperPage
   }) => {
-    await expect(orcaPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible({
-      timeout: 15_000
-    })
-    await continueOnboarding(orcaPage)
-    await expect(orcaPage.getByRole('heading', { name: /Make it feel like home/i })).toBeVisible()
-    await continueOnboarding(orcaPage)
-    await expect(orcaPage.getByRole('heading', { name: /Set up Orca for agents/i })).toBeVisible()
+    await expect(serperPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible(
+      {
+        timeout: 15_000
+      }
+    )
+    await continueOnboarding(serperPage)
+    await expect(serperPage.getByRole('heading', { name: /Make it feel like home/i })).toBeVisible()
+    await continueOnboarding(serperPage)
+    await expect(
+      serperPage.getByRole('heading', { name: /Set up Serper for agents/i })
+    ).toBeVisible()
 
     // Why: this flow validates the orchestration-only setup path without
     // touching Browser Use, Computer Use permission prompts, or real CLI mutation.
-    await orcaPage.evaluate(() => {
+    await serperPage.evaluate(() => {
       window.__onboardingFeatureSetupDeps = {
         getCliStatus: async () => ({
           platform: 'darwin',
-          commandName: 'orca',
-          commandPath: '/usr/local/bin/orca',
+          commandName: 'serper',
+          commandPath: '/usr/local/bin/serper',
           pathDirectory: '/usr/local/bin',
           pathConfigured: true,
-          launcherPath: '/Applications/Orca.app/Contents/MacOS/Orca',
+          launcherPath: '/Applications/Serper.app/Contents/MacOS/Serper',
           installMethod: 'symlink',
           supported: true,
           state: 'installed',
-          currentTarget: '/Applications/Orca.app/Contents/MacOS/Orca',
+          currentTarget: '/Applications/Serper.app/Contents/MacOS/Serper',
           unsupportedReason: null,
           detail: null
         }),
@@ -671,14 +707,14 @@ test.describe('Onboarding flow', () => {
         setStorageItem: (key, value) => localStorage.setItem(key, value),
         removeStorageItem: (key) => localStorage.removeItem(key),
         notifyOrchestrationStateChanged: () => {
-          window.dispatchEvent(new CustomEvent('orca:orchestration-setup-state'))
+          window.dispatchEvent(new CustomEvent('serper:orchestration-setup-state'))
         }
       }
     })
 
-    const browserUse = orcaPage.getByRole('checkbox', { name: /Agent Browser Use/i })
-    const computerUse = orcaPage.getByRole('checkbox', { name: /Computer Use/i })
-    const orchestration = orcaPage.getByRole('checkbox', { name: /Agent Orchestration/i })
+    const browserUse = serperPage.getByRole('checkbox', { name: /Agent Browser Use/i })
+    const computerUse = serperPage.getByRole('checkbox', { name: /Computer Use/i })
+    const orchestration = serperPage.getByRole('checkbox', { name: /Agent Orchestration/i })
     await expect(browserUse).toHaveAttribute('aria-checked', 'true')
     await expect(computerUse).toHaveAttribute('aria-checked', 'true')
     await expect(orchestration).toHaveAttribute('aria-checked', 'true')
@@ -689,18 +725,18 @@ test.describe('Onboarding flow', () => {
     await expect(computerUse).toHaveAttribute('aria-checked', 'false')
     await expect(orchestration).toHaveAttribute('aria-checked', 'true')
 
-    await setupOnboardingFeatures(orcaPage)
-    await expect(orcaPage.getByRole('region', { name: /Skill setup command/i })).toBeVisible()
-    await continueFromFeatureSetupToRepo(orcaPage)
+    await setupOnboardingFeatures(serperPage)
+    await expect(serperPage.getByRole('region', { name: /Skill setup command/i })).toBeVisible()
+    await continueFromFeatureSetupToRepo(serperPage)
     await expect
-      .poll(async () => (await getOnboardingState(orcaPage)).lastCompletedStep, {
+      .poll(async () => (await getOnboardingState(serperPage)).lastCompletedStep, {
         timeout: 5_000
       })
       .toBe(4)
     await expect
       .poll(
         async () =>
-          orcaPage.evaluate(
+          serperPage.evaluate(
             ({ orchestrationKey, browserUseKey }) => ({
               orchestration: localStorage.getItem(orchestrationKey),
               browserUse: localStorage.getItem(browserUseKey)
@@ -716,84 +752,94 @@ test.describe('Onboarding flow', () => {
   })
 
   test('typing in the clone-url input does not hijack Enter as a global shortcut', async ({
-    orcaPage
+    serperPage
   }) => {
-    await expect(orcaPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible({
-      timeout: 15_000
-    })
+    await expect(serperPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible(
+      {
+        timeout: 15_000
+      }
+    )
     // Advance to the repo step.
-    await continueOnboarding(orcaPage)
-    await continueOnboarding(orcaPage)
-    await installSafeOnboardingFeatureSetupDeps(orcaPage)
-    await setupOnboardingFeatures(orcaPage)
-    await expectSkillSetupTerminalReady(orcaPage)
-    await continueFromFeatureSetupToRepo(orcaPage)
+    await continueOnboarding(serperPage)
+    await continueOnboarding(serperPage)
+    await installSafeOnboardingFeatureSetupDeps(serperPage)
+    await setupOnboardingFeatures(serperPage)
+    await expectSkillSetupTerminalReady(serperPage)
+    await continueFromFeatureSetupToRepo(serperPage)
 
     // Why: focus the clone-url input and press Cmd/Ctrl+Enter. The capture-
     // phase keydown handler should bail via isEditableTarget, so the folder
     // picker IPC must NOT fire (the heading should remain visible — no
     // navigation, no opened OS dialog). A bare Enter press also must not
     // submit the empty form (the Clone button is disabled when blank).
-    const isMac = await orcaPage.evaluate(() => navigator.userAgent.includes('Mac'))
+    const isMac = await serperPage.evaluate(() => navigator.userAgent.includes('Mac'))
     const accelerator = isMac ? 'Meta+Enter' : 'Control+Enter'
-    const input = orcaPage.getByPlaceholder('git@github.com:org/repo.git')
+    const input = serperPage.getByPlaceholder('git@github.com:org/repo.git')
     await input.click()
     await input.press(accelerator)
     // Brief wait so any (incorrect) handler firing would have already happened.
-    await orcaPage.waitForTimeout(250)
-    await expect(orcaPage.getByRole('heading', { name: REPO_STEP_HEADING })).toBeVisible()
+    await serperPage.waitForTimeout(250)
+    await expect(serperPage.getByRole('heading', { name: REPO_STEP_HEADING })).toBeVisible()
     // Onboarding must still be open (closedAt remains null).
-    expect((await getOnboardingState(orcaPage)).closedAt).toBeNull()
+    expect((await getOnboardingState(serperPage)).closedAt).toBeNull()
   })
 
-  test('Back returns to the previous step without losing progress', async ({ orcaPage }) => {
-    await expect(orcaPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible({
-      timeout: 15_000
-    })
+  test('Back returns to the previous step without losing progress', async ({ serperPage }) => {
+    await expect(serperPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible(
+      {
+        timeout: 15_000
+      }
+    )
 
-    await continueOnboarding(orcaPage)
-    await expect(orcaPage.getByRole('heading', { name: /Make it feel like home/i })).toBeVisible()
+    await continueOnboarding(serperPage)
+    await expect(serperPage.getByRole('heading', { name: /Make it feel like home/i })).toBeVisible()
     await expect
-      .poll(async () => (await getOnboardingState(orcaPage)).lastCompletedStep, {
+      .poll(async () => (await getOnboardingState(serperPage)).lastCompletedStep, {
         timeout: 5_000
       })
       .toBe(1)
 
     // Why: exact match — the app sidebar also exposes a "Go back" button that
     // would otherwise match this regex.
-    await orcaPage.getByRole('button', { name: 'Back', exact: true }).click()
-    await expect(orcaPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible()
-    await expect(orcaPage.getByText('1 of 5')).toBeVisible()
+    await serperPage.getByRole('button', { name: 'Back', exact: true }).click()
+    await expect(
+      serperPage.getByRole('heading', { name: /Pick your default agent/i })
+    ).toBeVisible()
+    await expect(serperPage.getByText('1 of 5')).toBeVisible()
 
     // Why: "without losing progress" means persisted lastCompletedStep stays
     // at 1 — Back rewinds the visible step but must not roll persistence back.
     // Poll because persistence flushes async via IPC after the Back click.
     await expect
-      .poll(async () => (await getOnboardingState(orcaPage)).lastCompletedStep, {
+      .poll(async () => (await getOnboardingState(serperPage)).lastCompletedStep, {
         timeout: 5_000
       })
       .toBe(1)
   })
 
-  test('repo step does not offer a skip or dismiss action', async ({ orcaPage }) => {
-    await expect(orcaPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible({
-      timeout: 15_000
-    })
+  test('repo step does not offer a skip or dismiss action', async ({ serperPage }) => {
+    await expect(serperPage.getByRole('heading', { name: /Pick your default agent/i })).toBeVisible(
+      {
+        timeout: 15_000
+      }
+    )
 
     // Advance through the first four steps. The repo step is required setup,
     // so the footer must not offer a dismiss action there.
-    await continueOnboarding(orcaPage)
-    await expect(orcaPage.getByRole('heading', { name: /Make it feel like home/i })).toBeVisible()
-    await continueOnboarding(orcaPage)
-    await expect(orcaPage.getByRole('heading', { name: /Set up Orca for agents/i })).toBeVisible()
-    await installSafeOnboardingFeatureSetupDeps(orcaPage)
-    await setupOnboardingFeatures(orcaPage)
-    await expectSkillSetupTerminalReady(orcaPage)
-    await continueFromFeatureSetupToRepo(orcaPage)
+    await continueOnboarding(serperPage)
+    await expect(serperPage.getByRole('heading', { name: /Make it feel like home/i })).toBeVisible()
+    await continueOnboarding(serperPage)
+    await expect(
+      serperPage.getByRole('heading', { name: /Set up Serper for agents/i })
+    ).toBeVisible()
+    await installSafeOnboardingFeatureSetupDeps(serperPage)
+    await setupOnboardingFeatures(serperPage)
+    await expectSkillSetupTerminalReady(serperPage)
+    await continueFromFeatureSetupToRepo(serperPage)
 
-    await expect(onboardingFooterButton(orcaPage, SKIP_TO_PROJECT_SETUP_BUTTON)).toHaveCount(0)
-    await expect(onboardingFooterButton(orcaPage, /Skip all onboarding/i)).toHaveCount(0)
-    const final = await getOnboardingState(orcaPage)
+    await expect(onboardingFooterButton(serperPage, SKIP_TO_PROJECT_SETUP_BUTTON)).toHaveCount(0)
+    await expect(onboardingFooterButton(serperPage, /Skip all onboarding/i)).toHaveCount(0)
+    const final = await getOnboardingState(serperPage)
     expect(final.closedAt).toBeNull()
     expect(final.outcome).toBeNull()
     expect(final.checklist.dismissed).toBe(false)

@@ -39,37 +39,37 @@ describe('github owner/repo resolution', () => {
       owner: 'acme',
       repo: 'widgets'
     })
-    expect(parseGitHubOwnerRepo('git@github.com:stablyai/orca.git')).toEqual({
-      owner: 'stablyai',
-      repo: 'orca'
+    expect(parseGitHubOwnerRepo('git@github.com:Legacynnn/serper.git')).toEqual({
+      owner: 'Legacynnn',
+      repo: 'serper'
     })
     expect(parseGitHubOwnerRepo('git@github.com:TheBoredTeam/boring.notch.git')).toEqual({
       owner: 'TheBoredTeam',
       repo: 'boring.notch'
     })
-    expect(parseGitHubOwnerRepo('git@example.com:stablyai/orca.git')).toBeNull()
+    expect(parseGitHubOwnerRepo('git@example.com:Legacynnn/serper.git')).toBeNull()
   })
 
   it('parses GitHub Enterprise host identity', () => {
-    expect(parseGitHubRemoteIdentity('https://ghe.acme.internal/acme/orca.git')).toEqual({
+    expect(parseGitHubRemoteIdentity('https://ghe.acme.internal/acme/serper.git')).toEqual({
       host: 'ghe.acme.internal',
       owner: 'acme',
-      repo: 'orca'
+      repo: 'serper'
     })
-    expect(parseGitHubRemoteIdentity('git@ghe.acme.internal:acme/orca.git')).toEqual({
+    expect(parseGitHubRemoteIdentity('git@ghe.acme.internal:acme/serper.git')).toEqual({
       host: 'ghe.acme.internal',
       owner: 'acme',
-      repo: 'orca'
+      repo: 'serper'
     })
-    expect(parseGitHubOwnerRepo('https://ghe.acme.internal/acme/orca.git')).toBeNull()
+    expect(parseGitHubOwnerRepo('https://ghe.acme.internal/acme/serper.git')).toBeNull()
   })
 
   it('keeps getOwnerRepo origin-based', async () => {
     gitExecFileAsyncMock.mockResolvedValueOnce({
-      stdout: 'git@github.com:fork/orca.git\n'
+      stdout: 'git@github.com:fork/serper.git\n'
     })
 
-    await expect(getOwnerRepo('/repo')).resolves.toEqual({ owner: 'fork', repo: 'orca' })
+    await expect(getOwnerRepo('/repo')).resolves.toEqual({ owner: 'fork', repo: 'serper' })
     expect(gitExecFileAsyncMock).toHaveBeenCalledWith(['remote', 'get-url', 'origin'], {
       cwd: '/repo'
     })
@@ -77,10 +77,13 @@ describe('github owner/repo resolution', () => {
 
   it('prefers upstream for issue owner/repo resolution', async () => {
     gitExecFileAsyncMock.mockResolvedValueOnce({
-      stdout: 'git@github.com:stablyai/orca.git\n'
+      stdout: 'git@github.com:Legacynnn/serper.git\n'
     })
 
-    await expect(getIssueOwnerRepo('/repo')).resolves.toEqual({ owner: 'stablyai', repo: 'orca' })
+    await expect(getIssueOwnerRepo('/repo')).resolves.toEqual({
+      owner: 'Legacynnn',
+      repo: 'serper'
+    })
     expect(gitExecFileAsyncMock).toHaveBeenCalledWith(['remote', 'get-url', 'upstream'], {
       cwd: '/repo'
     })
@@ -88,10 +91,10 @@ describe('github owner/repo resolution', () => {
 
   it('falls back to origin when upstream is missing or non-GitHub', async () => {
     gitExecFileAsyncMock
-      .mockResolvedValueOnce({ stdout: 'git@example.com:stablyai/orca.git\n' })
-      .mockResolvedValueOnce({ stdout: 'git@github.com:fork/orca.git\n' })
+      .mockResolvedValueOnce({ stdout: 'git@example.com:Legacynnn/serper.git\n' })
+      .mockResolvedValueOnce({ stdout: 'git@github.com:fork/serper.git\n' })
 
-    await expect(getIssueOwnerRepo('/repo')).resolves.toEqual({ owner: 'fork', repo: 'orca' })
+    await expect(getIssueOwnerRepo('/repo')).resolves.toEqual({ owner: 'fork', repo: 'serper' })
     expect(gitExecFileAsyncMock).toHaveBeenNthCalledWith(1, ['remote', 'get-url', 'upstream'], {
       cwd: '/repo'
     })
@@ -102,62 +105,70 @@ describe('github owner/repo resolution', () => {
 
   it('does not mix origin and upstream cache entries for the same repo path', async () => {
     gitExecFileAsyncMock
-      .mockResolvedValueOnce({ stdout: 'git@github.com:fork/orca.git\n' })
-      .mockResolvedValueOnce({ stdout: 'git@github.com:stablyai/orca.git\n' })
+      .mockResolvedValueOnce({ stdout: 'git@github.com:fork/serper.git\n' })
+      .mockResolvedValueOnce({ stdout: 'git@github.com:Legacynnn/serper.git\n' })
 
-    await expect(getOwnerRepo('/repo')).resolves.toEqual({ owner: 'fork', repo: 'orca' })
-    await expect(getIssueOwnerRepo('/repo')).resolves.toEqual({ owner: 'stablyai', repo: 'orca' })
+    await expect(getOwnerRepo('/repo')).resolves.toEqual({ owner: 'fork', repo: 'serper' })
+    await expect(getIssueOwnerRepo('/repo')).resolves.toEqual({
+      owner: 'Legacynnn',
+      repo: 'serper'
+    })
   })
 
   it('resolves SSH repo remotes through the registered SSH git provider', async () => {
     const sshProvider = {
-      exec: vi.fn().mockResolvedValue({ stdout: 'git@github.com:stablyai/orca.git\n', stderr: '' })
+      exec: vi
+        .fn()
+        .mockResolvedValue({ stdout: 'git@github.com:Legacynnn/serper.git\n', stderr: '' })
     }
     getSshGitProviderMock.mockReturnValue(sshProvider)
 
-    await expect(getOwnerRepo('/home/user/orca', 'openclaw-2')).resolves.toEqual({
-      owner: 'stablyai',
-      repo: 'orca'
+    await expect(getOwnerRepo('/home/user/serper', 'openclaw-2')).resolves.toEqual({
+      owner: 'Legacynnn',
+      repo: 'serper'
     })
 
     expect(gitExecFileAsyncMock).not.toHaveBeenCalled()
     expect(getSshGitProviderMock).toHaveBeenCalledWith('openclaw-2')
     expect(sshProvider.exec).toHaveBeenCalledWith(
       ['remote', 'get-url', 'origin'],
-      '/home/user/orca'
+      '/home/user/serper'
     )
   })
 
   it('keeps local and SSH owner/repo cache entries separate for the same path', async () => {
     const sshProvider = {
-      exec: vi.fn().mockResolvedValue({ stdout: 'git@github.com:remote/orca.git\n', stderr: '' })
+      exec: vi.fn().mockResolvedValue({ stdout: 'git@github.com:remote/serper.git\n', stderr: '' })
     }
-    gitExecFileAsyncMock.mockResolvedValueOnce({ stdout: 'git@github.com:local/orca.git\n' })
+    gitExecFileAsyncMock.mockResolvedValueOnce({ stdout: 'git@github.com:local/serper.git\n' })
     getSshGitProviderMock.mockReturnValue(sshProvider)
 
-    await expect(getOwnerRepo('/repo')).resolves.toEqual({ owner: 'local', repo: 'orca' })
-    await expect(getOwnerRepo('/repo', 'ssh-1')).resolves.toEqual({ owner: 'remote', repo: 'orca' })
+    await expect(getOwnerRepo('/repo')).resolves.toEqual({ owner: 'local', repo: 'serper' })
+    await expect(getOwnerRepo('/repo', 'ssh-1')).resolves.toEqual({
+      owner: 'remote',
+      repo: 'serper'
+    })
   })
 
   it('resolves PR candidates as upstream then origin and de-dupes matching slugs', async () => {
     gitExecFileAsyncMock
-      .mockResolvedValueOnce({ stdout: 'git@github.com:Acme/Orca.git\n' })
-      .mockResolvedValueOnce({ stdout: 'git@github.com:acme/orca.git\n' })
+      .mockResolvedValueOnce({ stdout: 'git@github.com:Acme/Serper.git\n' })
+      .mockResolvedValueOnce({ stdout: 'git@github.com:acme/serper.git\n' })
 
     await expect(resolvePRRepositoryCandidates('/repo')).resolves.toEqual({
-      candidates: [{ owner: 'Acme', repo: 'Orca' }],
-      headRepo: { owner: 'acme', repo: 'orca' }
+      candidates: [{ owner: 'Acme', repo: 'Serper' }],
+      headRepo: { owner: 'acme', repo: 'serper' }
     })
   })
 
   it('ignores non-GitHub upstream while keeping origin as the head repo', async () => {
     gitExecFileAsyncMock
-      .mockResolvedValueOnce({ stdout: 'git@example.com:Acme/Orca.git\n' })
-      .mockResolvedValueOnce({ stdout: 'git@github.com:fork/orca.git\n' })
+      .mockResolvedValueOnce({ stdout: 'git@example.com:Acme/Serper.git\n' })
+      .mockResolvedValueOnce({ stdout: 'git@github.com:fork/serper.git\n' })
 
     await expect(resolvePRRepositoryCandidates('/repo')).resolves.toEqual({
-      candidates: [{ owner: 'fork', repo: 'orca' }],
-      headRepo: { owner: 'fork', repo: 'orca' }
+      candidates: [{ owner: 'fork', repo: 'serper' }],
+      headRepo: { owner: 'fork', repo: 'serper' }
     })
   })
 
@@ -165,16 +176,16 @@ describe('github owner/repo resolution', () => {
     vi.useFakeTimers()
     try {
       gitExecFileAsyncMock
-        .mockResolvedValueOnce({ stdout: 'git@github.com:old/orca.git\n' })
-        .mockResolvedValueOnce({ stdout: 'git@github.com:new/orca.git\n' })
+        .mockResolvedValueOnce({ stdout: 'git@github.com:old/serper.git\n' })
+        .mockResolvedValueOnce({ stdout: 'git@github.com:new/serper.git\n' })
 
       await expect(getOwnerRepoForRemote('/repo', 'origin')).resolves.toEqual({
         owner: 'old',
-        repo: 'orca'
+        repo: 'serper'
       })
       await expect(getOwnerRepoForRemote('/repo', 'origin')).resolves.toEqual({
         owner: 'old',
-        repo: 'orca'
+        repo: 'serper'
       })
       expect(gitExecFileAsyncMock).toHaveBeenCalledTimes(1)
 
@@ -182,7 +193,7 @@ describe('github owner/repo resolution', () => {
 
       await expect(getOwnerRepoForRemote('/repo', 'origin')).resolves.toEqual({
         owner: 'new',
-        repo: 'orca'
+        repo: 'serper'
       })
       expect(gitExecFileAsyncMock).toHaveBeenCalledTimes(2)
     } finally {
@@ -200,33 +211,33 @@ describe('resolveIssueSource', () => {
 
   it("'auto' + upstream exists → upstream, fellBack=false", async () => {
     gitExecFileAsyncMock.mockResolvedValueOnce({
-      stdout: 'git@github.com:stablyai/orca.git\n'
+      stdout: 'git@github.com:Legacynnn/serper.git\n'
     })
 
     await expect(resolveIssueSource('/repo', 'auto')).resolves.toEqual({
-      source: { owner: 'stablyai', repo: 'orca' },
+      source: { owner: 'Legacynnn', repo: 'serper' },
       fellBack: false
     })
   })
 
   it("'auto' + no upstream → origin, fellBack=false", async () => {
     gitExecFileAsyncMock
-      .mockResolvedValueOnce({ stdout: 'git@example.com:stablyai/orca.git\n' })
-      .mockResolvedValueOnce({ stdout: 'git@github.com:solo/orca.git\n' })
+      .mockResolvedValueOnce({ stdout: 'git@example.com:Legacynnn/serper.git\n' })
+      .mockResolvedValueOnce({ stdout: 'git@github.com:solo/serper.git\n' })
 
     await expect(resolveIssueSource('/repo', 'auto')).resolves.toEqual({
-      source: { owner: 'solo', repo: 'orca' },
+      source: { owner: 'solo', repo: 'serper' },
       fellBack: false
     })
   })
 
   it("'upstream' + upstream exists → upstream, fellBack=false", async () => {
     gitExecFileAsyncMock.mockResolvedValueOnce({
-      stdout: 'git@github.com:stablyai/orca.git\n'
+      stdout: 'git@github.com:Legacynnn/serper.git\n'
     })
 
     await expect(resolveIssueSource('/repo', 'upstream')).resolves.toEqual({
-      source: { owner: 'stablyai', repo: 'orca' },
+      source: { owner: 'Legacynnn', repo: 'serper' },
       fellBack: false
     })
   })
@@ -235,10 +246,10 @@ describe('resolveIssueSource', () => {
     // No upstream remote configured — the first call fails.
     gitExecFileAsyncMock
       .mockRejectedValueOnce(new Error('fatal: No such remote'))
-      .mockResolvedValueOnce({ stdout: 'git@github.com:solo/orca.git\n' })
+      .mockResolvedValueOnce({ stdout: 'git@github.com:solo/serper.git\n' })
 
     await expect(resolveIssueSource('/repo', 'upstream')).resolves.toEqual({
-      source: { owner: 'solo', repo: 'orca' },
+      source: { owner: 'solo', repo: 'serper' },
       fellBack: true
     })
   })
@@ -246,11 +257,11 @@ describe('resolveIssueSource', () => {
   it("'origin' + upstream exists → origin (ignores upstream), fellBack=false", async () => {
     // Only one gh call should happen — origin. Upstream is never consulted.
     gitExecFileAsyncMock.mockResolvedValueOnce({
-      stdout: 'git@github.com:fork/orca.git\n'
+      stdout: 'git@github.com:fork/serper.git\n'
     })
 
     await expect(resolveIssueSource('/repo', 'origin')).resolves.toEqual({
-      source: { owner: 'fork', repo: 'orca' },
+      source: { owner: 'fork', repo: 'serper' },
       fellBack: false
     })
     expect(gitExecFileAsyncMock).toHaveBeenCalledTimes(1)
@@ -261,22 +272,22 @@ describe('resolveIssueSource', () => {
 
   it("'origin' + no upstream → origin, fellBack=false", async () => {
     gitExecFileAsyncMock.mockResolvedValueOnce({
-      stdout: 'git@github.com:solo/orca.git\n'
+      stdout: 'git@github.com:solo/serper.git\n'
     })
 
     await expect(resolveIssueSource('/repo', 'origin')).resolves.toEqual({
-      source: { owner: 'solo', repo: 'orca' },
+      source: { owner: 'solo', repo: 'serper' },
       fellBack: false
     })
   })
 
   it('undefined preference is treated identically to auto', async () => {
     gitExecFileAsyncMock.mockResolvedValueOnce({
-      stdout: 'git@github.com:stablyai/orca.git\n'
+      stdout: 'git@github.com:Legacynnn/serper.git\n'
     })
 
     await expect(resolveIssueSource('/repo', undefined)).resolves.toEqual({
-      source: { owner: 'stablyai', repo: 'orca' },
+      source: { owner: 'Legacynnn', repo: 'serper' },
       fellBack: false
     })
   })
@@ -290,7 +301,7 @@ describe('gh error classification', () => {
   // per-repo selector to an origin fork that has issues disabled.
   it('classifies "has disabled issues" stderr as issues_disabled', () => {
     const stderr =
-      "Command failed: gh issue list --limit 36 --json number,title,state --repo brennanb2025/orca --state open\nthe 'brennanb2025/orca' repository has disabled issues"
+      "Command failed: gh issue list --limit 36 --json number,title,state --repo brennanb2025/serper --state open\nthe 'brennanb2025/serper' repository has disabled issues"
     expect(classifyGhError(stderr)).toEqual({
       type: 'issues_disabled',
       message: 'Issues are disabled on this repository.'

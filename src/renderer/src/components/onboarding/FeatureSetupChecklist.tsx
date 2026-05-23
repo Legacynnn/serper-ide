@@ -24,21 +24,21 @@ const FEATURE_SETUP_ROWS: readonly FeatureSetupRow[] = [
     id: 'browserUse',
     title: 'Agent Browser Use',
     description: 'Agents can navigate sites, inspect pages, and work through browser tasks.',
-    setupSummary: 'Enables browser use, prepares orca-cli, and leaves cookies for Settings.',
+    setupSummary: 'Enables browser use, prepares serper-cli, and leaves cookies for Settings.',
     icon: <Globe2 className="size-4" />
   },
   {
     id: 'computerUse',
     title: 'Computer Use',
     description: 'Agents can inspect app windows and operate local apps when you ask.',
-    setupSummary: 'Registers `orca`, opens permissions, and prepares the skill.',
+    setupSummary: 'Registers `serper`, opens permissions, and prepares the skill.',
     icon: <MonitorCog className="size-4" />
   },
   {
     id: 'orchestration',
     title: 'Agent Orchestration',
     description: 'Agents can message each other, take tasks, and coordinate handoffs.',
-    setupSummary: 'Registers `orca`, enables orchestration, and prepares the skill.',
+    setupSummary: 'Registers `serper`, enables orchestration, and prepares the skill.',
     icon: <Workflow className="size-4" />
   }
 ]

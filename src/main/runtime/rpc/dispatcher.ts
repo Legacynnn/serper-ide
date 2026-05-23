@@ -16,15 +16,15 @@ import {
 import type { TerminalStreamFrame } from '../../../shared/terminal-stream-protocol'
 import { errorResponse, mapBrowserError, mapRuntimeError, successResponse } from './errors'
 import { ALL_RPC_METHODS } from './methods'
-import type { OrcaRuntimeService } from '../orca-runtime'
+import type { SerperRuntimeService } from '../serper-runtime'
 
 export type DispatcherOptions = {
-  runtime: OrcaRuntimeService
+  runtime: SerperRuntimeService
   methods?: readonly RpcAnyMethod[]
 }
 
 export class RpcDispatcher {
-  private readonly runtime: OrcaRuntimeService
+  private readonly runtime: SerperRuntimeService
   private readonly registry: RpcRegistry
 
   constructor({ runtime, methods = ALL_RPC_METHODS }: DispatcherOptions) {

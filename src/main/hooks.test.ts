@@ -2,7 +2,7 @@
 import type { Repo } from '../shared/types'
 
 import { describe, expect, it, vi } from 'vitest'
-import { parseOrcaYaml } from './hooks'
+import { parseSerperYaml } from './hooks'
 
 // Mock fs and path used by loadHooks
 vi.mock('fs', () => ({
@@ -27,10 +27,10 @@ vi.mock('child_process', () => ({
   spawn: vi.fn()
 }))
 
-describe('parseOrcaYaml', () => {
+describe('parseSerperYaml', () => {
   it('parses YAML with setup script only', () => {
     const yaml = `scripts:\n  setup: |\n    echo "setting up"\n    npm install\n`
-    const result = parseOrcaYaml(yaml)
+    const result = parseSerperYaml(yaml)
     expect(result).toEqual({
       scripts: {
         setup: 'echo "setting up"\nnpm install'
@@ -40,7 +40,7 @@ describe('parseOrcaYaml', () => {
 
   it('parses YAML with archive script only', () => {
     const yaml = `scripts:\n  archive: |\n    echo "archiving"\n`
-    const result = parseOrcaYaml(yaml)
+    const result = parseSerperYaml(yaml)
     expect(result).toEqual({
       scripts: {
         archive: 'echo "archiving"'
@@ -58,7 +58,7 @@ describe('parseOrcaYaml', () => {
       '    echo "archive"',
       '    rm -rf node_modules'
     ].join('\n')
-    const result = parseOrcaYaml(yaml)
+    const result = parseSerperYaml(yaml)
     expect(result).toEqual({
       scripts: {
         setup: 'echo "setup"\nnpm install',
@@ -69,12 +69,12 @@ describe('parseOrcaYaml', () => {
 
   it('returns null when there is no scripts block', () => {
     const yaml = `other:\n  key: value\n`
-    expect(parseOrcaYaml(yaml)).toBeNull()
+    expect(parseSerperYaml(yaml)).toBeNull()
   })
 
   it('parses YAML with inline scalar scripts', () => {
     const yaml = `scripts:\n  setup: npm install\n  archive: sleep 5\n`
-    const result = parseOrcaYaml(yaml)
+    const result = parseSerperYaml(yaml)
     expect(result).toEqual({
       scripts: {
         setup: 'npm install',
@@ -85,12 +85,12 @@ describe('parseOrcaYaml', () => {
 
   it('returns null when scripts block has no setup or archive', () => {
     const yaml = `scripts:\n  unknown: |\n    echo "nope"\n`
-    expect(parseOrcaYaml(yaml)).toBeNull()
+    expect(parseSerperYaml(yaml)).toBeNull()
   })
 
   it('handles multiline block scalar scripts', () => {
     const yaml = ['scripts:', '  setup: |', '    line1', '    line2', '    line3'].join('\n')
-    const result = parseOrcaYaml(yaml)
+    const result = parseSerperYaml(yaml)
     expect(result).toEqual({
       scripts: {
         setup: 'line1\nline2\nline3'
@@ -100,7 +100,7 @@ describe('parseOrcaYaml', () => {
 
   it('stops parsing when it hits another top-level key', () => {
     const yaml = ['scripts:', '  setup: |', '    echo "setup"', 'other:', '  key: value'].join('\n')
-    const result = parseOrcaYaml(yaml)
+    const result = parseSerperYaml(yaml)
     expect(result).toEqual({
       scripts: {
         setup: 'echo "setup"'
@@ -109,7 +109,7 @@ describe('parseOrcaYaml', () => {
   })
 
   it('returns null for empty string', () => {
-    expect(parseOrcaYaml('')).toBeNull()
+    expect(parseSerperYaml('')).toBeNull()
   })
 
   it('parses a top-level issueCommand block scalar', () => {
@@ -118,7 +118,7 @@ describe('parseOrcaYaml', () => {
       '  claude -p "Read issue #{{issue}}"',
       '  codex exec "Review docs/design-{{issue}}.md"'
     ].join('\n')
-    const result = parseOrcaYaml(yaml)
+    const result = parseSerperYaml(yaml)
     expect(result).toEqual({
       scripts: {},
       issueCommand:
@@ -134,7 +134,7 @@ describe('parseOrcaYaml', () => {
       'issueCommand: |',
       '  claude -p "Read issue #{{issue}}"'
     ].join('\n')
-    const result = parseOrcaYaml(yaml)
+    const result = parseSerperYaml(yaml)
     expect(result).toEqual({
       scripts: {
         setup: 'pnpm install'
@@ -144,21 +144,21 @@ describe('parseOrcaYaml', () => {
   })
 })
 
-describe('hasUnrecognizedOrcaYamlKeys', () => {
+describe('hasUnrecognizedSerperYamlKeys', () => {
   it('returns true when the file contains only keys this version does not handle', async () => {
     const fs = await import('fs')
     vi.mocked(fs.readFileSync).mockReturnValue('futureFeature: |\n  some config\n')
 
-    const { hasUnrecognizedOrcaYamlKeys } = await import('./hooks')
-    expect(hasUnrecognizedOrcaYamlKeys('/test/repo')).toBe(true)
+    const { hasUnrecognizedSerperYamlKeys } = await import('./hooks')
+    expect(hasUnrecognizedSerperYamlKeys('/test/repo')).toBe(true)
   })
 
   it('returns true when an unknown key has no trailing space (block-value form)', async () => {
     const fs = await import('fs')
     vi.mocked(fs.readFileSync).mockReturnValue('futureFeature:\n  nested: value\n')
 
-    const { hasUnrecognizedOrcaYamlKeys } = await import('./hooks')
-    expect(hasUnrecognizedOrcaYamlKeys('/test/repo')).toBe(true)
+    const { hasUnrecognizedSerperYamlKeys } = await import('./hooks')
+    expect(hasUnrecognizedSerperYamlKeys('/test/repo')).toBe(true)
   })
 
   it('returns true when the file mixes recognised and unrecognised keys', async () => {
@@ -167,8 +167,8 @@ describe('hasUnrecognizedOrcaYamlKeys', () => {
       'scripts:\n  setup: |\n    pnpm install\nnewFeature: enabled\n'
     )
 
-    const { hasUnrecognizedOrcaYamlKeys } = await import('./hooks')
-    expect(hasUnrecognizedOrcaYamlKeys('/test/repo')).toBe(true)
+    const { hasUnrecognizedSerperYamlKeys } = await import('./hooks')
+    expect(hasUnrecognizedSerperYamlKeys('/test/repo')).toBe(true)
   })
 
   it('returns false when the file contains only recognised keys', async () => {
@@ -177,16 +177,16 @@ describe('hasUnrecognizedOrcaYamlKeys', () => {
       'scripts:\n  setup: |\n    pnpm install\nissueCommand: |\n  claude -p "test"\n'
     )
 
-    const { hasUnrecognizedOrcaYamlKeys } = await import('./hooks')
-    expect(hasUnrecognizedOrcaYamlKeys('/test/repo')).toBe(false)
+    const { hasUnrecognizedSerperYamlKeys } = await import('./hooks')
+    expect(hasUnrecognizedSerperYamlKeys('/test/repo')).toBe(false)
   })
 
   it('returns false when the file is empty or has no top-level keys', async () => {
     const fs = await import('fs')
     vi.mocked(fs.readFileSync).mockReturnValue('# just a comment\n')
 
-    const { hasUnrecognizedOrcaYamlKeys } = await import('./hooks')
-    expect(hasUnrecognizedOrcaYamlKeys('/test/repo')).toBe(false)
+    const { hasUnrecognizedSerperYamlKeys } = await import('./hooks')
+    expect(hasUnrecognizedSerperYamlKeys('/test/repo')).toBe(false)
   })
 
   it('returns false when the file cannot be read', async () => {
@@ -195,22 +195,22 @@ describe('hasUnrecognizedOrcaYamlKeys', () => {
       throw new Error('ENOENT')
     })
 
-    const { hasUnrecognizedOrcaYamlKeys } = await import('./hooks')
-    expect(hasUnrecognizedOrcaYamlKeys('/test/repo')).toBe(false)
+    const { hasUnrecognizedSerperYamlKeys } = await import('./hooks')
+    expect(hasUnrecognizedSerperYamlKeys('/test/repo')).toBe(false)
   })
 })
 
 describe('readIssueCommand', () => {
-  it('prefers the local override over the shared orca.yaml command', async () => {
+  it('prefers the local override over the shared serper.yaml command', async () => {
     const fs = await import('fs')
     vi.mocked(fs.existsSync).mockImplementation(
-      (path) => path === '/test/repo/.orca/issue-command' || path === '/test/repo/orca.yaml'
+      (path) => path === '/test/repo/.serper/issue-command' || path === '/test/repo/serper.yaml'
     )
     vi.mocked(fs.readFileSync).mockImplementation((path) => {
-      if (path === '/test/repo/.orca/issue-command') {
+      if (path === '/test/repo/.serper/issue-command') {
         return 'local command\n'
       }
-      if (path === '/test/repo/orca.yaml') {
+      if (path === '/test/repo/serper.yaml') {
         return 'issueCommand: |\n  shared command\n'
       }
       return ''
@@ -221,16 +221,16 @@ describe('readIssueCommand', () => {
       localContent: 'local command',
       sharedContent: 'shared command',
       effectiveContent: 'local command',
-      localFilePath: '/test/repo/.orca/issue-command',
+      localFilePath: '/test/repo/.serper/issue-command',
       source: 'local'
     })
   })
 
-  it('falls back to the shared orca.yaml command when no local override exists', async () => {
+  it('falls back to the shared serper.yaml command when no local override exists', async () => {
     const fs = await import('fs')
-    vi.mocked(fs.existsSync).mockImplementation((path) => path === '/test/repo/orca.yaml')
+    vi.mocked(fs.existsSync).mockImplementation((path) => path === '/test/repo/serper.yaml')
     vi.mocked(fs.readFileSync).mockImplementation((path) => {
-      if (path === '/test/repo/orca.yaml') {
+      if (path === '/test/repo/serper.yaml') {
         return 'issueCommand: |\n  shared command\n'
       }
       return ''
@@ -241,17 +241,17 @@ describe('readIssueCommand', () => {
       localContent: null,
       sharedContent: 'shared command',
       effectiveContent: 'shared command',
-      localFilePath: '/test/repo/.orca/issue-command',
+      localFilePath: '/test/repo/.serper/issue-command',
       source: 'shared'
     })
   })
 })
 
 describe('writeIssueCommand', () => {
-  it('writes only the local override file and keeps .orca ignored locally', async () => {
+  it('writes only the local override file and keeps .serper ignored locally', async () => {
     const fs = await import('fs')
     vi.mocked(fs.existsSync).mockImplementation(
-      (path) => path === '/test/repo/.gitignore' || path === '/test/repo/.orca'
+      (path) => path === '/test/repo/.gitignore' || path === '/test/repo/.serper'
     )
     vi.mocked(fs.readFileSync).mockImplementation((path) => {
       if (path === '/test/repo/.gitignore') {
@@ -265,11 +265,11 @@ describe('writeIssueCommand', () => {
 
     expect(vi.mocked(fs.writeFileSync)).toHaveBeenCalledWith(
       '/test/repo/.gitignore',
-      'node_modules/\n.orca\n',
+      'node_modules/\n.serper\n',
       'utf-8'
     )
     expect(vi.mocked(fs.writeFileSync)).toHaveBeenCalledWith(
-      '/test/repo/.orca/issue-command',
+      '/test/repo/.serper/issue-command',
       'local command\n',
       'utf-8'
     )
@@ -280,7 +280,7 @@ describe('writeIssueCommand', () => {
     const { writeIssueCommand } = await import('./hooks')
     writeIssueCommand('/test/repo', '   ')
 
-    expect(vi.mocked(fs.rmSync)).toHaveBeenCalledWith('/test/repo/.orca/issue-command', {
+    expect(vi.mocked(fs.rmSync)).toHaveBeenCalledWith('/test/repo/.serper/issue-command', {
       force: true
     })
   })
@@ -303,7 +303,7 @@ describe('getEffectiveHooks', () => {
       hookSettings
     }) as unknown as Repo
 
-  it('uses hooks from orca.yaml when present', async () => {
+  it('uses hooks from serper.yaml when present', async () => {
     const fs = await import('fs')
     vi.mocked(fs.existsSync).mockReturnValue(true)
     vi.mocked(fs.readFileSync).mockReturnValue('scripts:\n  setup: |\n    echo "yaml setup"\n')
@@ -320,16 +320,16 @@ describe('getEffectiveHooks', () => {
     })
   })
 
-  it("loads setup hooks from the target worktree's orca.yaml when a worktree path is provided", async () => {
+  it("loads setup hooks from the target worktree's serper.yaml when a worktree path is provided", async () => {
     const fs = await import('fs')
     vi.mocked(fs.existsSync).mockImplementation(
-      (path) => path === '/test/repo/orca.yaml' || path === '/test/worktree/orca.yaml'
+      (path) => path === '/test/repo/serper.yaml' || path === '/test/worktree/serper.yaml'
     )
     vi.mocked(fs.readFileSync).mockImplementation((path) => {
-      if (path === '/test/repo/orca.yaml') {
+      if (path === '/test/repo/serper.yaml') {
         return 'scripts:\n  setup: |\n    echo old-version\n'
       }
-      if (path === '/test/worktree/orca.yaml') {
+      if (path === '/test/worktree/serper.yaml') {
         return 'scripts:\n  setup: |\n    echo new-version\n'
       }
       return ''
@@ -439,7 +439,7 @@ describe('getEffectiveHooks', () => {
     })
   })
 
-  it('treats orca.yaml as authoritative by default when it defines only one command', async () => {
+  it('treats serper.yaml as authoritative by default when it defines only one command', async () => {
     const fs = await import('fs')
     vi.mocked(fs.existsSync).mockReturnValue(true)
     vi.mocked(fs.readFileSync).mockReturnValue('scripts:\n  archive: |\n    echo "yaml archive"\n')
@@ -473,7 +473,7 @@ describe('getEffectiveHooks', () => {
     expect(result).toBeNull()
   })
 
-  it('treats legacy shared-first policy as orca.yaml only', async () => {
+  it('treats legacy shared-first policy as serper.yaml only', async () => {
     const fs = await import('fs')
     vi.mocked(fs.existsSync).mockReturnValue(true)
     vi.mocked(fs.readFileSync).mockReturnValue('scripts:\n  archive: |\n    echo "yaml archive"\n')
@@ -662,10 +662,10 @@ describe('runHook', () => {
       expect(options).toEqual(
         expect.objectContaining({
           env: expect.objectContaining({
-            ORCA_ROOT_PATH: '/mnt/c/Users/jinwo/git/orca',
-            ORCA_WORKTREE_PATH: '/home/jin/feature',
-            CONDUCTOR_ROOT_PATH: '/mnt/c/Users/jinwo/git/orca',
-            GHOSTX_ROOT_PATH: '/mnt/c/Users/jinwo/git/orca'
+            SERPER_ROOT_PATH: '/mnt/c/Users/jinwo/git/serper',
+            SERPER_WORKTREE_PATH: '/home/jin/feature',
+            CONDUCTOR_ROOT_PATH: '/mnt/c/Users/jinwo/git/serper',
+            GHOSTX_ROOT_PATH: '/mnt/c/Users/jinwo/git/serper'
           })
         })
       )
@@ -686,7 +686,7 @@ describe('runHook', () => {
       const { runHook } = await import('./hooks')
       const result = await runHook('setup', '\\\\wsl.localhost\\Ubuntu\\home\\jin\\feature', {
         ...makeRepo(),
-        path: 'C:\\Users\\jinwo\\git\\orca'
+        path: 'C:\\Users\\jinwo\\git\\serper'
       })
 
       expect(result).toEqual({ success: true, output: '' })

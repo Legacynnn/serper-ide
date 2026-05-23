@@ -11,7 +11,7 @@ const args = new Set(process.argv.slice(2))
 const requestedApps = valueFlag('--apps')
 const includeScreenshot = args.has('--screenshot')
 const session = valueFlag('--session') ?? `computer-smoke-${process.pid}`
-const preferredApps = (requestedApps ?? process.env.ORCA_COMPUTER_SMOKE_APPS ?? 'Finder,TextEdit,Spotify,Slack,Microsoft Edge')
+const preferredApps = (requestedApps ?? process.env.SERPER_COMPUTER_SMOKE_APPS ?? 'Finder,TextEdit,Spotify,Slack,Microsoft Edge')
   .split(',')
   .map((app) => app.trim())
   .filter(Boolean)
@@ -86,7 +86,7 @@ function runCli(cliArgs, options = {}) {
     encoding: 'utf8',
     env: {
       ...process.env,
-      ORCA_USER_DATA_PATH: process.env.ORCA_COMPUTER_SMOKE_USER_DATA_PATH ?? defaultDevUserDataPath()
+      SERPER_USER_DATA_PATH: process.env.SERPER_COMPUTER_SMOKE_USER_DATA_PATH ?? defaultDevUserDataPath()
     }
   })
   if (child.status !== 0) {
@@ -108,12 +108,12 @@ function runCli(cliArgs, options = {}) {
 
 function defaultDevUserDataPath() {
   if (process.platform === 'darwin') {
-    return resolve(homedir(), 'Library', 'Application Support', 'orca-dev')
+    return resolve(homedir(), 'Library', 'Application Support', 'serper-dev')
   }
   if (process.platform === 'win32') {
-    return resolve(process.env.APPDATA ?? resolve(homedir(), 'AppData', 'Roaming'), 'orca-dev')
+    return resolve(process.env.APPDATA ?? resolve(homedir(), 'AppData', 'Roaming'), 'serper-dev')
   }
-  return resolve(process.env.XDG_CONFIG_HOME ?? resolve(homedir(), '.config'), 'orca-dev')
+  return resolve(process.env.XDG_CONFIG_HOME ?? resolve(homedir(), '.config'), 'serper-dev')
 }
 
 function unwrapResult(value) {

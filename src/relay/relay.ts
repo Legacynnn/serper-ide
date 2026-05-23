@@ -9,7 +9,7 @@
    daemon reconnect, and handler registration. Splitting the orchestration
    would hide the startup order, which is the important invariant here. */
 
-// Orca Relay — lightweight daemon deployed to remote hosts.
+// Serper Relay — lightweight daemon deployed to remote hosts.
 // Communicates over stdin/stdout using the framed JSON-RPC protocol.
 // The Electron app (client) deploys this script via SCP and launches
 // it via an SSH exec channel.
@@ -253,7 +253,7 @@ async function main(): Promise<void> {
   // ── Agent-hook server ─────────────────────────────────────────────
   // Why: hosts a loopback HTTP receiver inside the relay process so agent
   // CLIs running in remote PTYs can post hook events without leaving the
-  // host. Each parsed payload is forwarded to Orca via an `agent.hook`
+  // host. Each parsed payload is forwarded to Serper via an `agent.hook`
   // JSON-RPC notification on the existing SSH channel — see
   // docs/design/agent-status-over-ssh.md §2-§5.
   const hookServer = new RelayAgentHookServer({
@@ -265,7 +265,7 @@ async function main(): Promise<void> {
       // Why: dispatcher.notify is fire-and-forget — when the SSH channel is
       // mid-reconnect the write callback no-ops and the notification is
       // silently dropped. The per-paneKey cache inside `hookServer` lets us
-      // replay the last status for each live pane after Orca re-wires its
+      // replay the last status for each live pane after Serper re-wires its
       // handler post-`--connect`.
       dispatcher.notify(
         AGENT_HOOK_NOTIFICATION_METHOD,
@@ -275,7 +275,7 @@ async function main(): Promise<void> {
   })
   // Why: await the hook-server bind before announcing readiness so the very
   // first PTY spawn (which can land within milliseconds of the sentinel)
-  // already sees populated ORCA_AGENT_HOOK_* env. The bind is a local-loopback
+  // already sees populated SERPER_AGENT_HOOK_* env. The bind is a local-loopback
   // listen — measured in ms — so the latency cost is trivial and removes a
   // class of "first agent invocation has no status" races. Bind failure is
   // treated as soft: log and continue, the augmenter returns {} and agent
@@ -288,7 +288,7 @@ async function main(): Promise<void> {
     )
   }
 
-  // Why: every relay-spawned PTY needs the live ORCA_AGENT_HOOK_* coords. The
+  // Why: every relay-spawned PTY needs the live SERPER_AGENT_HOOK_* coords. The
   // augmenter is read on every spawn so a hook-server bind that succeeded
   // late (or after a stop/start) lands in the next PTY's env without a
   // restart.
@@ -296,9 +296,9 @@ async function main(): Promise<void> {
 
   // Why: per-PTY plugin overlays for OpenCode and Pi. `OPENCODE_CONFIG_DIR`
   // and `PI_CODING_AGENT_DIR` only make sense on the relay's own filesystem
-  // — paths the renderer would synthesize for the Orca host's userData are
+  // — paths the renderer would synthesize for the Serper host's userData are
   // meaningless on the remote. The overlay manager materializes a per-PTY
-  // dir on the remote (rooted at $HOME/.orca-relay/) so the agent CLI inside
+  // dir on the remote (rooted at $HOME/.serper-relay/) so the agent CLI inside
   // the relay-spawned PTY loads the bundled status plugin and posts to the
   // relay's hook server. Source bodies arrive over JSON-RPC (see
   // `agent_hook.installPlugins` below) — not bundled with the relay binary.
@@ -315,9 +315,9 @@ async function main(): Promise<void> {
       const dir = pluginOverlay.materializeOpenCode(overlayId, sourceDir)
       if (dir) {
         env.OPENCODE_CONFIG_DIR = dir
-        env.ORCA_OPENCODE_CONFIG_DIR = dir
+        env.SERPER_OPENCODE_CONFIG_DIR = dir
         if (sourceDir) {
-          env.ORCA_OPENCODE_SOURCE_CONFIG_DIR = sourceDir
+          env.SERPER_OPENCODE_SOURCE_CONFIG_DIR = sourceDir
         }
       }
     }
@@ -326,9 +326,9 @@ async function main(): Promise<void> {
       const dir = pluginOverlay.materializePi(overlayId, sourceDir)
       if (dir) {
         env.PI_CODING_AGENT_DIR = dir
-        env.ORCA_PI_CODING_AGENT_DIR = dir
+        env.SERPER_PI_CODING_AGENT_DIR = dir
         if (sourceDir) {
-          env.ORCA_PI_SOURCE_AGENT_DIR = sourceDir
+          env.SERPER_PI_SOURCE_AGENT_DIR = sourceDir
         }
       }
     }
@@ -346,7 +346,7 @@ async function main(): Promise<void> {
     pluginOverlay.clearOverlay(paneKey ?? id)
   })
 
-  // Why: request-driven replay. Orca issues this *after* it re-wires the
+  // Why: request-driven replay. Serper issues this *after* it re-wires the
   // `agent.hook` filter on the new mux post-`--connect`. We forward each
   // cached entry as a fresh notification BEFORE returning so the response
   // strictly trails all replays on the dispatcher's single write callback —
@@ -357,13 +357,13 @@ async function main(): Promise<void> {
     return { replayed }
   })
 
-  // Why: Orca ships the OpenCode plugin / Pi extension source bodies over
+  // Why: Serper ships the OpenCode plugin / Pi extension source bodies over
   // the wire at session-ready (the renderer's bundled hook-service strings
   // change as new agent events are added — pinning them to the relay binary
-  // would force a relay redeploy on every Orca update). Cache them so each
+  // would force a relay redeploy on every Serper update). Cache them so each
   // subsequent PTY spawn can materialize a per-PTY overlay rooted under
-  // $HOME/.orca-relay/. See docs/design/agent-status-over-ssh.md §4.
-  // Why: bound the per-source size so a buggy/hostile Orca can't OOM the
+  // $HOME/.serper-relay/. See docs/design/agent-status-over-ssh.md §4.
+  // Why: bound the per-source size so a buggy/hostile Serper can't OOM the
   // relay by pushing a giant string. The HTTP path has HOOK_REQUEST_MAX_BYTES
   // = 1 MB; the JSON-RPC path needs an equivalent ceiling. Real plugin sources
   // are <50 KB today; 256 KB leaves generous headroom.

@@ -383,7 +383,7 @@ export function HostedReviewHeaderLink({
         className={className}
         onClick={(e) => {
           e.stopPropagation()
-          // Why: GitHub PR details already live in Orca's Checks tab; keep
+          // Why: GitHub PR details already live in Serper's Checks tab; keep
           // the sidebar workflow in-app instead of opening the browser.
           onOpenGitHubPRInChecks()
         }}
@@ -1388,7 +1388,7 @@ function SourceControlInner(): React.JSX.Element {
           })
         ])
       } catch {
-        toast.warning('Pull request created, but Orca could not refresh it yet.', {
+        toast.warning('Pull request created, but Serper could not refresh it yet.', {
           action: {
             label: 'Open on GitHub',
             onClick: () => window.api.shell.openUrl(result.url)
@@ -2030,7 +2030,7 @@ function SourceControlInner(): React.JSX.Element {
       }
     }
     // Why: branch compare shells out to git every tick. The panel only needs
-    // background freshness while Orca is focused; on focus we refresh
+    // background freshness while Serper is focused; on focus we refresh
     // immediately so hidden-window time does not burn subprocess work.
     const intervalId = window.setInterval(refreshIfFocused, BRANCH_REFRESH_INTERVAL_MS)
     window.addEventListener('focus', refreshIfFocused)

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { AgentBrowserBridge } from '../browser/agent-browser-bridge'
-import type { RuntimeBrowserCommandHost } from './orca-runtime-browser'
+import type { RuntimeBrowserCommandHost } from './serper-runtime-browser'
 
 const { webContentsFromIdMock, startBrowserScreencastMock } = vi.hoisted(() => ({
   webContentsFromIdMock: vi.fn(),
@@ -52,7 +52,7 @@ function createHost(): RuntimeBrowserCommandHost {
 
 describe('RuntimeBrowserCommands browser screencast', () => {
   it('lets a new same-page stream take over an active stale stream', async () => {
-    const { RuntimeBrowserCommands } = await import('./orca-runtime-browser')
+    const { RuntimeBrowserCommands } = await import('./serper-runtime-browser')
     webContentsFromIdMock.mockReturnValue({ isDestroyed: () => false })
     const firstDone = deferred<void>()
     const secondDone = deferred<void>()

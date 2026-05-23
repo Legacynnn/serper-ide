@@ -146,7 +146,7 @@ describe('add_repo_setup_step_action schema', () => {
   it('rejects extra keys via .strict()', () => {
     const parsed = eventSchemas.add_repo_setup_step_action.safeParse({
       action: 'skip',
-      repo_name: 'orca' // raw repo names are UGC — must not cross the wire
+      repo_name: 'serper' // raw repo names are UGC — must not cross the wire
     })
     expect(parsed.success).toBe(false)
   })
@@ -264,7 +264,7 @@ describe('commonPropsSchema', () => {
       os_release: '25.3.0',
       install_id: '00000000-0000-4000-8000-000000000000',
       session_id: 'ffffffff-ffff-4fff-8fff-ffffffffffff',
-      orca_channel: 'stable'
+      serper_channel: 'stable'
     })
     expect(parsed.success).toBe(true)
   })
@@ -277,7 +277,7 @@ describe('commonPropsSchema', () => {
       os_release: '25.3.0',
       install_id: '00000000-0000-4000-8000-000000000000',
       session_id: 'ffffffff-ffff-4fff-8fff-ffffffffffff',
-      orca_channel: 'stable'
+      serper_channel: 'stable'
     })
     expect(parsed.success).toBe(false)
   })
@@ -294,7 +294,7 @@ describe('commonPropsSchema', () => {
       os_release: '25.3.0',
       install_id: '',
       session_id: 'ffffffff-ffff-4fff-8fff-ffffffffffff',
-      orca_channel: 'stable'
+      serper_channel: 'stable'
     })
     expect(parsed.success).toBe(false)
   })
@@ -307,7 +307,7 @@ describe('commonPropsSchema', () => {
       os_release: '25.3.0',
       install_id: '00000000-0000-4000-8000-000000000000',
       session_id: '',
-      orca_channel: 'stable'
+      serper_channel: 'stable'
     })
     expect(parsed.success).toBe(false)
   })

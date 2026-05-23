@@ -11,7 +11,7 @@ import { basename } from '@/lib/path'
 export const NOTIFICATIONS_PANE_SEARCH_ENTRIES: SettingsSearchEntry[] = [
   {
     title: 'Enable Notifications',
-    description: 'Master switch for Orca desktop notifications.',
+    description: 'Master switch for Serper desktop notifications.',
     keywords: ['notifications', 'desktop', 'system', 'native']
   },
   {
@@ -26,7 +26,7 @@ export const NOTIFICATIONS_PANE_SEARCH_ENTRIES: SettingsSearchEntry[] = [
   },
   {
     title: 'Suppress While Focused',
-    description: 'Avoid notifying when Orca is focused on the active worktree.',
+    description: 'Avoid notifying when Serper is focused on the active worktree.',
     keywords: ['notifications', 'focused', 'suppress', 'filtering']
   },
   {
@@ -56,7 +56,7 @@ function getRendererNotificationPermission(): NotificationPermission | null {
 
 function showNotificationPermissionDeniedToast(): void {
   toast.error('Notifications are blocked in macOS', {
-    description: 'Enable notifications for this Orca app in System Settings.',
+    description: 'Enable notifications for this Serper app in System Settings.',
     action: {
       label: 'Open Settings',
       onClick: () => {
