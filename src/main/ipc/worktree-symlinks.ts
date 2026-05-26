@@ -1,4 +1,4 @@
-import { symlink, mkdir, stat, lstat, unlink } from 'fs/promises'
+import { symlink, mkdir, stat, lstat, unlink, readdir } from 'fs/promises'
 import { dirname, isAbsolute, resolve } from 'path'
 
 /** Create filesystem symlinks from the primary checkout into a freshly-created
@@ -50,7 +50,16 @@ export async function createWorktreeSymlinks(
       // pre-existing symlink (including a broken one whose source has moved)
       // is detected and skipped, rather than falling through to `symlink()`
       // and failing with EEXIST.
-      await lstat(target)
+      const targetStat = await lstat(target)
+
+      // Why: a git-tracked directory may contain gitignored children (e.g.
+      // `data/` is tracked but `data/cache/` is in .gitignore). `git worktree
+      // add` creates the tracked directory but not its ignored contents. When
+      // the target is a real directory (not a symlink), drill into it and
+      // symlink individual children that exist in primary but not the worktree.
+      if (sourceIsDirectory && targetStat.isDirectory() && !targetStat.isSymbolicLink()) {
+        await symlinkMissingChildren(source, target)
+      }
       continue
     } catch {
       // Target does not exist — proceed with symlink creation.
@@ -68,6 +77,56 @@ export async function createWorktreeSymlinks(
         `[worktree-symlinks] Failed to symlink "${rel}" (${source} -> ${target}):`,
         error
       )
+    }
+  }
+}
+
+/** Symlink direct children of `sourceDir` that are missing from `targetDir`. */
+async function symlinkMissingChildren(sourceDir: string, targetDir: string): Promise<void> {
+  let children: string[]
+  try {
+    children = await readdir(sourceDir)
+  } catch {
+    return
+  }
+  for (const child of children) {
+    const childSource = resolve(sourceDir, child)
+    const childTarget = resolve(targetDir, child)
+    try {
+      await lstat(childTarget)
+      continue
+    } catch {
+      // Child doesn't exist in worktree — symlink it.
+    }
+    try {
+      const s = await stat(childSource)
+      await symlink(childSource, childTarget, s.isDirectory() ? 'dir' : 'file')
+    } catch (error) {
+      console.error(
+        `[worktree-symlinks] Failed to symlink child "${child}" (${childSource} -> ${childTarget}):`,
+        error
+      )
+    }
+  }
+}
+
+/** Remove symlinks that are direct children of `dir`. */
+async function unlinkChildSymlinks(dir: string): Promise<void> {
+  let children: string[]
+  try {
+    children = await readdir(dir)
+  } catch {
+    return
+  }
+  for (const child of children) {
+    const childPath = resolve(dir, child)
+    try {
+      const s = await lstat(childPath)
+      if (s.isSymbolicLink()) {
+        await unlink(childPath)
+      }
+    } catch {
+      // Missing or inaccessible — skip.
     }
   }
 }
@@ -96,16 +155,15 @@ export async function removeWorktreeSymlinks(
     const target = resolve(worktreePath, rel)
     try {
       const s = await lstat(target)
-      if (!s.isSymbolicLink()) {
-        continue
+      if (s.isSymbolicLink()) {
+        await unlink(target)
+      } else if (s.isDirectory()) {
+        // Why: a git-tracked directory won't be a symlink itself, but we may
+        // have created child-level symlinks inside it for gitignored contents.
+        await unlinkChildSymlinks(target)
       }
     } catch {
       continue
-    }
-    try {
-      await unlink(target)
-    } catch (error) {
-      console.error(`[worktree-symlinks] Failed to unlink "${rel}" (${target}):`, error)
     }
   }
 }

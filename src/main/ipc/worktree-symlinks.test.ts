@@ -160,6 +160,32 @@ describe('createWorktreeSymlinks', () => {
     expect(warn).not.toHaveBeenCalled()
     expect(error).not.toHaveBeenCalled()
   })
+
+  it('symlinks missing children when a tracked directory already exists in the worktree', async () => {
+    // Primary has a tracked dir with gitignored subfolders.
+    mkdirSync(join(primary, 'data'))
+    writeFileSync(join(primary, 'data', '.gitkeep'), '')
+    mkdirSync(join(primary, 'data', 'cache'))
+    writeFileSync(join(primary, 'data', 'cache', 'file.bin'), 'cached')
+    mkdirSync(join(primary, 'data', 'logs'))
+    writeFileSync(join(primary, 'data', 'logs', 'app.log'), 'log')
+
+    // Worktree has the tracked dir with only the tracked file (simulating git worktree add).
+    mkdirSync(join(worktree, 'data'))
+    writeFileSync(join(worktree, 'data', '.gitkeep'), '')
+
+    await createWorktreeSymlinks(primary, worktree, ['data'])
+
+    // The tracked file is untouched (not replaced with a symlink).
+    expect(lstatSync(join(worktree, 'data', '.gitkeep')).isSymbolicLink()).toBe(false)
+    // The gitignored children are symlinked.
+    expect(lstatSync(join(worktree, 'data', 'cache')).isSymbolicLink()).toBe(true)
+    expect(readlinkSync(join(worktree, 'data', 'cache'))).toBe(join(primary, 'data', 'cache'))
+    expect(lstatSync(join(worktree, 'data', 'logs')).isSymbolicLink()).toBe(true)
+    expect(readlinkSync(join(worktree, 'data', 'logs'))).toBe(join(primary, 'data', 'logs'))
+    // The directory itself is not a symlink.
+    expect(lstatSync(join(worktree, 'data')).isSymbolicLink()).toBe(false)
+  })
 })
 
 describe('removeWorktreeSymlinks', () => {
@@ -223,5 +249,27 @@ describe('removeWorktreeSymlinks', () => {
   it('is a no-op for an empty paths list', async () => {
     await removeWorktreeSymlinks(worktree, [])
     expect(error).not.toHaveBeenCalled()
+  })
+
+  it('removes child symlinks inside a tracked directory', async () => {
+    // Simulate a tracked dir with child-level symlinks (as created by the
+    // new symlinkMissingChildren behavior).
+    mkdirSync(join(primary, 'data'))
+    mkdirSync(join(primary, 'data', 'cache'))
+    mkdirSync(join(primary, 'data', 'logs'))
+
+    mkdirSync(join(worktree, 'data'))
+    writeFileSync(join(worktree, 'data', '.gitkeep'), '')
+    symlinkSync(join(primary, 'data', 'cache'), join(worktree, 'data', 'cache'), 'dir')
+    symlinkSync(join(primary, 'data', 'logs'), join(worktree, 'data', 'logs'), 'dir')
+
+    await removeWorktreeSymlinks(worktree, ['data'])
+
+    // Child symlinks are removed.
+    expect(existsSync(join(worktree, 'data', 'cache'))).toBe(false)
+    expect(existsSync(join(worktree, 'data', 'logs'))).toBe(false)
+    // Tracked file and directory itself are untouched.
+    expect(existsSync(join(worktree, 'data', '.gitkeep'))).toBe(true)
+    expect(existsSync(join(worktree, 'data'))).toBe(true)
   })
 })
